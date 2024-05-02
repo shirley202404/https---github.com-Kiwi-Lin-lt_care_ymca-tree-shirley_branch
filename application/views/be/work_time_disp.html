@@ -1,0 +1,69 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>{{$tv_cur_breadcrumb|default:''}}</h1>
+      <ol class="breadcrumb">
+        {{if !empty($tv_prev_breadcrumb|default:'')}}
+          <li class="breadcrumb-item"><a href="#">{{$tv_prev_breadcrumb|default:''}}</a></li>
+        {{/if}}
+        <li class="breadcrumb-item"><a href="#">{{$tv_cur_breadcrumb|default:''}}</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_work_time_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_work_time_row->b_acc_name|default:''}}({{$tv_work_time_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_work_time_row->e_acc_name|default:''}}({{$tv_work_time_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">班別名稱</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_time_row->wt01|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">班別開始時間</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_time_row->wt02_begin|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">班別結束時間</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_time_row->wt02_end|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">班別對應餐別</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_time_row->wt03|default:''}}</span></td>
+          </tr>
+        				  		
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              <span class="text-dark">
+              {{if '1'==$tv_work_time_row->is_available}}
+                是
+              {{else}}
+                否
+              {{/if}}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

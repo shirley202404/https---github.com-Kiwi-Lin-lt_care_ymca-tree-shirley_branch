@@ -1,0 +1,191 @@
+<script>
+  $(function(){
+    $('.dropdown').click(function(){
+      $('.dropdown-menu').toggleClass('show');
+    });
+    $(window).bind('scroll resize', function(){
+      var $this = $(this);
+      var $this_Top=$this.scrollTop();
+      if($this_Top < 100){
+          $("#igotop").hide();
+          //$("#igotop").css({"opacity": "0",});
+        }
+        if($this_Top > 100){
+          $("#igotop").show();
+          //$("#igotop").fadeIn(800);
+          $("#igotop").css({"opacity": "0.3"});
+      }
+    }).scroll();
+    $("#igotop").click(function(){
+      $('html, body').animate({scrollTop: '0px'}, 500);
+    });
+    $("#igotop").mouseover(function(){
+      $(this).css({"opacity": "0.5"});
+    });
+    $("#igotop").mouseout(function(){
+      $(this).css({"opacity": "0.3"});
+    });
+  });
+</script>
+<!-- 上方導覽列 -->
+<div class="top-header clearfix no_print">
+    <button class="nav-button"><i class="fa fa-bars" aria-hidden="true"></i></button>
+    {{*<a href="{{$tv_be_url}}main"><div class="logo"><img src="{{$tv_pub_url}}/images/ymca-logo.png" alt=""></div></a>*}}
+    <a href="{{$tv_be_url}}main"><span class="text-white-50 ml-3">YMCA</span></a>
+    <div class="float-right d-none d-sm-block">
+        {{*
+        <a class="fcW maR20" href="{{$tv_acc_edit_link}}">修改個人資料&nbsp;<i class="fa fa-pencil" aria-hidden="true"></i></a>
+        *}}
+        <a class="fcW maR20" href="{{$tv_logout}}">登出&nbsp;<i class="fa fa-sign-out" aria-hidden="true"></i></a>
+    </div>
+    <div class="float-right d-sm-none">
+        <button type="button" class="login-status dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa fa-user" aria-hidden="true"></i> <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="fck maR20" href="{{$tv_acc_edit_link}}">修改個人資料&nbsp;<i class="fa fa-pencil" aria-hidden="true"></i></a></li>
+            <li><a class="fck maR20" href="{{$tv_logout}}">登出&nbsp;<i class="fa fa-sign-out" aria-hidden="true"></i></a></li>
+        </ul>
+    </div>
+</div>
+<!-- 上方導覽列 end-->
+<!-- 左側選單 -->
+<div class="side-nav-bg no_print">
+<div class="side-nav">
+    <div class="logo"></div>
+    <div class="mainC1 maR20 user-status maT10">{{$tv_login_acg_name}}<br>{{$tv_login_acc_depname}}&nbsp;{{$tv_login_acc_name}}</div>
+    <ul class="nav-list maT10">
+      <li><i class="fas fa-home"></i>&nbsp;&nbsp;<a href="{{$tv_be_url}}main">系統首頁</a></li>
+      {{foreach from=$tv_menu_h key=k item=v}}
+        {{if empty($tv_menu_b[$k]) }}
+          <li class="menu_{{$k}} {{$v.sys_menu_ct}}" data-menu_num="{{$k}}"><a href="{{$tv_be_url}}{{$v.sys_menu_ct}}"><i class="active_{{$v.sys_menu_ct}}"></i><i class="{{$v.sys_menu_icon}}"></i>&nbsp;&nbsp;{{$v.sys_menu_name}}</a></li>
+        {{else}}
+          <li class="menu_{{$k}}" data-menu_num="{{$k}}">
+            <p><i class="{{$v.sys_menu_icon}}"></i>&nbsp;&nbsp;{{$v.sys_menu_name}}
+              <span class="float-right">
+                <i class="fa fa-angle-up fa-align-right nav-none"></i>
+                <i class="fa fa-angle-down fa-align-right nav-open"></i>
+              </span>
+            </p>
+          {{foreach from=$tv_menu_b[$k] key=k2 item=v2}}
+            <ul class="drop-down menu_{{$k}} {{$v2.sys_menu_ct}}" data-menu_num="{{$k}}">
+              <a href="{{$tv_be_url}}{{$v2.sys_menu_ct}}"><li><i class="active_{{$v2.sys_menu_ct}}"></i><i class="{{$v2.sys_menu_icon}}"></i>&nbsp;&nbsp;{{$v2.sys_menu_name}}</li></a>
+            </ul>
+          {{/foreach}}
+          </li>
+        {{/if}}
+      {{/foreach}}
+      {{if $tv_is_super == "1"}}
+        <li>
+          <p><i class="fas fa-hammer"></i>&nbsp;&nbsp;系統版本
+            <span class="float-right">
+              <i class="fa fa-angle-up fa-align-right nav-none"></i>
+              <i class="fa fa-angle-down fa-align-right nav-open"></i>
+            </span>
+          </p>
+            <ul class="drop-down">
+              <li class="mainC1">CI_Version：{{$tv_ci_version}}</li>
+            </ul>
+            <ul class="drop-down">
+              <li class="mainC1">PHP_Version：{{phpversion()}}</li>
+            </ul>
+        </li>
+      {{/if}}
+    </ul>
+</div>
+{{* {{$tv_agu_open[$tv_agu_open_ct_name]}} *}}
+<i class="fas fa-arrow-circle-up fa-3x" id="igotop" style="z-index:99999;position:fixed;bottom:15px;right:15px;cursor:pointer;display:none"></i>
+</div>
+
+<script>
+  $.fn.modal.Constructor.prototype.enforceFocus = function () {
+    var $modalElement = this.$element;
+    $(document).on('focusin.modal',
+      function (e) {
+        var $parent = $(e.target.parentNode);
+        if ($modalElement[0] !== e.target &&
+          !$modalElement.has(e.target).length &&
+          !$parent.hasClass('cke_dialog_ui_input_select') &&
+          !$parent.hasClass('cke_dialog_ui_input_textarea') &&
+          !$parent.hasClass('cke_dialog_ui_input_text')) {
+          $modalElement.focus();
+        }
+      });
+  };
+</script>
+<!-- 左側選單 end-->
+<script>
+jQuery(document).ready(function($) {
+    $(".page-title ").addClass('active');
+    $(".nav-button").click(function(event) {
+        $(".right-content").toggleClass('toggle');
+        $(".page-title ").toggleClass('active');
+        $(".side-nav").toggleClass('toggle');
+    });
+    $(".nav-none").show();
+    $(".nav-list li").click(
+        function() {
+            //toggle 像電燈般開闔物件
+            $(this).toggleClass('nav-list-active');
+            $(this).toggleClass('active');
+            $(this).find(".drop-down").slideToggle();
+            $(this).find(".nav-open").toggle();
+            $(this).find(".nav-none").toggle();
+        }
+    );
+    var menu_num = $('.{{$tv_ct_name}}').data('menu_num');
+    $('.menu_'+menu_num).show();
+    //$('.{{$tv_ct_name}}').addClass( "bg-dark" );
+    $('.active_{{$tv_ct_name}}').addClass( "fas fa-caret-right text-warning" );
+    $('.active_{{$tv_ct_name}}').html('&nbsp;');
+});
+</script>
+
+<!-- container-fluid自動padding-top -->
+<script>
+    jQuery(document).ready(function($) {
+        var test = $('.page-title').height();
+        $('.container-fluid').css('padding-top', test + 40 + "px");
+    });
+</script>
+
+<script>
+  $(function(){
+    CKEDITOR.editorConfig = function( config ) {
+      config.skin = 'moonocolor';
+      config.extraPlugins = "youtube";
+      config.allowedContent = true;
+      config.toolbarGroups = [
+        { name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
+        { name: 'clipboard', groups: [ 'clipboard', 'undo' ] },
+        { name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
+        { name: 'forms', groups: [ 'forms' ] },
+        { name: 'tools', groups: [ 'tools' ] },
+        '/',
+        { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
+        { name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
+        { name: 'links', groups: [ 'links' ] },
+        '/',
+        { name: 'styles', groups: [ 'styles' ] },
+        { name: 'colors', groups: [ 'colors' ] },
+        { name: 'insert', groups: [ 'insert' ] },
+        { name: 'others', groups: [ 'others' ] },
+        { name: 'about', groups: [ 'about' ] }
+      ];
+      //config.language = 'zh-cn';
+      config.language = 'zh';
+      config.removeButtons = 'Save,NewPage,Print,Form,Checkbox,Radio,TextField,Textarea,Select,Button,ImageButton,HiddenField,Language,About';
+      config.font_names = 'Arial;Arial Black;Comic Sans MS;Courier New;Tahoma;Times New Roman;Verdana;新細明體;細明體;標楷體;微軟正黑體';
+      //config.filebrowserUploadUrl = 'http://59.125.154.98:48080/polycell/pub/be/ckfinder/core/connector/php/connector.php?command=QuickUpload&type=Files'; //上傳頁籤
+      //config.filebrowserBrowseUrl = 'http://127.0.0.1/scos/pub/be/ckfinder/ckfinder.html';
+      //config.removeButtons = 'Replace,Save,NewPage,Preview,Print,Templates,SelectAll,Scayt,Find,Form,Checkbox,Radio,TextField,Textarea,Select,ImageButton,HiddenField,Button,CreateDiv,BidiLtr,BidiRtl,Language,Smiley,PageBreak,Iframe,Flash,BGColor,TextColor,About';
+      //config.filebrowserUploadUrl = '{{$tv_pub_url}}/ckfinder/core/connector/php/connector.php?command=QuickUpload&type=Files'; // 上傳頁籤
+      //config.filebrowserBrowseUrl = '{{$tv_pub_url}}/ckfinder/ckfinder.html';
+      
+      config.filebrowserBrowseUrl = '{{$tv_pub_url}}/filemanager/dialog.php?type=2&lang=zh_TW&editor=ckeditor&fldr=';
+      //config.filebrowserImageBrowseUrl = '{{$tv_pub_url}}/filemanager/dialog.php?type=1&lang=zh_TW&editor=ckeditor&fldr=';
+      config.filebrowserUploadUrl = ''; // 上傳頁籤
+      config.image_previewText = '&nbsp;';
+    };
+  });
+</script>

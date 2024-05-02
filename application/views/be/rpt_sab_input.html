@@ -1,0 +1,72 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>社會局月報表</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">報表下載</a></li>
+        <li class="breadcrumb-item"><a href="#">社會局月報表</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter no_print">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content  modal-C1 ">
+            <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+              <div class="text-center paTB20">
+                <h2>請輸入下載條件</h2>
+              </div>
+              <div class="modal-body text-left">
+                <table class="table xtable-bordered table-hover table-sm">
+                  {{assign var="swidth_left" value="col-3"}}
+                  {{assign var="swidth_right" value="col-9"}}
+                  <tbody>
+                    <tr id="month_tr" class='d-flex'>
+                      <td class='{{$swidth_left}} table-secondary text-right'><span class="text-danger">*</span>下載月份</td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <span class='form-group'>
+                          <div class='input-group form_month'>
+                            <div id="dys01_type" class='input-group-prepend'>
+                              <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                            </div>
+                            <input type='text' id='rpt_month' name='rpt_month' class='form-control form-control-sm' placeholder='請輸入時間' value='' required>
+                          </div>
+                          <span id='helpBlock_rpt_pay_month' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class='d-flex'>
+                      <td class='{{$swidth_left}}'></td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <button type="button" id="btn_prn" class="btn btn-C1 col-3" data-toggle="modal" data-target=".pop-id_download">確定下載 <i class="fas fa-download"></i></button>
+                        <button id="btn_prn_reset" type="reset" class="btn btn-C1-line col-3">重新輸入 <i class="fas fa-eraser"></i></button>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- 篩選＆搜尋表格 -->
+    </div>
+  </div>
+</div>
+{{include file="{{$tv_kind}}/download_info_modal.html"}}
+
+
+

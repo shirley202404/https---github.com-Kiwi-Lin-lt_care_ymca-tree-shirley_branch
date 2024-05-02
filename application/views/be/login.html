@@ -1,0 +1,135 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+<style>
+.top-header{display:none;}
+.side-nav{display:none;}
+</style>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script>
+  $(function(){
+    $('#f_ok').click(function(){
+      $('#loginForm').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('請輸入正確資料!!!');
+        return;
+      }
+      /*
+      else {
+        if($("#acc_kind").val() == 'ELEC') {
+          var is_login_time = false;
+          var current_time = '{{$tv_morning_login_time_start|default:''}}'; 
+          var morning_login_time_start = '{{$tv_morning_login_time_start|default:''}}'; 
+          var morning_login_time_end = '{{$tv_morning_login_time_end|default:''}}'; 
+          var afternoon_login_time_start = '{{$tv_afternoon_login_time_start|default:''}}'; 
+          var afternoon_login_time_end = '{{$tv_afternoon_login_time_end|default:''}}'; 
+
+          var today = new Date();
+          var current_time = today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate() + ' ' + today.getHours() + ':' + today.getMinutes()+ ':' + today.getSeconds();
+          console.log(current_time);
+          if(Date.parse(morning_login_time_start).valueOf() < Date.parse(current_time).valueOf() && Date.parse(current_time).valueOf() < Date.parse(morning_login_time_end).valueOf()) {
+            is_login_time = true;
+          }
+
+          if(Date.parse(afternoon_login_time_start).valueOf() < Date.parse(current_time).valueOf() && Date.parse(current_time).valueOf() < Date.parse(afternoon_login_time_end).valueOf()) {
+            is_login_time = true;
+          }
+
+          if(!is_login_time) {
+            alert("現在非登入時間，請稍後在試!!");
+            return false;
+          }
+        }
+      }
+              */
+      $('#loginForm').submit();
+    });
+    $('.refresh').click(function(){
+      $.ajax({
+        type:'post',
+        url: '{{$tv_captcha_link}}',
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_captcha_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          $('.captcha').attr('src','{{$tv_cap_path}}'+rs)
+          //console.log(rs);
+        }
+      });
+    });
+
+  });
+</script>
+
+<div class="log-background">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+        <div class="log-in-form" style="margin-top: 5%;margin-bottom:0%">
+          <div class="card-body">
+            <div class="log-in-logo maB15 img-responsive"><img src="{{$tv_pub_url}}/images/ymca-logo.png" alt=""></div>
+            <form action="{{$tv_action}}" class="form-horizontal" name="loginForm" id="loginForm" method="POST" data-toggle="validator">
+              <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-text"><i class="fas fa-hand-point-right"></i></div>
+                  <select id="acc_kind" name="acc_kind" class="form-control form-control-sm" required>
+                    <option value="">-請選擇身份別-</option>
+                    <option value="SW">社工</option>
+                    <option value="MAN">系統管理者</option>
+                  </select>
+                </div>
+                <div class="help-block with-errors text-danger"></div>
+              </div>
+              <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-text"><i class="fas fa-user"></i></div>
+                  <input type="text" name="acc_user" id="acc_user" class="form-control form-control-sm" placeholder="Username" aria-describedby="sizing-addon1" required>
+                </div>
+                <div class="help-block with-errors text-danger"></div>
+              </div>
+              <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-text"><i class="fas fa-key"></i></div>
+                  <input type="password" id="acc_password" name="acc_password" class="form-control form-control-sm" placeholder="Password" aria-describedby="sizing-addon1" required>
+                </div>
+                <div class="help-block with-errors text-danger"></div>
+              </div>
+              <div class="form-group">
+                <div class="input-group">
+                  <div class="input-group-text"><i class="fas fa-lock"></i></div>
+                  <input id="logincaptcha" class="form-control form-control-sm" name="logincaptcha" type="text" placeholder="驗證碼不分大小寫" autocomplete="off" required>
+                  <div class="input-group-addon"><img class="check-code captcha refresh rounded" src="{{$tv_cap_path}}{{$tv_cap_img}}" style="cursor: pointer;"></div>
+                </div>
+                <div class="help-block with-errors text-danger"></div>
+              </div>
+              <button type="button" name="f_ok" id="f_ok" class="btn btn-lg btn-primary btn-block">登入</button>
+              {{if $tv_login_ng == "Y"}}
+                <p>&nbsp;</p>
+                <h2><p class="bg-danger text-center">登入錯誤，請重新登入！</p></h2>
+              {{/if}}
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto text-center">
+        <div class="log-in-form" style="margin-top: 5%;">
+          <div class="card-body" style="padding: 0.8rem!important;">
+            <img src="{{$tv_pub_url}}/images/nstc-logo.png" alt="" class="maB10" style="width:300px;hight:auto;">
+            <div class="text-left paL10 mx-auto" style="border-left:5px #0c85cb solid;">
+              <p class="maB5 fcG1 fpx12 h5 font-weight-bold">補助機構：國科會人文處以包容為導向之科技計畫</p>
+              <p class="maB5 fcG1 fpx12 h5 font-weight-bold">執行計畫：社福機構營養膳食送餐服務之數位優化與轉型</p>
+              <p class="maB5 fcG1 fpx12 h5 font-weight-bold">合作單位：社團法人南投縣基督教青年會</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>    
+<div class="fixed-bottom" style="background: rgba(255, 255, 255, .4);">
+  <div class="py-2 text-center">
+    <span style="color: rgba(0, 0, 0, 1);">
+      Copyright Ⓒ 2023 社團法人南投縣基督教青年會｜國科會人文處以包容為導向之科技計畫｜國立暨南國際大學｜國立臺中科技大學｜銘傳大學
+    </span>
+  </div>
+</div> 

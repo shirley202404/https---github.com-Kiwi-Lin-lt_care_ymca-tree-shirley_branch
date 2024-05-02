@@ -1,0 +1,229 @@
+﻿{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    $('#group_s_num').val({{$tv_sys_account_row->group_s_num|default:''}})
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>帳戶管理</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">系統管理</a></li>
+        <li class="breadcrumb-item"><a href="#">帳戶管理</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_sys_account_row->b_acc_name|default:''}}({{$tv_sys_account_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_sys_account_row->e_acc_name|default:''}}({{$tv_sys_account_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <input type="hidden" id="s_num" name="s_num" value="{{$tv_sys_account_row->s_num|default:'0'}}">
+      {{/if}}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>群組名稱</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+						      <select id="group_s_num" name="group_s_num" class="form-control form-control-sm">
+						        <option value="">-請選擇-</option>
+						        {{foreach from=$tv_acc_group_row key=k item=v}}
+						          <option value="{{$v.s_num}}">{{$v.acg_name}}</option>
+						        {{/foreach}}
+						      </select>
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+						      <script>
+						        $('#group_s_num').val({{$tv_acc_row->group_s_num|default:''}})
+					        </script>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>帳號</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+                    <span class="form-control form-control-sm text-primary" readonly>{{$tv_sys_account_row->acc_user|default:''}}</span>
+                  {{else}}
+                    <input type='text' id='acc_user' name='acc_user' class='form-control form-control-sm' placeholder='請輸入帳號' value='{{$tv_sys_account_row->acc_user|default:''}}' required>
+                    <span id='helpBlock' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  {{/if}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>密碼</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group">
+						        <input type="password" id="acc_pwd" name="acc_pwd" class="form-control form-control-sm" placeholder="{{$tv_pwd_placeholder}}" value="" autocomplete="off">
+							      <div class="input-group-text pwd_icon" data-icon="no_see" data-pwd_fd="acc_pwd" style="cursor: pointer"><i class="far fa-eye-slash"></i></div>
+                  </div>
+                  <span id='helpBlock' class='help-block'>空白=不修改密碼。</span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>使用者</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='acc_name' name='acc_name' class='form-control form-control-sm' placeholder='請輸入使用者' value='{{$tv_sys_account_row->acc_name|default:''}}' >
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>部門</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='acc_depname' name='acc_depname' class='form-control form-control-sm' placeholder='請輸入部門' value='{{$tv_sys_account_row->acc_depname|default:''}}' >
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>Email</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='email' id='acc_email' name='acc_email' class='form-control form-control-sm' placeholder='請輸入Email' value='{{$tv_sys_account_row->acc_email|default:''}}' >
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            {{*
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>電話</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='acc_tel' name='acc_tel' class='form-control form-control-sm' placeholder='請輸入電話' value='{{$tv_sys_account_row->acc_tel|default:''}}' >
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>手機</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='acc_phone' name='acc_phone' class='form-control form-control-sm' placeholder='請輸入手機' value='{{$tv_sys_account_row->acc_phone|default:''}}' >
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            *}}
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>是否超級使用者</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span class="form-control form-control-sm">
+                    <input type="radio" name="is_super" value="1" {{if $tv_sys_account_row->is_super|default:0==1}} checked {{/if}}> 是
+                    <input type="radio" name="is_super" value="0" {{if $tv_sys_account_row->is_super|default:0==0}} checked {{/if}}> 否
+                  </span>
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            {{if 'Tony' == $tv_login_acc_name or 'Daniel' == $tv_login_acc_name}}
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>MVC可用DB</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='acc_mvc_db' name='acc_mvc_db' class='form-control form-control-sm' placeholder='請輸入DB名稱' value='{{$tv_sys_account_row->acc_mvc_db|default:''}}' >
+                    <span id='helpBlock' class='help-block'>用逗號區分ex: rd_test,n2</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+            {{/if}}
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+</div>

@@ -1,0 +1,166 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>選單管理</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">系統管理</a></li>
+        <li class="breadcrumb-item"><a href="#">選單管理</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_sys_menu_row->b_acc_name|default:''}}({{$tv_sys_menu_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_sys_menu_row->e_acc_name|default:''}}({{$tv_sys_menu_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <input type="hidden" id="s_num" name="s_num" value="{{$tv_sys_menu_row->s_num|default:'0'}}">
+      {{/if}}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>層級編號</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input min='0' type='number' id='sys_menu_level' name='sys_menu_level' class='form-control form-control-sm' placeholder='請輸入層級編號' value='{{$tv_sys_menu_row->sys_menu_level|default:''}}' required>
+                  <span id='helpBlock' class='help-block'>0=第一層</span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>選單圖示</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='sys_menu_icon' name='sys_menu_icon' class='form-control form-control-sm' placeholder='請輸入選單圖示' value='{{$tv_sys_menu_row->sys_menu_icon|default:''}}' >
+                  <span id='helpBlock' class='help-block'><a href="https://fontawesome.com/icons?d=gallery&m=free" target="_BLANK">fontawesome圖示</a></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>選單名稱</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='sys_menu_name' name='sys_menu_name' class='form-control form-control-sm' placeholder='請輸入選單名稱' value='{{$tv_sys_menu_row->sys_menu_name|default:''}}' required>
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>選單CT</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='sys_menu_ct' name='sys_menu_ct' class='form-control form-control-sm' placeholder='請輸入選單Controller_name' value='{{$tv_sys_menu_row->sys_menu_ct|default:''}}' >
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>排序</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input min='0' type='number' id='sys_menu_order' name='sys_menu_order' class='form-control form-control-sm' placeholder='請輸入排序' value='{{$tv_sys_menu_row->sys_menu_order|default:''}}' >
+                  <span id='helpBlock' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class="d-flex">
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>是否啟用</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span class="form-control form-control-sm">
+                    <input type="radio" name="is_available" value="1" {{if $tv_sys_menu_row->is_available|default:0==1}} checked {{/if}}> 是
+                    <input type="radio" name="is_available" value="0" {{if $tv_sys_menu_row->is_available|default:0==0}} checked {{/if}}> 否
+                  </span>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+</div>

@@ -1,0 +1,270 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/jquery.fancybox.min.css">
+<script src="{{$tv_pub_url}}/js/jquery.fancybox.min.js"></script>
+<script>
+  $(function() {
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_identity_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_identity_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          if(rs['rtn_msg']=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace(rs['rtn_url']);
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+            //alert(rs);
+          }
+        }
+      })
+      return;
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>案主資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">案主資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_client_import_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_client_import_row->b_acc_name|default:''}}({{$tv_client_import_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_client_import_row->e_acc_name|default:''}}({{$tv_client_import_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">區域</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct14|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主姓名</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct01|default:''}}{{$tv_client_import_row->ct02|default:''}}</span></td>
+          </tr>
+          {{*
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">beacon序號</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->bn_s_num|default:''}}</span></td>
+          </tr>
+          *}}
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主身分證</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct03|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主性別</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct04_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主生日</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct05|default:''|date_format:"%Y-%m-%d"}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主手機</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct06_telephone|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主家電</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct06_homephone|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主聯絡人-1</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct07_1_name|default:''}}{{if $tv_client_import_row->ct07_1_name != null}}-{{/if}}{{$tv_client_import_row->ct07_1_rlat|default:''}}{{if $tv_client_import_row->ct07_1_rlat != null}}-{{/if}}{{$tv_client_import_row->ct07_1_tel|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主聯絡人-2</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct07_2_name|default:''}}{{if $tv_client_import_row->ct07_2_name != null}}-{{/if}}{{$tv_client_import_row->ct07_2_rlat|default:''}}{{if $tv_client_import_row->ct07_2_rlat != null}}-{{/if}}{{$tv_client_import_row->ct07_2_tel|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">個管</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct22_name|default:''}}{{if $tv_client_import_row->ct22_name != null}}-{{/if}}{{$tv_client_import_row->ct22_phone|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">照專</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct23_name|default:''}}{{if $tv_client_import_row->ct23_name != null}}-{{/if}}{{$tv_client_import_row->ct23_phone|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">居服</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct24_name|default:''}}{{if $tv_client_import_row->ct24_name != null}}-{{/if}}{{$tv_client_import_row->ct24_phone|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主戶籍地址</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct09|default:''}}{{$tv_client_import_row->ct10|default:''}}{{$tv_client_import_row->ct11|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主聯絡地址</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct13|default:''}}{{$tv_client_import_row->ct14|default:''}}{{$tv_client_import_row->ct15|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主家緯度</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct16|default:''}}</span></td>
+          </tr>
+          {{*
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主家緯度(現場)</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct16_actual|default:''}}</span></td>
+          </tr>
+          *}}
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主家經度</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct17|default:''}}</span></td>
+          </tr>
+          {{*
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主家經度(現場)</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct17_actual|default:''}}</span></td>
+          </tr>
+          *}}
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">餐盒單價</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct19|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">匯款尾碼</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct20|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">是否為僅OT個案</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct00_str|default:''}}</span></td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>居住狀況</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <span>一. 居住狀況：{{$tv_client_import_row->ct31_str|default:''}}</span>
+              <br/>
+              <span>二. 狀況說明：{{$tv_client_import_row->ct31_memo|default:''}}</span>
+              <br/>
+              <span>三. 家電狀況：{{$tv_client_import_row->ct21_str|default:''}}</span>
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>身分別</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <span>一. 內部定義：{{$tv_client_import_row->ct34_fo_str|default:''}}</span>
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>身心障礙</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <span>一. 身心障礙手冊：{{$tv_client_import_row->ct35_str|default:''}} {{if $tv_client_import_row->ct35|default:'' == "Y"}}(手冊到期日：{{$tv_client_import_row->ct35_end_date}}){{/if}}</span>
+              <br/>
+              <span>二. 障礙類別：{{$tv_client_import_row->ct35_type_str|default:''}}</span>
+              <br/>
+              <span>三. 障礙等級：{{$tv_client_import_row->ct35_level_str|default:''}}</span>
+              <br/>
+              <span>三. 障礙說明：{{$tv_client_import_row->ct35_memo|default:''}}</span>
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">健康狀況</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              <span>{{$tv_client_import_row->ct36_str|default:''}}</span>
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">失能程度</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              <span>{{$tv_client_import_row->ct37_str|default:''}}</span>
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>疾病名稱</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <span>一. 疾病1：{{$tv_client_import_row->ct38_1_str|default:''}}</span>
+              <br/>
+              <span>二. 疾病2：{{$tv_client_import_row->ct38_2_str|default:''}}</span>
+              <br/>
+              <span>三. 其他：{{$tv_client_import_row->ct38_memo}}</span>
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">家系圖</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              {{if NULL != $tv_client_import_row->ct95}}
+                <a href="{{$tv_client_import_row->ct95_base64}}" data-fancybox >
+                  <img src="{{$tv_client_import_row->ct95_base64}}" class="img-fluid" alt="{{$tv_client_import_row->ct95|default:''}}" title="{{$tv_client_import_row->ct95|default:''}}" style="max-width: 100px;">
+                </a>
+              {{/if}}
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">資源生態圖</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              {{if NULL != $tv_client_import_row->ct96}}
+                <a href="{{$tv_client_import_row->ct96_base64}}" data-fancybox >
+                  <img src="{{$tv_client_import_row->ct96_base64}}" class="img-fluid" alt="{{$tv_client_import_row->ct96|default:''}}" title="{{$tv_client_import_row->ct96|default:''}}" style="max-width: 100px;">
+                </a>
+              {{/if}}
+            </td>
+          </tr>                             	  
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">個案評估摘要</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct97|nl2br|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">處遇計畫摘要</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_client_import_row->ct98|nl2br|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              <span class="text-dark">
+              {{if '1'==$tv_client_import_row->is_available}}
+                是
+              {{else}}
+                否
+              {{/if}}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此身分別資料嗎？
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>

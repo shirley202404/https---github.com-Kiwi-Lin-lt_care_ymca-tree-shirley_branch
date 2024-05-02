@@ -1,0 +1,178 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>手機資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">手機管理</a></li>
+        <li class="breadcrumb-item"><a href="#">手機資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_mobile_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="nav-basic-tab" data-toggle="tab" href="#nav-basic" role="tab" aria-controls="nav-basic" aria-selected="true">手機資料</a>
+        <a class="nav-item nav-link" id="nav-use-tab" data-toggle="tab" href="#nav-use" role="tab" aria-controls="nav-use" aria-selected="true">使用紀錄</a>
+        <a class="nav-item nav-link" id="nav-credit-tab" data-toggle="tab" href="#nav-credit" role="tab" aria-controls="nav-credit" aria-selected="false">充值紀錄</a>
+        {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+          <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+            <div class="float-right">建檔:<span class="mainC1">{{$tv_mobile_row->b_acc_name|default:''}}({{$tv_mobile_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_mobile_row->e_acc_name|default:''}}({{$tv_mobile_row->e_date|default:""}})</span></div>
+          </span>
+        {{/if}}
+      </div>
+    </nav>
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-basic" role="tabpanel" aria-labelledby="nav-basic-tab">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover table-sm">
+            {{assign var="swidth_left" value="20%"}}
+            {{assign var="swidth_right" value="80%"}}
+            <tbody>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機編號</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me01|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機廠牌</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me02|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機型號</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me03|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機序號</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me04|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機號碼</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me05|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">SIM卡</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me06_sim_str|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機方案</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me06_program_str|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機持有者</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me07|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機保管者</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->dp01|default:''}}{{$tv_mobile_row->dp02|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">購入日期</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me09|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">備註</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_mobile_row->me99|default:''}}</span></td>
+              </tr>
+                    
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+                <td width="{{$swidth_right}}" class="table-light">
+                  <span class="text-dark">
+                  {{if '1'==$tv_mobile_row->is_available}}
+                    是
+                  {{else}}
+                    否
+                  {{/if}}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="nav-use" role="tabpanel" aria-labelledby="nav-use-tab">
+        <div>
+          <table class="table table-bordered table-striped table-hover table-sm" style="width:100%; overflow-y: visible;">
+            <thead>
+              <tr class="thead-light">
+                <th class="text-nowrap">手機借用者</th><!--2-->
+                <th class="text-nowrap">借用路線</th><!--3-->
+                <th class="text-nowrap">借出時間</th><!--5-->
+                <th class="text-nowrap">借出流量</th><!--4-->
+                <th class="text-nowrap">歸還時間</th><!--7-->
+                <th class="text-nowrap">歸還流量</th><!--6-->
+                <th class="text-nowrap">使用量</th><!--6-->
+                <th class="text-nowrap text-center">確認者/確認時間</th><!--8-->
+                <th class="text-nowrap">備註</th><!--10-->
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_mobile_use_row key=k item=v}}
+               <tr>
+                 <td>{{$v.dp01|default:''}}{{$v.dp02|default:''}}</td>
+                 <td>{{$v.reh01|default:''}}</td>
+                 <td>{{$v.meu03_time|default:''}}</td>
+                 <td>{{$v.meu03_flow|default:''}}</td>
+                 <td>{{$v.meu04_time|default:''}}</td>
+                 <td>{{$v.meu04_flow|default:''}}</td>
+                 <td>{{$v.meu05|default:''}}</td>
+                 <td class="text-center">{{$v.y_acc_name|default:''}}<br/>{{$v.meu21_y_date|default:''}}</td>
+                 <td>{{$v.mec99|default:''}}</td>
+               </tr>
+              {{foreachelse}}
+                <tr>
+                  <td colspan="99" class="alert alert-warning">
+                      查無資料!!!
+                  </td>
+                </tr>
+              {{/foreach}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="nav-credit" role="tabpanel" aria-labelledby="nav-credit-tab">
+        <div>
+          <table class="table table-bordered table-striped table-hover table-sm" style="width:35%; overflow-y: visible;">
+            <thead>
+              <tr class="thead-light">
+                <th class="text-nowrap" style="width:15%">充值日期</th>
+                <th class="text-nowrap" style="width:15%">充值金額</th>
+                <th class="text-nowrap" style="width:15%">備註</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_mobile_credit_row key=k item=v}}
+               <tr>
+                 <td>{{$v.mec01|default:''}}</td>
+                 <td class="text-right">{{$v.mec02|number_format|default:''}}</td>
+                 <td>{{$v.mec99|default:''}}</td>
+               </tr>
+              {{foreachelse}}
+                <tr>
+                  <td colspan="99" class="alert alert-warning">
+                      查無資料!!!
+                  </td>
+                </tr>
+              {{/foreach}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

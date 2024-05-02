@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <!--[if IE 9]><html class="lt-ie10" lang="en" > <![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最新消息</title>
+  </head>
+  <style type="text/css">
+  .pay-table{font-size: 12px;}
+  .pay-table th{
+  text-align: center;
+  }
+  .pay-table td,.pay-table th{
+  border:1px solid #000000;
+  /*padding:12px 12px;*/
+  }
+  .pay-table ul{
+  padding-left: 30px;
+  }
+  </style>
+  <body>
+    <div style="font-size: 14px;">
+      <div style="font-size:20px;text-align: center;line-height:30px;">最新消息</div>
+      <br>
+      <table cellspacing="0">
+        <tbody>
+          <tr>
+            <th width="90" style="text-align: left;">日期:&nbsp;&nbsp;</th>
+            <td width="1000">{{$tv_news_row->news_publication}}</td>
+          </tr>
+          <tr>
+            <th width="90" style="text-align: left;">標題:&nbsp;&nbsp;</th>
+            <td width="1000">{{$tv_news_row->news_title}}</td>
+          </tr>
+
+          <tr>
+            <th width="90" style="text-align: left;">內容:&nbsp;&nbsp;</th>
+            <td width="1000">{{$tv_news_row->news_content}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

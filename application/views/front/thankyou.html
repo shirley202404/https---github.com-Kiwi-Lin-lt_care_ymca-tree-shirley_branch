@@ -1,0 +1,114 @@
+    {{include file="{{$tv_kind}}/header.html"}}
+    <main class="page-main bgecee">
+      <div class="section-hero">
+        <div class="section-hero__bg" style="background-image: url({{$tv_pub_url}}/img/banner-1.jpg)">
+          <div class="uk-container">
+            <div class="section-hero__content">
+              <div class="section-hero__title"> 
+                <div class="uk-h1">傳心之路送餐交通費募集</div>
+              </div>
+              <div class="section-hero__breadcrumb">
+                <ul class="uk-breadcrumb">
+                  <li><a href="{{$tv_main_link}}">首頁</a></li>
+                  <li><span>傳心之路送餐交通費募集</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-content mb-10">
+        <div class="uk-section-large uk-container">
+          <div class="card card-custom">
+            <div class="card-body p-0">
+              <!--begin::Wizard 5-->
+                <div class="d-flex flex-column flex-lg-row flex-row-fluid" id="kt_wizard">
+                    <!--begin::Aside-->
+                    <div class="order-2 order-sm-1 pt-10 pt-lg-20 bg-white d-flex flex-column flex-row-auto w-100 w-lg-300px w-xl-400px w-xxl-500px" style="justify-content: flex-end;">
+                       
+                        <!--begin::Aside Bottom-->
+                        <div class=" d-flex flex-row-auto bgi-no-repeat bgi-position-y-bottom bgi-position-x-center bgi-size-contain pt-2 pt-lg-5 h-350px" style="background-image: url({{$tv_pub_url}}/img/icon/love.svg)"></div>
+                        <!--end::Aside Bottom-->
+                    </div>
+                    <!--begin::Aside-->
+                    <!--begin::Content-->
+                    <div class="order-1 order-sm-2 bg-gray-100 d-flex flex-center flex-row-fluid py-15 px-5 px-lg-10">
+                        <!--begin::Form-->
+                        <div class="d-flex justify-content-center flex-row-fluid">
+                          <form class="pb-5 w-100 w-md-450px w-lg-500px "  >
+                            <div class="card py-3 mt-sm-3" >
+                              <div class="card-body text-center justify-content-center">
+                                <h2 class="h4 pb-3">感謝您的愛心!</h2>
+                                <strong class="text-danger">{{$tv_status}}</strong>
+                                <ul class="list-group list-group-sm mt-4 pb-5">
+                                   <li class="list-group-item d-flex ">
+                                     <span>捐款人：</span> <span class="ml-auto ">{{$tv_donate_row->de01|default:''}}{{$tv_donate_row->de02|default:''}}</span>
+                                   </li>
+                                   <li class="list-group-item d-flex ">
+                                     <span>電子郵件：</span> <span class="ml-auto ">{{$tv_donate_row->de03_email|default:''}}</span>
+                                   </li>
+                                   <li class="list-group-item d-flex ">
+                                     <span>捐款方式：</span> <span class="ml-auto ">{{$tv_donate_row->de09_str|default:''}}</span>
+                                   </li>
+                                   <li class="list-group-item d-flex ">
+                                     <span>捐款項目：</span> <span class="ml-auto ">{{$tv_donate_row->di01|default:''}}</span>
+                                   </li>
+                                   <li class="list-group-item d-flex">
+                                    <span>捐款金額：</span> 
+                                    <strong class="ml-auto text-primary ">
+                                      <small>NTD </small>
+                                      {{$tv_donate_row->de06|number_format:0|default:0}}
+                                      {{if $tv_donate_row->de09|default:'' == 7}}
+                                      x ({{$tv_donate_row->de07}} 期)
+                                      {{/if}}
+                                    </strong>
+                                   </li>
+                                   <li class="list-group-item d-flex">
+                                     <span>收據索取：</span> <span class="ml-auto ">{{$tv_donate_row->de05_str|default:''}}</span>
+                                   </li>
+                                </ul>
+                              </div>
+                            </div>
+                            <!--begin: Wizard Actions-->
+                            <div class="d-flex justify-content-center pt-3">
+                              <div class="mr-2">
+                                <a class="btn btn-primary font-weight-bolder font-size-h6 pr-8 pl-8 my-3" href="{{$tv_main_link}}" role="button"></i>回首頁 </a>                                
+                              </div>                           
+                            </div>
+                          <!--end: Wizard Actions-->
+                          </form>
+                        </div>
+                      <!--end::Form-->
+                    </div>
+                    <!--end::Content-->
+                </div>
+              <!--end::Wizard 5-->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <div class="section-subscribe">
+      <div class="uk-container">
+        <div class="subscribe-box">
+          <div class="uk-grid uk-flex-middle uk-child-width-1-1@m" data-uk-grid>
+            <div>
+              <div class="section-title"><span>獨居長者熱騰騰的飯菜</span>
+                <div class="uk-h2">你的簡單小事，我的重責大任</div>
+              </div>
+            </div>
+            <!--
+            <div>
+              <div class="subscribe-box__form">
+                <form action="#!">
+                  <div class="uk-flex uk-flex-middle"><input class="uk-input" type="email" name="email" placeholder="Email Address ...."><button class="uk-button uk-button-danger" type="submit">Subscribe</button></div>
+                </form>
+              </div>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+    </div>
+  {{include file="{{$tv_kind}}/footer.html"}}

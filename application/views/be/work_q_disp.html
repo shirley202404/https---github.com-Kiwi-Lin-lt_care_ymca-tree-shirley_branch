@@ -1,0 +1,100 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>關懷紀錄</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">工作紀錄</a></li>
+        <li class="breadcrumb-item"><a href="#">關懷紀錄</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_work_q_h_row->b_acc_name|default:''}}({{$tv_work_q_h_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_work_q_h_row->dp01|default:''}}{{$tv_work_q_h_row->dp02|default:''}}({{$tv_work_q_h_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">序號</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_q_h_row->s_num|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主名稱</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_q_h_row->ct_name|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">服務名稱</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_q_h_row->sec01_str|default:''}}-{{$tv_work_q_h_row->sec04_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">填寫時間</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_q_h_row->e_date|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">填寫者</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_work_q_h_row->dp01|default:''}}{{$tv_work_q_h_row->dp02|default:''}}</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 class="bg-secondary text-white text-center">工作單回答紀錄</h2>
+      <table class="table table-bordered table-striped table-hover table-sm">
+        <thead>
+          <tr class="thead-light">
+            <td width="02%" class="text-nowrap">序號</td>
+            <td width="02%" class="text-nowrap">題目序號</td>
+            <td width="10%" class="text-nowrap">題目</td>
+            <td width="15%" class="text-nowrap">題目類型</td>
+            <td width="32%" class="text-nowrap">回答</td>
+            <td width="32%" class="text-nowrap">備註</td>
+          </tr>
+        </thead>
+        <tbody id="questionnaire_b">
+          {{assign var="snum" value="1"}}
+          {{foreach from=$tv_work_q_b_row key=k item=v}}
+            <tr>
+              <td class="text-center">{{$snum}}</td>
+              <td class="text-center"><span class="">{{$v.qb_order|default:''}}</span></td>
+              <td class="text-left"><span class="">{{$v.qb01|default:''}}</span></td>
+              <td class="text-left"><span class="">{{$v.qb02_str|default:''}}</span></td>
+              <td class="text-left">
+                <span class="">
+                  {{if $v['qb02'] != 3}}
+                    {{foreach from=$v.wqb01_arr key=k_wqb item=v_wqb name=wqb}}
+                        {{$v.qb03_arr[$v_wqb]}}
+                        {{if not $smarty.foreach.wqb.last}}、{{/if}}
+                    {{/foreach}}
+                  {{else}}
+                    {{$v['wqb01']}}
+                  {{/if}}
+                </span>
+              </td>
+              <td class="text-left"><span class="">{{$v.wqb99|default:''}}</span></td>
+            </tr>
+            {{assign var="snum" value="{{$snum+1}}"}}
+            {{foreachelse}}
+            <tr>
+              <td colspan="99" class="alert alert-warning">
+                  查無資料!!!
+              </td>
+            </tr>
+            {{/foreach}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

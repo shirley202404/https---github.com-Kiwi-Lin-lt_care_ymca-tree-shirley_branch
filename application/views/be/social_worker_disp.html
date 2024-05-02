@@ -1,0 +1,119 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>社工資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">員工管理</a></li>
+        <li class="breadcrumb-item"><a href="#">社工資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_social_worker_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_social_worker_row->b_acc_name|default:''}}({{$tv_social_worker_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_social_worker_row->e_acc_name|default:''}}({{$tv_social_worker_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">姓名</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw01_mask|default:''}}{{$tv_social_worker_row->sw02_mask|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">所屬權限</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->acg_name|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">身份證字號</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw03_mask|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">性別</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw04_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">員工編號</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw05|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">Email Address</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw06|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">到職日</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw08_start|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">離職日</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw08_end|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">年資</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw09|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">手機門號</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw10_mask|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">負責區域</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw20|default:''}}{{$tv_social_worker_row->sw21|default:''}}{{$tv_social_worker_row->sw22|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">是否具送餐員身分</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw30_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">備註</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_social_worker_row->sw99|default:''}}</span></td>
+          </tr>		
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              <span class="text-dark">
+              {{if '1'==$tv_social_worker_row->is_available}}
+                是
+              {{else}}
+                否
+              {{/if}}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 class="bg-secondary text-white text-center">負責區域</h2>
+      <table class="table table-bordered table-hover table-sm">
+        <thead>
+          <tr class="thead-light">
+            <td width="10%" class="text-nowrap">序</td>
+            <td width="90%" class="text-nowrap">負責區域</td>
+          </tr>
+        </thead>
+        <tbody id="sw_ra">
+          {{foreach from=$tv_sw_ra_row key=k item=v}}
+            <tr>
+              <td>{{$v@iteration}}</td>
+              <td>{{$v.sw_ra01}}{{$v.sw_ra02}}{{$v.sw_ra03}}</td>
+            </tr>
+          {{/foreach}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

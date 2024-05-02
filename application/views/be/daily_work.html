@@ -1,0 +1,642 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<link href='{{$tv_pub_url}}/fullcalendar/main.css' rel='stylesheet' />
+<script src='{{$tv_pub_url}}/fullcalendar/main.js'></script>
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+
+<script>
+  $(function() {
+    var month_arr = [];
+    var data_arr = [];
+    month_arr.push("{{$tv_month}}");
+    data_arr.push({{$tv_date}});    
+
+    function modal_open(obj) {
+      $(this).prop('disabled',true); // 關閉儲存按鈕
+      $('#save_info_progress').show();
+      $('.pop-save_info').modal({
+        backdrop: "static",
+        keyboard: false
+      });
+    }
+    
+    function info_modal(rs , rs_str) {
+      $('#save_info_progress').hide();
+      $('#save_info_str').show();
+      if(rs=='ok') {
+        $('#save_info_btn').data('rs_flag','ok');
+        $('#save_info_str').html(rs_str + "成功");
+      }
+      else {
+        $('#save_info_btn').data('rs_flag','ng');
+        $('#save_info_str').html(rs_str + "失敗");
+      }
+      $('#save_info_btn').show();
+    }
+    
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      contentHeight: "auto",
+      initialView: "dayGridMonth", //日曆載入時的初始檢視
+      timeZone: 'UTC',//時區
+      editable: false,//是否可以修改日曆事件
+      title: false,
+      selectable: true,
+      eventStartEditable:false,//允許事件的開始時間可通過拖動進行編輯
+      eventDurationEditable:false,//允許通過調整大小來更改事件的持續時間
+      themeSystem: 'bootstrap',//主題
+      locale: 'zh',//語言
+      customButtons: { // 更新整個月份訂單狀況
+        update: {
+          text: '一鍵更新',
+          click: function() {
+            var date = calendar.getDate();
+            var year = date.getFullYear();
+            var month = ckh_date(date.getMonth()+1);
+            var q = year + '-' + month;
+            $("#upd_str").html(month + '月');
+            $("#q_month").val(q);
+            $("#q_type").val('month');
+            $('.pop-upd_info').modal('show');
+          }
+        }
+      },
+      headerToolbar: {//頭部工具欄
+        start: '',
+        center: 'title',
+        right: 'prev,next',
+        left: 'update today',
+      },
+      // 切換月份時切換的事件
+      datesSet: function(info) {
+        // info 包含有關可見日期範圍的信息
+        var month = info.view.currentStart.toISOString().substr(0, 7); // 格式化为"YYYY-MM"
+        if(!month_arr.includes(month)) {
+          $.ajax({
+            type:'post',
+            url: "{{$tv_que_meal_order_status_link|default:''}}",
+            data: {que_month: month},
+            error: function() {
+              err_msg = 'Ajax request發生錯誤[{{$tv_produce_meal_order_link}}]:'+xhr+'\n請重試';
+              alert(err_msg);
+            },
+            success: function (rs) {
+              rs = JSON.parse(rs);
+              if(rs != null) {
+                calendar.addEventSource(rs);
+                calendar.refetchEvents(); // 重新渲染事件
+                data_arr.push(rs);            
+              }
+              month_arr.push(month);            
+            }
+          });
+        }
+      },
+      dateClick:  function(info) {
+        var event_text = info.dayEl.innerText;
+        if(!event_text.includes("{{$tv_js_judgment|default:''}}")) {
+          $("#produce_meal_order").prop("disabled" , false);
+        }
+        else {
+          $("#produce_meal_order").prop("disabled" , true);
+          // alert("訂單已生產過!!!");
+        }
+        var date = new Date(info.date);
+        var year = date.getFullYear();
+        var month = ckh_date(date.getMonth()+1);
+        var date = ckh_date(date.getDate());
+        var bk_date_str  = year+'-'+month+'-'+date;
+        $(".date_str").text(month + '/' + date + " ");
+        $("#produce_date").val(info.dateStr);
+        $("#produce_date_str").val(month + '/' + date);
+        $(".route").val(month + '/' + date);
+        $('.pop-container').modal('show'); 
+        if('{{$tv_today}}' != bk_date_str) {
+          $(".route").prop("disabled" , true);
+        }
+        else {
+          $(".route").prop("disabled" , false);
+        }
+        $('#hah01').val(bk_date_str);
+      },
+      select: function(info) { // 更新選擇區間訂單狀況
+        var start_date_val = info.startStr;
+        var end_date = info.endStr;
+        end_date = new Date(end_date);
+        end_date = end_date.setDate(end_date.getDate() - 1);
+        end_date = new Date(end_date);
+        end_date_val = end_date.getFullYear() + '-' + ckh_date(end_date.getMonth()+1) + '-' + ckh_date(end_date.getDate());
+        if(start_date_val != end_date_val) {
+          $("#q_start_date").val(start_date_val);
+          $("#q_end_date").val(end_date_val);
+          start_date = new Date(start_date_val);
+          var upd_str = ckh_date(start_date.getMonth()+1) + '/' + ckh_date(start_date.getDate()) + '~' + ckh_date(end_date.getMonth()+1) + '/' + ckh_date(end_date.getDate());
+          $("#upd_str").html(upd_str);
+          $("#q_type").val('date');
+          $('.pop-upd_info').modal('show');
+        }
+      },
+      buttonText:{//按鈕文字
+        today:    '今天',
+        month:    '月',
+        week:     '周',
+        day:      '天',
+      },
+      events: {{$tv_date}},
+    });
+    calendar.render(); 
+
+    $(".btn_send").click(function() {
+      modal_open(this);
+      var err_msg = '';
+      var produce_time = $(this).data("produce_time");
+      var produce_date = $("#produce_date").val();
+      var produce_date_str = $("#produce_date_str").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_produce_link}}',
+        data:{produce_type:'send', 
+              produce_time:produce_time,
+              produce_date:produce_date
+            },
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_produce_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          info_modal(rs , produce_date_str + "配送單(外)產生");
+        }
+      })
+      return;
+    });
+        
+    $(".btn_meal").click(function() {
+      modal_open(this);
+      var err_msg = '';
+      var produce_time = $(this).data("produce_time");
+      var produce_date = $("#produce_date").val();
+      var produce_date_str = $("#produce_date_str").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_produce_link}}',
+        data:{produce_type:'meal' ,               
+              produce_time:produce_time,
+              produce_date:produce_date
+             },
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_produce_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          info_modal(rs , produce_date_str + "餐點生產單產生");
+        }
+      })
+      return;
+    });
+    
+    $("#produce_meal_order").click(function() { // 先彈出訂單類型
+      $('.pop-order_info').modal('show');
+    });
+    
+    $('#order_info_btn').click(function() { // 確認訂單類型後
+      modal_open(this);
+      $("#produce_meal_order").prop('disabled', true);
+      $('.pop-order_info').modal('hide');
+      var mlo_dt02 = $("#mlo_dt02").val(); // 訂單類型
+      var mlo_dt03 = $("#mlo_dt03").val(); // 補班日期
+      var produce_date = $("#produce_date").val();
+      var produce_date_str = $("#produce_date_str").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_produce_meal_order_link}}',
+        data:{produce_date:produce_date, 
+              mlo_dt02:mlo_dt02, 
+              mlo_dt03:mlo_dt03
+             },
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_produce_meal_order_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          info_modal(rs , produce_date_str + "訂單產生");
+          if(rs == 'ok') {
+            $("#produce_meal_order").prop("disabled" , true);
+            var event_data = {'title': "訂單已產生",
+                              'start': produce_date,
+                              'allDay': true,
+                              'display': "background",
+                              'is_produce': "0"
+                             };
+            calendar.addEvent(event_data);
+            calendar.render();
+          }
+          else {
+            $("#produce_meal_order").prop("disabled" , false);
+          }
+        }
+      })
+      return;
+    });
+    
+    $('#order_info_close_btn').click(function() { // 關閉訂單類型modal
+      $('#mlo_dt02').val(1);
+      $('#mlo_dt03').val('');
+      $('.pop-order_info').modal('hide');
+      return;
+    });
+        
+    $("#add_meal_order").click(function() {
+      modal_open(this);
+      var produce_date = $("#produce_date").val();
+      var produce_date_str = $("#produce_date_str").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_add_meal_order_link}}',
+        data:{produce_date:produce_date},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_add_meal_order_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs != 'none') {
+            info_modal(rs , produce_date_str + "補訂單");
+          }
+          else {
+            alert("無新案主須補單");
+            location.href = "{{$tv_return_link}}";
+          }
+        }
+      })
+      return;
+    });
+    
+    $(".log_confirm").click(function(){
+      modal_open(this);
+      var produce_time = $(this).data("produce_time");
+      var produce_date = $("#produce_date").val();
+      var produce_date_str = $("#produce_date_str").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_log_confirm_link}}',
+        data:{produce_time:produce_time,
+              produce_date:produce_date},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_log_confirm_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          info_modal(rs , produce_date_str + "異動確認");
+        }
+      })
+      return;
+    });
+  
+    function ckh_date(val) {
+      if(val < 10) {
+        return "0"+val;
+      }
+      return val;
+    }
+          
+    $('#save_info_btn').click(function() {
+      var rs_flag = $('#save_info_btn').data('rs_flag');
+      $('#save_info_btn').hide();
+      $('#save_info_str').hide();
+      $('.pop-save_info').modal('hide');
+    });
+  
+    $("#mlo_dt02").change(function(){
+      if($(this).val() == "3") {
+        $("#mlo_dt03_div").show();
+        $("#mlo_dt03").val('');
+      }
+      else {
+        $("#mlo_dt03_div").hide();
+      }
+    });
+    
+    $("#upd_info_btn").click(function() {
+      var q_type = $("#q_type").val();
+      var q_month = $("#q_month").val();
+      var q_start_date = $("#q_start_date").val();
+      var q_end_date = $("#q_end_date").val();
+      $(".pop-upd_proccess").modal("show");
+      $.ajax({
+        type:'post',
+        url: '{{$tv_upd_meal_order_link}}',
+        data: {q_type:q_type , q_month:q_month , q_start_date:q_start_date , q_end_date:q_end_date},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_upd_meal_order_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $('#upd_info_progress').hide();
+          $("#upd_info_close_btn").show();
+          $("#upd_result").show(rs);
+          $("#upd_result").append(rs);
+        }
+      });
+    });
+    
+    $('#upd_info_close_btn').click(function() { // 關閉訂單類型modal
+      $('#upd_result').html('');
+      $('.pop-upd_proccess').modal('hide');
+      location.href = "{{$tv_return_link}}";
+    });
+    
+    $(".fc-update-button").removeClass("btn-primary");
+    $(".fc-update-button").addClass("btn-C2");
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>每日工作單</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">作業專區</a></li>
+        <li class="breadcrumb-item"><a href="#">每日工作單</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+     {{*
+    <div class="alert alert-danger" role="alert">
+      程式尚未完成，請勿使用!!!
+    </div>
+    *}}
+    <!-- 篩選＆搜尋表格 -->
+    <div class="table-filter">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content  modal-C1 ">
+          <div class="text-center paT20">
+            <h2 class="">訂單產生狀況一覽</h2>
+          </div>
+          <div class="modal-body">
+            <div id='calendar'></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 篩選＆搜尋表格 -->
+  </div>
+  {{*
+  <!-- 生產訂單狀況 -->
+  <div class="modal fade pop-que" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+      <div class="modal-content modal-C1 ">
+        <div class="text-center paT20">
+          <h2>訂單產生狀況一覽 </h2>
+        </div>
+        <div class="modal-body">
+          <div id='calendar'></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  *}}
+  <!-- 生產訂單狀況 end-->
+
+  <!-- 訂單產生modal Begin -->
+  <div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paT20">
+          <h2><span class="date_str"></span>訂單產生</h2>
+        </div>
+        <div class="modal-body text-left">
+          <table class="table xtable-bordered table-hover table-sm">
+            {{assign var="swidth_left" value="col-3"}}
+            {{assign var="swidth_right" value="col-9"}}
+            <tbody>
+              <input type="hidden" id="produce_date" name="produce_date" value="" />
+              <input type="hidden" id="produce_date_str" value="" />
+              <div align="center">
+                <div class="col-12">
+                  <button id="produce_meal_order" class="btn btn-primary col-5" align="center"><span style="font-size: 10pt;">訂單產生</button>
+                  <button id="add_meal_order" class="btn btn-warning col-5" align="center"><span style="font-size: 10pt;">補訂單</button>
+                </div>
+                <div class="maT5"></div>
+                <div class="maT5"></div>
+                <div class="col-12">
+                  <button type="button" data-produce_time="1" class="log_confirm btn btn-info col-5" align="center"><span style="font-size: 10pt;"><i class="fas fa-sun"></i> 早上異動確認 </button>
+                  <button type="button" data-produce_time="2" class="log_confirm btn btn-success col-5" align="center"><span style="font-size: 10pt;"><i class="fas fa-moon"></i> 晚上異動確認</i></button>
+                </div>
+                <div class="maT5"></div>
+                <div class="col-12">
+                  <button type="button" data-produce_time="1" class="btn_send btn btn-C1 col-5" align="center"><span style="font-size: 10pt;"><i class="fas fa-sun"></i> 早上配送單產生</button>
+                  <button type="button" data-produce_time="2" class="btn_send btn btn-C2 col-5" align="center"><span style="font-size: 10pt;"><i class="fas fa-moon"></i> 晚上配送單產生</button>
+                </div>
+                <div class="maT5"></div>
+                <div class="col-12">
+                  <button type="button" data-produce_time="1" class="btn_meal btn btn-C3 col-5" align="center"><span style="font-size: 10pt;"><i class="fas fa-sun"></i> 早上餐條產生</button>
+                  <button type="button" data-produce_time="2" class="btn_meal btn btn-C4 col-5" align="center"><span style="font-size: 10pt;"><i class="fas fa-moon"></i> 晚上餐條產生</button>
+                </div>
+                <div class="maT5"></div>
+                <div class="maT5"></div>
+                <div class="col-12">
+                  <div class="alert alert-info col-10 text-left" role="alert">
+                    ※ 1. 請先產生<span class="text-danger">今日訂單</span><br/>
+                    ※ 2. 再進行  <span class="text-danger"><span class="date_str"></span></span>早上及晚上異動確認<br/>
+                    ※ 3. 最後產生 <span class="text-danger"><span class="date_str"></span></span>早上及晚上配送單(外)、餐點生產單。<br>
+                    ※ 4. 如訂單已經生產，但有新開案案主，需補訂單，請按<span class="text-danger">"補訂單功能"</span>，並且再次執行步驟1~3<br>
+                  </div>
+                </div>
+                </div>
+              </tbody>
+            </table>
+          </div>
+        </div>
+    </div>
+  </div>
+  <!-- 訂單產生modal end-->
+  
+  <!-- 訂單類型 Begin-->
+  <div class="modal fade pop-order_info" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+        <div class="modal-body text-center paTB20">
+          <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+            <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i> 訂單類型選擇</h1>
+            <div class="text-left mb-2" id="mlo_dt02_div">
+              <label for="mlo_dt02">訂單類型</label>
+              <select id='mlo_dt02' name='mlo_dt02' data-placeholder='-請選擇或輸入訂單類型-' class='col-12 form-control form-control-sm' required>
+                {{foreach from=hlp_opt_setup("mlo_dt02", null, "get") key=k item=v}}
+                  <option value='{{$k}}'>{{$v}}</option>
+                {{/foreach}}
+              </select>
+            </div>
+            <div class="text-left mb-2" id="mlo_dt03_div" style="display:none;">
+              <label for="mlo_dt03">補班日期</label>
+              <input type='text' id='mlo_dt03' name='mlo_dt03' class='col-12 form-control form-control-sm form_date' placeholder='請輸入補班日期' value=''>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" id="order_info_btn" class="btn btn-primary">確定</button>
+          <button type="button" id="order_info_close_btn" class="btn btn-C2">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 訂單類型 End-->
+  
+  <!-- 資料處理訊息 Begin-->
+  <div class="modal fade pop-save_info" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+        <div class="modal-body text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i> 資料處理狀態</h1>
+          <div id="save_info_str" style="display:none;"></div>
+          <div id="save_info_progress" style="display:none;">
+            <div class="progress progress-striped active">
+               <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">
+                <span>資料處理中，請稍候...</span>
+               </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" id="save_info_btn" class="btn btn-C1" style="display:none;" data-rs_flag="ok">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 資料處理訊息 End-->
+  
+  <!-- PDM資料上傳Begin -->
+  <div class="modal fade pop-upload" id="pop-upload" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-top modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <!-- Heading -->
+          <h2 class="">善耕資料上傳</h2>
+            <button type="button" class="close file_close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Form -->         
+          <form class="p-2 row" id="file_input" name="file_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+            <div class="col-12 col-sm-12 d-inline">
+              <div class="form-group">
+                <a href='javascript:;' class='file maT10'>選擇檔案
+                  <input text='hidden' id='hah01' name='hah01' value=''>
+                  <input text='hidden' id='hah02' name='hah02' value=''>
+                  <input type='file' class="hah02_file" data-url='{{$tv_upload_link}}'>
+                  <i class='fa fa-upload' aria-hidden='true'></i>
+                </a>
+              </div>
+              <div class="row">
+                <div class="col-sm-12 col-xs-12">
+                  <div id="progress_hah02_file" class="progress">
+                    <div class="progress-bar progress-bar-success"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="file_save" class="btn btn-primary">確認上傳</button>
+          <button type="button" id="modal_close" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- PDM資料上傳END -->
+  
+  <!-- 匯入資訊視窗彈出 -->
+  <div class="modal fade pop-import" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+      <div class="modal-content  modal-C1">
+        <div class="modal-body">
+          <div class="text-center paTB20">
+            <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i> 善耕資料匯入結果</h1>          
+            <span id="show_import_info"></span>
+          </div>
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" id="show_import_info_btn" class="btn btn-C1" data-dismiss="modal" style="display:none">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 匯入資訊視窗彈出 end-->
+  
+  <!-- 更新確認彈出 -->
+  <div class="modal fade pop-upd_info" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          是否確認更新<span id="upd_str"></span>的資料呢?        
+        </div>
+        <div class="modal-footer text-center">
+           <input type='hidden' id='q_type' name='q_type' placeholder='' value=''>
+           <input type='hidden' id='q_month' name='q_month' placeholder='' value=''>
+           <input type='hidden' id='q_start_date' name='q_start_date' placeholder='' value=''>
+           <input type='hidden' id='q_end_date' name='q_end_date' placeholder='' value=''>
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="upd_info_btn" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 更新確認彈出 end-->
+  
+  <!-- 一鍵更新 Begin-->
+  <div class="modal fade pop-upd_proccess" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" role="document">
+      <div class="modal-content  modal-C1">
+        <div class="modal-body text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB20" aria-hidden="true"></i> 補訂單狀況一覽</h1>
+          <div id="upd_info_progress">
+            <div class="progress progress-striped active">
+               <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">
+                <span>資料處理中，請稍候...</span>
+               </div>
+            </div>
+          </div>
+          <div class="table-responsive text-center" id="upd_result" style="display:none;"> 
+          </div>
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" id="upd_info_close_btn" class="btn btn-C1" style="display:none;" data-rs_flag="ok">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 一鍵更新 End-->
+  
+  {{* 異動更新資料初版 Mark by Kiwi 20210929
+  <!-- 訂單類型 Begin-->
+  <div class="modal fade pop-upd_info" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content  modal-C1">
+        <div class="modal-body text-center paTB20">
+          <form class="maT20" id="fd_upd_info" name="fd_upd_info" method="POST" enctype="multipart/form-data" data-toggle="validator">
+            <input type='hidden' id='q_type' name='q_type' placeholder='' value=''>
+            <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i>更新資料</h1>
+          </form>
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" id="upd_info_btn" class="btn btn-primary">確定</button>
+          <button type="button" id="upd_info_close_btn" class="btn btn-C2">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 訂單類型 End-->
+  *}}
+</div>
+

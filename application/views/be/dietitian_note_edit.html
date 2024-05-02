@@ -1,0 +1,510 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<script src="{{$tv_pub_url}}/js/jquery-ui/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/js/jquery-ui/jquery-ui.min.css">
+<style>
+  .pagination {
+    z-index:99999;
+    position:fixed;
+    bottom: 10px;
+    opacity:1;
+    box-shadow:5px 5px 5px 0px #7777778e;
+    margin: 0px; 
+  }
+  .pagination li a {
+    color: #676a6c; 
+  }
+  .pagination li.active a {
+    background-color: #1ABC9C;
+    border: 1px solid #1ABC9C; 
+  }
+  .pagination li.active a:hover {
+    background-color: #17a689;
+    border: 1px solid #17a689; 
+  }
+  .fixed-dialog{
+    position: fixed;
+  }
+</style>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+
+    // dnt刪除 Begin //
+    $(document).on("click", ".dnt_del", function () {
+      var dnt_s_num = $(this).data('dnt_s_num');
+      $(".pop-dnt_del #f_del_s_num").val(dnt_s_num);
+    });
+        
+    $(document).on('click',"#dnt_del",function() {
+      var dnt_s_num = $(".pop-dnt_del #f_del_s_num").val();
+      $('#dnt_table_'+dnt_s_num).remove();
+      $(this).dnt_item_reset();
+      return;
+    });
+    // dnt刪除 End //
+    
+    $('.add_dnt_row').click(function(){
+      $(this).dnt_add_row(1);
+      return;
+    });
+    
+    // 重新顯示欄位的序1,2,3... Begin //
+    $.fn.dnt_item_reset = function() {
+      var item_num = 1;
+      $('.dnt_item').each(function() {
+        $(this).text(item_num);
+        item_num++;
+      })
+    }
+    // 重新顯示欄位的序1,2,3... End //
+
+    // 新增x筆明細 Begin //
+    $.fn.dnt_add_row = function(add_qty) {
+      var wfn_cnt = eval($('#std_dnt_cnt').val()); // 目前的筆數，刪除資料這裡不會減少數量，避免id重複
+      for (i = 1; i <= add_qty; i++) {
+        var snum = wfn_cnt+i; // 目前的筆數，刪除資料這裡不會減少數量，避免id重複        
+        var new_add_dnt_row = $('#dnt_table_STD_SNUM')[0].outerHTML;
+        var add_dnt_row = replaceAll(new_add_dnt_row,'STD_SNUM',snum);
+        var add_dnt_row = replaceAll(add_dnt_row,'STD_ITEM','dnt_item');
+        $('#std_dnt_cnt').val(snum);
+        std_dnt_cnt = eval($('#std_dnt_cnt').val());
+        $('#dietitian_track_div').append(add_dnt_row);
+      }
+      $(this).dnt_item_reset();
+      $(".form_date").datetimepicker({
+        locale: 'tw',
+        format: 'YYYY-MM-DD',
+        showTodayButton: true,
+        showClear: true,
+        showClose: true,
+        allowInputToggle: true,
+        tooltips: {
+            today: '今天',
+            clear: '清除',
+            close: '關閉',
+            selectMonth: '選取月',
+            prevMonth: '上個月',
+            nextMonth: '下個月',
+            selectYear: '選擇年',
+            prevYear: '上一年',
+            nextYear: '下一年',
+            selectDecade: '選取十年',
+            prevDecade: '上十年',
+            nextDecade: '下十年',
+            prevCentury: '上世紀',
+            nextCentury: '下世紀'
+        },
+        icons: {
+          time: 'far fa-clock',
+          date: 'far fa-calendar',
+          up: 'fas fa-arrow-up',
+          down: 'fas fa-arrow-down',
+          previous: 'fas fa-chevron-left',
+          next: 'fas fa-chevron-right',
+          today: 'fas fa-calendar-check',
+          clear: 'far fa-trash-alt',
+          close: 'far fa-times-circle'
+        }
+      });
+    }
+    // 新增x筆明細 End //
+
+    $("input[name='dnn02_opt']").change(function() { 
+      var object = [];
+      $("input[name='dnn02_opt']:checked").each(function(){
+        object.push($(this).val());
+      });
+      object = object.join(',');
+      $('#dnn02').val(object);
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>照會營養師</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">個案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">照會營養師</a></li>
+        <li class="breadcrumb-item active">修改</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel == 'add' }}
+        <input type="hidden" id="dnn01_source_s_num" name="dnn[dnn01_source_s_num]" value="{{$tv_dietitian_note_row->dnn01_source_s_num|default:"{{$tv_dnn01_source_s_num}}"}}">
+        <input type="hidden" id="dnn01_source_type" name="dnn[dnn01_source_type]" value="{{$tv_souce|default:"{{$tv_source}}"}}">
+      {{/if}}
+      {{if $tv_msel == 'upd' }}
+        <input type="hidden" id="s_num" name="dnn[dnn_s_num]" value="{{$tv_dietitian_note_row->dnn_s_num|default:''}}">
+      {{/if}}
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-note-tab" data-toggle="tab" href="#nav-note" role="tab" aria-controls="nav-note" aria-selected="true">照會營養師</a>
+          <a class="nav-item nav-link" id="nav-track-tab" data-toggle="tab" href="#nav-track" role="tab" aria-controls="nav-track" aria-selected="false">追蹤紀錄</a>
+          {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+            <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+              <div class="float-right">建檔:<span class="mainC1">{{$tv_dietitian_note_row->b_acc_name|default:''}}({{$tv_dietitian_note_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_dietitian_note_row->e_acc_name|default:''}}({{$tv_dietitian_note_row->e_date|default:""}})</span></div>
+            </span>
+          {{/if}}
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-note" role="tabpanel" aria-labelledby="nav-note-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="20%"}}
+              {{assign var="swidth_right" value="80%"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>案主姓名</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span>{{$tv_dietitian_note_row->ct01|default:''}}{{$tv_dietitian_note_row->ct02|default:''}}</span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>異動項目</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span>
+                      {{if 'meal' == $tv_source}}
+                        餐食異動
+                      {{else}}
+                        照會營養師
+                      {{/if}}
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>異動備註</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span>{{$tv_dietitian_note_row->mil99|default:''|nl2br}}{{$tv_dietitian_note_row->ocl99|default:''|nl2br}}</span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>營養師回覆</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <input type="hidden" id="dnn02" name="dnn[dnn02]" value="{{$tv_dietitian_note_row->dnn02|default:''}}">
+                    <table class="table table-sm">
+                      {{assign var="swidth_left_2" value="10%"}}
+                      {{assign var="swidth_right_2" value="90%"}}
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' colspan="2"><input type="checkbox" name="dnn02_opt" value="1" {{if in_array(1, $tv_dietitian_note_row->dnn02_arr)}} checked {{/if}}>&nbsp&nbsp無需處理</td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}'>
+                          <input type="checkbox" name="dnn02_opt" value="2" {{if in_array(2, $tv_dietitian_note_row->dnn02_arr)}} checked {{/if}}>&nbsp&nbsp原因&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                        </td>
+                        <td width='{{$swidth_right_2}}'>
+                          <textarea id='dnn02_02_memo' class='form-control form-control-sm' name='dnn[dnn02_02_memo]' rows='2'>{{$tv_dietitian_note_row->dnn02_02_memo|default:''}}</textarea>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}'>
+                          <input type="checkbox" name="dnn02_opt" value="3" {{if in_array(3, $tv_dietitian_note_row->dnn02_arr)}} checked {{/if}}>&nbsp&nbsp照會單位
+                        </td>
+                        <td width='{{$swidth_right_2}}'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='dnn[dnn02_03_opt]' value='1' {{if $tv_dietitian_note_row->dnn02_03_opt|default:0==1}} checked {{/if}}> 社工組
+                            <input type='radio' name='dnn[dnn02_03_opt]' value='2' {{if $tv_dietitian_note_row->dnn02_03_opt|default:0==2}} checked {{/if}}> 膳務組
+                            <input type='radio' name='dnn[dnn02_03_opt]' value='3' {{if $tv_dietitian_note_row->dnn02_03_opt|default:0==3}} checked {{/if}}> 倉管組
+                            <input type='radio' name='dnn[dnn02_03_opt]' value='4' {{if $tv_dietitian_note_row->dnn02_03_opt|default:0==4}} checked {{/if}}> 行政組
+                            <input type='radio' name='dnn[dnn02_03_opt]' value='5' {{if $tv_dietitian_note_row->dnn02_03_opt|default:0==5}} checked {{/if}}> 交通組
+                            <input type='radio' name='dnn[dnn02_03_opt]' value='6' {{if $tv_dietitian_note_row->dnn02_03_opt|default:0==6}} checked {{/if}}> 志工組  
+                          </span>                     
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}'>
+                          <input type="checkbox" name="dnn02_opt" value="4" {{if in_array(4, $tv_dietitian_note_row->dnn02_arr)}} checked {{/if}}>&nbsp&nbsp連結&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                        </td>
+                        <td width='{{$swidth_right_2}}'>
+                          <span class='form-control form-control-sm'>
+                            {{if meal == $tv_source}}
+                              {{if NULL == $tv_service_case_complaint_row}}
+                                <a href="{{$tv_service_case_complaint_add_link}}?que_mil_h_s_num={{$tv_dnn01_source_s_num}}" target="_blank">客訴單</a>
+                              {{else}}
+                                <a href="{{$tv_service_case_complaint_upd_link}}/{{$tv_service_case_complaint_row->s_num}}" target="_blank">客訴單</a>
+                              {{/if}}
+                            {{else}}
+                              {{if NULL == $tv_service_case_complaint_row}}
+                                <a href="{{$tv_service_case_complaint_add_link}}?que_ocl_h_s_num={{$tv_dnn01_source_s_num}}" target="_blank">客訴單</a>
+                              {{else}}
+                                <a href="{{$tv_service_case_complaint_upd_link}}/{{$tv_service_case_complaint_row->s_num}}" target="_blank">客訴單</a>
+                              {{/if}}
+                            {{/if}}
+                          </span>                         
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="nav-track" role="tabpanel" aria-labelledby="nav-track-tab">
+          <div class="table-responsive" id="dietitian_track_div" style="overflow: visible;">
+            {{assign var="snum" value="1"}}
+            <input type="hidden" id='std_dnt_cnt' value="{{$tv_dietitian_track_row|default:'1'|count}}">
+            {{foreach from=$tv_dietitian_track_row key=k item=v}}
+              <table class="table table-bordered table-hover table-sm" id="dnt_table_{{$snum}}" data-item="{{$snum}}">
+                <input type='hidden' id='s_num_{{$snum}}' name='dnt[{{$snum}}][s_num]' value='{{$v.s_num}}'>
+                <span class="dnt_item" style="display:none;">{{$snum}}</span>
+                <tr class='d-flex'>
+                  <td class="text-right" style="border: 1px solid Transparent!important;">
+                    <button type='button' class='btn btn-C2 btn-sm dnt_del' data-dnt_s_num='{{$snum}}' data-toggle='modal' data-target='.pop-dnt_del'>{{$tv_del_btn}}</button>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤日期</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='dnt01_{{$snum}}' name='dnt[{{$snum}}][dnt01]' class='form-control form-control-sm' placeholder='請輸入追蹤日期' value='{{$v.dnt01|default:''}}' >
+                      </div>
+                      <span id='helpBlock_dnt01_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤項目</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dnt02_{{$snum}}' name='dnt[{{$snum}}][dnt02]' class='form-control form-control-sm' placeholder='請輸入追蹤項目' value='{{$v.dnt02|default:''}}' >
+                      <span id='helpBlock_dnt02_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤情形</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='dnt03_{{$snum}}' name='dnt[{{$snum}}][dnt03]' class='form-control form-control-sm' placeholder='請輸入追蹤情形' rows='3' >{{$v.dnt03|default:''}}</textarea>
+                      <span id='helpBlock_dnt03_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>是否持續追蹤</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <span class="form-control form-control-sm">
+                        <input type="radio" name="dnt[{{$snum}}][dnt04_type]" value="1" {{if $v.dnt04_type|default:1==1}} checked {{/if}}> 持續追蹤
+                        <input type="radio" name="dnt[{{$snum}}][dnt04_type]" value="99" {{if $v.dnt04_type|default:0==99}} checked {{/if}}> 結案
+                      </span>
+                    </span>  
+                    <span id='helpBlock_dnt04_type_{{$snum}}' class='help-block'>
+                      追蹤標準:<br/>
+                      1.針對個案質地與疾病飲食上需間隔一個月後做一次追蹤<br/>
+                      2.90天內須完成一次追蹤<br/>
+                    </span>
+                    <div class='help-block with-errors'></div>
+                  </span>    
+                  </td>
+                </tr>
+              </table>
+              {{assign var="snum" value="{{$snum+1}}"}}
+            {{/foreach}}
+            <script>
+              $(function(){
+                $(this).dnt_add_row(1); // 預設再多1筆空白
+              });
+            </script>
+          </div>
+          <ul class="pagination justify-content-center pagination-sm">
+            <button class="btn btn-warning btn-sm add_dnt_row" type="button">新增追蹤紀錄 <i class="fa fa-plus" aria-hidden="true"></i></button>
+          </ul>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- dnt 明細刪除確認彈出 -->
+  <div class="modal fade pop-dnt_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="sw_ra_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="dnt_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- dnt 明細刪除確認彈出 end-->
+  {{*預先增加一筆空白資料，主要用來複製用。 Begin*}}
+  <div style="display:none;">
+    <table class="table table-bordered table-hover table-sm dnt_table" id="dnt_table_STD_SNUM" data-item="STD_SNUM">
+      <span class="STD_ITEM" style="display:none;"></span>
+      <input type='hidden' id='s_num_STD_SNUM' name='dnt[STD_SNUM][s_num]' value='0'>
+      <tr class='d-flex'>
+        <td class="text-right" style="border: 1px solid Transparent!important;">
+          <button type='button' class='btn btn-C2 btn-sm dnt_del' data-dnt_s_num='STD_SNUM' data-toggle='modal' data-target='.pop-dnt_del'>{{$tv_del_btn}}</button>
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤日期</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <div class='input-group form_date'>
+              <div class='input-group-prepend'>
+                <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+              </div>
+              <input type='text' id='dnt01_STD_SNUM' name='dnt[STD_SNUM][dnt01]' class='form-control form-control-sm' placeholder='請輸入追蹤日期' value='' >
+            </div>
+            <span id='helpBlock_dnt01_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤項目</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <input type='text' id='dnt02_STD_SNUM' name='dnt[STD_SNUM][dnt02]' class='form-control form-control-sm' placeholder='請輸入追蹤項目' value='' >
+            <span id='helpBlock_dnt02_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤情形</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <textarea id='dnt03_STD_SNUM' name='dnt[STD_SNUM][dnt03]' class='form-control form-control-sm' placeholder='請輸入追蹤情形' rows='3' ></textarea>
+            <span id='helpBlock_dnt03_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>是否持續追蹤</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <span class="form-control form-control-sm">
+              <input type="radio" name="dnt[STD_SNUM][dnt04_type]" value="1"> 持續追蹤
+              <input type="radio" name="dnt[STD_SNUM][dnt04_type]" value="99"> 結案
+            </span>
+          </span> 
+          <span id='helpBlock_dnt04_type_STD_SNUM' class='help-block'>
+            追蹤標準:<br/>
+            1.針對個案質地與疾病飲食上需間隔一個月後做一次追蹤<br/>
+            2.90天內須完成一次追蹤<br/>
+          </span>               
+        </td>
+      </tr>
+    </table>
+  </div>
+  {{*預先增加一筆空白資料，主要用來複製用。 End*}}
+</div>

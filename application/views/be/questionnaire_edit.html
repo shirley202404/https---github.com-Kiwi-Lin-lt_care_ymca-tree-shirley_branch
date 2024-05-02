@@ -1,0 +1,297 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+//    CKEDITOR.replace('qh10', { height: '300px', width: '100%'});
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+
+    // questionnaire_b 檔身刪除 Begin //
+    $(document).on("click", ".questionnaire_b_del", function () {
+      var questionnaire_b_s_num = $(this).data('questionnaire_b_s_num');
+      $(".questionnaire_b_del #f_del_s_num").val(questionnaire_b_s_num);
+    });
+    $(document).on('click',"#questionnaire_b_del",function() {
+      var questionnaire_b_s_num = $(".questionnaire_b_del #f_del_s_num").val();
+      $('#questionnaire_b_tr_'+questionnaire_b_s_num).remove();
+      return;
+    });
+    // questionnaire_b 檔身刪除 End //
+
+    
+    $('#questionnaire_b_add').click(function(){
+      $(this).questionnaire_b(5); // 新增5筆 questionnaire_b
+      return;
+    });
+    // 新增 questionnaire_b 明細 Begin //
+    $.fn.questionnaire_b = function(add_qty) {
+      if(!add_qty) {
+        var add_qty = 5;
+      }
+      var next_snum = eval($(".questionnaire_b_tr").last().data('snum'));
+      var add_questionnaire_b_input = "";
+      for(i=1;i<=add_qty;i++) {
+        if($.isNumeric(next_snum)) {
+          next_snum = next_snum+1;
+        }
+        else {
+          next_snum = 1;
+        }
+        //console.log(next_snum);
+        var questionnaire_b_s_num = 10000000+next_snum;
+        add_questionnaire_b_input += "<tr class='questionnaire_b_tr' id='questionnaire_b_tr_"+questionnaire_b_s_num+"' data-snum='"+next_snum+"'>";
+        add_questionnaire_b_input += "  <input type='hidden' id='questionnaire_b_s_num_"+questionnaire_b_s_num+"' name='questionnaire_b[s_num][]' value='0'>";
+        add_questionnaire_b_input += "  <td class='text-center'>"+next_snum+"</td>";
+        add_questionnaire_b_input += "  <td class='text-left'>";
+        add_questionnaire_b_input += "    <span class='form-group'>";
+        add_questionnaire_b_input += "      <input type='text' id='qb_order_"+questionnaire_b_s_num+"' name='questionnaire_b[qb_order][]' class='form-control form-control-sm' placeholder='' value='' >";
+        add_questionnaire_b_input += "      <span id='helpBlock_qb_order_"+questionnaire_b_s_num+"' class='help-block'></span>";
+        add_questionnaire_b_input += "      <div class='help-block with-errors'></div>";
+        add_questionnaire_b_input += "    </span>";
+        add_questionnaire_b_input += "  </td>";
+        add_questionnaire_b_input += "  <td class='text-left'>";
+        add_questionnaire_b_input += "    <span class='form-group'>";
+        add_questionnaire_b_input += "      <input type='text' id='qb01_"+questionnaire_b_s_num+"' name='questionnaire_b[qb01][]' class='col-12 form-control form-control-sm typeahead' placeholder='' value=''  data-s_num='"+questionnaire_b_s_num+"' autocomplete='off' data-provide='typeahead'>";
+        add_questionnaire_b_input += "      <span id='helpBlock_qb01_"+questionnaire_b_s_num+"' class='help-block'></span>";
+        add_questionnaire_b_input += "      <div class='help-block with-errors'></div>";
+        add_questionnaire_b_input += "    </span>";
+        add_questionnaire_b_input += "  </td>";
+        add_questionnaire_b_input += "  <td class='text-left'>";
+        add_questionnaire_b_input += "    <span class='form-group'>";
+        add_questionnaire_b_input += "      <select id='qb02_"+questionnaire_b_s_num+"' name='questionnaire_b[qb02][]' class='form-control form-control-sm' required>";
+        add_questionnaire_b_input += "        <option value='1'>單選題</option>";
+        add_questionnaire_b_input += "        <option value='2'>複選題</option>";
+        add_questionnaire_b_input += "        <option value='3'>問答題</option>";
+        add_questionnaire_b_input += "       </select>";
+        add_questionnaire_b_input += "      <div class='help-block with-errors'></div>";
+        add_questionnaire_b_input += "    </span>";
+        add_questionnaire_b_input += "  </td>";
+        add_questionnaire_b_input += "  <td class='text-left'>";
+        add_questionnaire_b_input += "    <span class='form-group'>";
+        add_questionnaire_b_input += "      <input type='text' id='qb03_"+questionnaire_b_s_num+"' name='questionnaire_b[qb03][]' class='form-control form-control-sm' placeholder='' value='' >";
+        add_questionnaire_b_input += "      <span id='helpBlock_qb03_"+questionnaire_b_s_num+"' class='help-block'></span>";
+        add_questionnaire_b_input += "      <div class='help-block with-errors'></div>";
+        add_questionnaire_b_input += "    </span>";
+        add_questionnaire_b_input += "  </td>";
+        add_questionnaire_b_input += "  <td class='text-right'>";
+        add_questionnaire_b_input += "    <button type='button' class='btn btn-C2 btn-xs questionnaire_b_del' data-questionnaire_b_s_num='"+questionnaire_b_s_num+"' data-toggle='modal' data-target='.pop-questionnaire_b_del'>{{$tv_del_btn}}</button>";
+        add_questionnaire_b_input += "  </td>";
+        add_questionnaire_b_input += "</tr>\n";
+      }
+      $('#questionnaire_b').append(add_questionnaire_b_input);
+    
+    // 新增 questionnaire_b 明細 End //
+    }
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>問卷資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">問卷管理</a></li>
+        <li class="breadcrumb-item"><a href="#">問卷資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_questionnaire_h_row->b_acc_name|default:''}}({{$tv_questionnaire_h_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_questionnaire_h_row->e_acc_name|default:''}}({{$tv_questionnaire_h_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="questionnaire_h[s_num]" value="{{$tv_questionnaire_h_row->s_num|default:'0'}}">
+      {{/if}}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>問卷名稱</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='qh01' name='questionnaire_h[qh01]' class='form-control form-control-sm' placeholder='請輸入問卷名稱' value='{{$tv_questionnaire_h_row->qh01|default:''}}' required>
+                  <span id='helpBlock_qh01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <h2 class="bg-secondary text-white text-center">問卷題目設定</h2>
+        <table class="table table-bordered table-striped table-hover table-sm">
+          <thead>
+            <tr class="thead-light">
+              <td width="02%"  class="text-nowrap">序</td>
+              <td width="08%" class="text-nowrap">排序</td>
+              <td width="08%" class="text-nowrap">題目</td>
+              <td width="15%" class="text-nowrap">題目類型</td>
+              <td width="25%" class="text-nowrap">題目選項</td>
+              <th width="08%" class="text-nowrap"></th>
+            </tr>
+          </thead>
+          <tbody id="questionnaire_b">
+            {{assign var="snum" value="1"}}
+            {{foreach from=$tv_questionnaire_b_row key=k item=v}}
+              <tr class="questionnaire_b_tr" id="questionnaire_b_tr_{{$v.s_num}}" data-snum="{{$snum}}">
+                <input type='hidden' id='questionnaire_b_s_num_{{$v.s_num}}' name='questionnaire_b[s_num][]' value='{{$v.s_num}}'>
+                <td class="text-center">{{$snum}}</td>
+                <td class="text-left">
+                  <span class='form-group'>
+                    <input type='number' min='0' step='any' id='qb_order_{{$v.s_num}}' name='questionnaire_b[qb_order][]' class='form-control form-control-sm' placeholder='請輸入排序' value='{{$v.qb_order|default:''}}' >
+                    <span id='helpBlock_qb_order_{{$v.s_num}}' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+                <td class='table-left'>
+                <span class='form-group'>
+                    <input type='text' id='qb01_{{$v.s_num}}' name='questionnaire_b[qb01][]' class='form-control form-control-sm' placeholder='請輸入問卷內容' value='{{$v.qb01|default:''}}' required>
+                    <span id='helpBlock_qb01_{{$v.s_num}}' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+                <td class='table-left'>
+                  <span class='form-group'>
+                    <select id='qb02_{{$v.s_num}}' name='questionnaire_b[qb02][]' class='form-control form-control-sm' required>
+                      <option value='' selected>-請選擇-</option>
+                      <option value='1'>單選題</option>
+                      <option value='2'>複選題</option>
+                      <option value='3'>問答題</option>
+                    </select>
+                    <span id='helpBlock_qb02' class='help-block'></span>
+                    <script>
+                      $('#qb02_{{$v.s_num}}').val('{{$v.qb02|default:''}}');
+                    </script>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+                <td class='table-left'>
+                  <span class='form-group'>
+                    <input type='text' id='qb03_{{$v.s_num}}' name='questionnaire_b[qb03][]' class='form-control form-control-sm' placeholder='請輸入問卷選項' value='{{$v.qb03|default:''}}' required>
+                    <span id='helpBlock_qb03_{{$v.s_num}}' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+                <td class="text-right">
+                  <button type='button' class='btn btn-C2 btn-xs questionnaire_b_del' data-questionnaire_b_s_num='{{$v.s_num}}' data-toggle='modal' data-target='.pop-questionnaire_b_del'>{{$tv_del_btn}}</button>
+                </td>
+              </tr>
+              {{assign var="snum" value="{{$snum+1}}"}}
+            {{/foreach}}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="8" class="text-left">
+                <button id="questionnaire_b_add" class="btn btn-warning btn-sm" type="button" data-add_qty="5">增加5筆明細 <i class="fa fa-plus" aria-hidden="true"></i></button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- questionnaire_b 明細刪除確認彈出 -->
+  <div class="modal fade pop-questionnaire_b_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="questionnaire_b_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="questionnaire_b_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- part_out_b 明細刪除確認彈出 end-->
+</div>

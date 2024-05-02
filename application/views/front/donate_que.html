@@ -1,0 +1,187 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta charset="utf-8">
+    <!--utf8 big5-->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!--IE6 7 8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=0.2, maximum-scale=2.0, user-scalable=yes">
+    <!---->
+    <!--  -->
+    <meta name="viewport" content="width=device-width, minimum-scale=0.2, maximum-scale=2.0, user-scalable=yes" />
+    <link rel="apple-touch-icon" href="{{$tv_pub_url}}/img/favicon.png" />
+    <title>弗傳慈心線上愛心芳名錄</title>
+    <!---->
+    <meta name="description" content="">
+    <!--:50-->
+    <meta name="keywords" content="buysun">
+    <!---->
+    <meta name="author" content="">
+    <meta name="copyright" CONTENT="Â©2018">
+    <meta name="URL" content="">
+    <meta http-equiv="imagetoolbar" content="no">
+    <meta name="application-name" content="">
+    <!---->
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <meta property="og:type" content="website">
+    <!--win7 8 -->
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileImage" content="{{$tv_pub_url}}/img/favicon.png">
+    <meta name="revised" content="">
+    <!---->
+    <link rel="shortcut icon" href="{{$tv_pub_url}}/img/favicon.png">
+    <!---->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="HandheldFriendly" content="true">
+    <meta name="format-detection" content="telephone=no">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <link rel="shortcut icon" href="{{$tv_pub_url}}/img/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="{{$tv_pub_url}}/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{{$tv_pub_url}}/css/main.css">
+    <link rel="stylesheet" type="text/css" href="{{$tv_pub_url}}/css/style.css">
+    <link rel="stylesheet" href="{{$tv_pub_url}}/css/datetimepicker-4/bootstrap-datetimepicker.min.css">
+    <link rel="stylesheet" href="{{$tv_pub_url}}/css/fontawesome/css/all.min.css">
+    
+    <script src="{{$tv_pub_url}}/js/jquery.min.js"></script>
+    <script type="text/javascript"  src="{{$tv_pub_url}}/js/bootstrap.js"></script>
+    <script src="{{$tv_pub_url}}/js/moment.min.js"></script>
+    <script src="{{$tv_pub_url}}/js/datetimepicker-4/bootstrap-datetimepicker.min.js"></script>
+    <script src="{{$tv_pub_url}}/js/datetimepicker-4/zh-tw.js"></script>
+    <script>
+      $(function(){
+        $('#f_search').click(function(){
+          $('#fd_que_input').submit();
+        });
+        $(".form_date").datetimepicker({
+          locale: 'tw',
+          format: 'YYYY-MM-DD',
+          allowInputToggle: true,
+          tooltips: {
+              today: '今天',
+              clear: '清除',
+              close: '關閉',
+              selectMonth: '選取月',
+              prevMonth: '上個月',
+              nextMonth: '下個月',
+              selectYear: '選擇年',
+              prevYear: '上一年',
+              nextYear: '下一年',
+              selectDecade: '選取十年',
+              prevDecade: '上十年',
+              nextDecade: '下十年',
+              prevCentury: '上世紀',
+              nextCentury: '下世紀'
+          },
+          icons: {
+            time: 'far fa-clock',
+            date: 'far fa-calendar',
+            up: 'fas fa-arrow-up',
+            down: 'fas fa-arrow-down',
+            previous: 'fas fa-chevron-left',
+            next: 'fas fa-chevron-right',
+            today: 'fas fa-calendar-check',
+            clear: 'far fa-trash-alt',
+            close: 'far fa-times-circle'
+          }
+        });
+      });
+    </script>
+  </head>
+  <body style="background-color:#FFECC9;">
+    <div class="container-fluid">
+      <h3 class="text-center my-3">線上愛心芳名錄</h3>
+      <div class="card my-2 mx-2">
+        <div class="card-body">
+          <form class="maT20" action="{{$tv_que_link}}" id="fd_que_input" name="fd_que_input" method="GET" enctype="multipart/form-data">
+            <div class="row">
+              <div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-4 mt-2">
+                <label>捐款日期</label>
+                <div class="input-group input-group-sm">
+                  <input type='text' id='start' name='start' class='form-control form-control-sm form_date' placeholder='請輸入捐款日期-起' value='{{$tv_start|default:''}}'>
+                  <div class="input-group-append">
+                    <span class="input-group-text">~</span>
+                  </div>
+                  <input type='text' id='end' name='end' class='form-control form-control-sm form_date' placeholder='請輸入捐款日期-訖' value='{{$tv_end|default:''}}'>
+                </div>
+              </div>
+              <div class="col-6 col-sm-3 col-md-2 col-lg-2 col-xl-2 mt-2">
+                <label>收據抬頭</label>
+                <input type="text" id="que_de10" name="que_de10" class="form-control form-control-sm" placeholder="請輸入捐款抬頭" value="{{$tv_que_de10}}">
+              </div>
+              <div class="col-6 col-sm-3 col-md-3 col-lg-3 col-xl-3 mt-2">
+                <label>地址</label>
+                <input type="text" id="que_addr" name="que_addr" class="form-control form-control-sm" placeholder="請輸入地址" value="{{$tv_que_addr}}">
+              </div>
+              <div class="col-6 col-sm-4 col-md-3 col-lg-3 col-xl-2 mt-2">
+                <label>電話</label>
+                <div class="input-group">
+                  <input type="text" id="que_de03_phone" name="que_de03_phone" class="form-control form-control-sm" placeholder="請輸入電話" value="{{$tv_que_de03_phone}}">
+                  <div class="input-group-prepend">
+                    <button id="f_search" name="f_search" class="btn btn-primary btn-sm" type="button">{{$tv_que_btn}}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+          <p>親愛的捐款者：</p>
+          <p>感謝您與本會一起做長輩們、身障者們，還有社會中更多需要幫助者的靠山，並對於本會的服務給予支持和鼓勵。</p>
+          <p>這每一分善款、愛心物資，本會必當珍惜，再次誠心感謝。</p>
+          <p>此外提醒您，依財團法人法第25條限定，基金會須主動公開捐贈者姓名及捐款金額。如您不同意公開於愛心芳名錄，歡迎與本會聯繫。來電洽詢 (04)2528-2989轉221出納楊小姐 將為您服務。</p>
+          <p>本線上捐款芳名錄包含線上捐贈內容，<span class="text-danger">線上捐款後7個工作天內進行更新。</span></p>
+          <p class="text-danger">不願意公開全名之捐款大德，此處將以「善心人士」呈現。</p>
+          <div class="table-responsive">
+            <table class="table">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">捐款日期</th>
+                  <th width="20%">收據抬頭</th>
+                  <th scope="col">捐款金額</th>
+                  <th scope="col">捐款方式</th>
+                  <th scope="col">捐款用途/方案</th>
+                  <th width="20%">捐款備註</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{foreach from=$tv_donate_row key=k item=v}}
+                  <tr>
+                    <td>{{$v.de17|default:''}}</td>
+                    <td>
+                      {{if 'Y' == $v.de21}}
+                        {{$v.de10|default:''}}
+                      {{else}}
+                        善心人士
+                      {{/if}}
+                    </td>
+                    <td>
+                      {{if $v.de06 != null}}
+                        NT {{$v.de06|number_format:0|default:''}}
+                      {{/if}}
+                    </td>
+                    <td>{{$v.de09_str|default:''}}</td>
+                    <td>{{$v.di01|default:''}}</td>
+                    <td>{{$v.de30|default:''}}</td>
+                  </tr>
+                {{foreachelse}}
+                  <tr>
+                    <td colspan="99" class="alert alert-warning">
+                        查無資料!!!
+                    </td>
+                  </tr>
+                {{/foreach}}
+              </tbody>
+            </table>
+          </div>
+          <!-- 頁籤 Begin -->
+          <ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+            {{$tv_pg_link|default:''}}
+          </ul>
+          <!-- 頁籤 End -->
+          <div class="alert alert-danger mt-2" role="alert">
+            捐款後將於<span class="text-danger">7個工作天</span>內進行更新。
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

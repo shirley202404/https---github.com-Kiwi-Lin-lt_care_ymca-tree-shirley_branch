@@ -1,0 +1,74 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>餐點資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">餐點管理</a></li>
+        <li class="breadcrumb-item"><a href="#">餐點資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_meal_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_meal_row->b_acc_name|default:''}}({{$tv_meal_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_meal_row->e_acc_name|default:''}}({{$tv_meal_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">餐點排序</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_row->ml05|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">餐點名稱</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_row->ml01|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">餐點內容</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_row->ml03|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">餐點價格</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_row->ml02|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">適用方案</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_row->ml04_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">搭配素食餐</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_row->sub_ml01|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              <span class="text-dark">
+              {{if '1'==$tv_meal_row->is_available}}
+                是
+              {{else}}
+                否
+              {{/if}}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

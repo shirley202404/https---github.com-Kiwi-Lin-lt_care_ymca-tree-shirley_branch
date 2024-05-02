@@ -1,0 +1,692 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/jquery.fancybox.min.css">
+<script src="{{$tv_pub_url}}/js/jquery.fancybox.min.js"></script>
+<script>
+  $(function() {
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_identity_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_identity_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          if(rs['rtn_msg']=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace(rs['rtn_url']);
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+            //alert(rs);
+          }
+        }
+      })
+      return;
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>案主資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">案主資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_clients_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="">
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-client-tab" data-toggle="tab" href="#nav-client" role="tab" aria-controls="nav-client" aria-selected="true">案主資料</a>
+          <a class="nav-item nav-link" id="nav-identity-tab" data-toggle="tab" href="#nav-identity" role="tab" aria-controls="nav-identity" aria-selected="false">身分別資料</a>
+          <a class="nav-item nav-link" id="nav-sec-tab" data-toggle="tab" href="#nav-sec" role="tab" aria-controls="nav-sec" aria-selected="false">開案資料</a>
+          <a class="nav-item nav-link" id="nav-reh-tab" data-toggle="tab" href="#nav-reh" role="tab" aria-controls="nav-reh" aria-selected="false">路徑資料</a>
+          <a class="nav-item nav-link" id="nav-care_record-tab" data-toggle="tab" href="#nav-care_record" role="tab" aria-controls="nav-care_record" aria-selected="false">關懷紀錄</a>
+          <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+            <div class="float-right">建檔:<span class="mainC1">{{$tv_clients_row->b_acc_name|default:''}}({{$tv_clients_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_clients_row->e_acc_name|default:''}}({{$tv_clients_row->e_date|default:""}})</span></div>
+          </span>
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-client" role="tabpanel" aria-labelledby="nav-client-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="20%"}}
+              {{assign var="swidth_right" value="80%"}}
+              <tbody>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">區域</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct14|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主姓名</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct01|default:''}}{{$tv_clients_row->ct02|default:''}}</span></td>
+                </tr>
+                {{*
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">beacon序號</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->bn_s_num|default:''}}</span></td>
+                </tr>
+                *}}
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主身分證</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct03|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主性別</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct04_str|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主生日</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct05|default:''|date_format:"%Y-%m-%d"}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主手機</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct06_telephone|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主家電</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct06_homephone|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主聯絡人-1</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct07_1_name|default:''}}{{if $tv_clients_row->ct07_1_name != null}}-{{/if}}{{$tv_clients_row->ct07_1_rlat|default:''}}{{if $tv_clients_row->ct07_1_rlat != null}}-{{/if}}{{$tv_clients_row->ct07_1_tel|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主聯絡人-2</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct07_2_name|default:''}}{{if $tv_clients_row->ct07_2_name != null}}-{{/if}}{{$tv_clients_row->ct07_2_rlat|default:''}}{{if $tv_clients_row->ct07_2_rlat != null}}-{{/if}}{{$tv_clients_row->ct07_2_tel|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">個管</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct22_name|default:''}}{{if $tv_clients_row->ct22_name != null}}-{{/if}}{{$tv_clients_row->ct22_phone|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">照專</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct23_name|default:''}}{{if $tv_clients_row->ct23_name != null}}-{{/if}}{{$tv_clients_row->ct23_phone|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">居服</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct24_name|default:''}}{{if $tv_clients_row->ct24_name != null}}-{{/if}}{{$tv_clients_row->ct24_phone|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主戶籍地址</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct09|default:''}}{{$tv_clients_row->ct10|default:''}}{{$tv_clients_row->ct11|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主聯絡地址</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct13|default:''}}{{$tv_clients_row->ct14|default:''}}{{$tv_clients_row->ct15|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主家緯度</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct16|default:''}}</span></td>
+                </tr>
+                {{*
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主家緯度(現場)</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct16_actual|default:''}}</span></td>
+                </tr>
+                *}}
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主家經度</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct17|default:''}}</span></td>
+                </tr>
+                {{*
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">案主家經度(現場)</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct17_actual|default:''}}</span></td>
+                </tr>
+                *}}
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">餐盒單價</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct19|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">匯款尾碼</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct20|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">是否為僅OT個案</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct00_str|default:''}}</span></td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>居住狀況</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span>一. 居住狀況：{{$tv_clients_row->ct31_str|default:''}}</span>
+                    <br/>
+                    <span>二. 狀況說明：{{$tv_clients_row->ct31_memo|default:''}}</span>
+                    <br/>
+                    <span>三. 家電狀況：{{$tv_clients_row->ct21_str|default:''}}</span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>身分別</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span>一. 內部定義：{{$tv_clients_row->ct34_fo_str|default:''}}</span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>身心障礙</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span>一. 身心障礙手冊：{{$tv_clients_row->ct35_str|default:''}} {{if $tv_clients_row->ct35|default:'' == "Y"}}(手冊到期日：{{$tv_clients_row->ct35_end_date}}){{/if}}</span>
+                    <br/>
+                    <span>二. 障礙類別：{{$tv_clients_row->ct35_type_str|default:''}}</span>
+                    <br/>
+                    <span>三. 障礙等級：{{$tv_clients_row->ct35_level_str|default:''}}</span>
+                    <br/>
+                    <span>三. 障礙說明：{{$tv_clients_row->ct35_memo|default:''}}</span>
+                  </td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">健康狀況</td>
+                  <td width="{{$swidth_right}}" class="table-light">
+                    <span>{{$tv_clients_row->ct36_str|default:''}}</span>
+                  </td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">失能程度</td>
+                  <td width="{{$swidth_right}}" class="table-light">
+                    <span>{{$tv_clients_row->ct37_str|default:''}}</span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>疾病名稱</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span>一. 疾病1：{{$tv_clients_row->ct38_1_str|default:''}}</span>
+                    <br/>
+                    <span>二. 疾病2：{{$tv_clients_row->ct38_2_str|default:''}}</span>
+                    <br/>
+                    <span>三. 其他：{{$tv_clients_row->ct38_memo}}</span>
+                  </td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">家系圖</td>
+                  <td width="{{$swidth_right}}" class="table-light">
+                    {{if NULL != $tv_clients_row->ct95}}
+                      <a href="{{$tv_clients_row->ct95_base64}}" data-fancybox >
+                        <img src="{{$tv_clients_row->ct95_base64}}" class="img-fluid" alt="{{$tv_clients_row->ct95|default:''}}" title="{{$tv_clients_row->ct95|default:''}}" style="max-width: 100px;">
+                      </a>
+                    {{/if}}
+                  </td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">資源生態圖</td>
+                  <td width="{{$swidth_right}}" class="table-light">
+                    {{if NULL != $tv_clients_row->ct96}}
+                      <a href="{{$tv_clients_row->ct96_base64}}" data-fancybox >
+                        <img src="{{$tv_clients_row->ct96_base64}}" class="img-fluid" alt="{{$tv_clients_row->ct96|default:''}}" title="{{$tv_clients_row->ct96|default:''}}" style="max-width: 100px;">
+                      </a>
+                    {{/if}}
+                  </td>
+                </tr>                             	  
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">個案評估摘要</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct97|nl2br|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">處遇計畫摘要</td>
+                  <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_row->ct98|nl2br|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+                  <td width="{{$swidth_right}}" class="table-light">
+                    <span class="text-dark">
+                    {{if '1'==$tv_clients_row->is_available}}
+                      是
+                    {{else}}
+                      否
+                    {{/if}}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="nav-identity" role="tabpanel" aria-labelledby="nav-identity-tab">
+          <table class="table table-bordered table-striped table-hover table-sm">
+            <thead>
+              <tr class="thead-light text-left ">
+                <th>序</th>
+                <th>異動日期</th>
+                <th>身分別</th>
+                {{if $tv_acc_kind == "M" or $tv_group_s_num == 12}}
+                  <th></th>
+                {{/if}}
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_clients_identity_row key=k item=v}}
+                <tr>
+                  <td class="text-left">{{$v@iteration|default:''}}</td><!--序-->
+                  <td class="text-left">{{$v.ct_il01|default:''}}</td><!--異動日期-->
+                  <td class="text-left">{{$v.ct_il02_str|default:''}}<!--身分別-->
+                  </td>
+                  {{if $tv_acc_kind == "M" or $tv_group_s_num == 12}}
+                    {{if 1 != $v@iteration|default:''}}
+                      <td align='right'>
+                        <button type="button" class="btn btn-danger btn-sm del" data-s_num="{{$v.s_num}}" data-toggle="modal" data-target=".pop-container">管理者刪除</button>
+                      </td>
+                    {{else}}
+                      <td class="text-right">
+                        <span class="text-danger">第一筆身分別資料無法刪除!!</span>
+                      </td>
+                    {{/if}}
+                  {{/if}}
+                </tr>
+              {{foreachelse}}
+              <tr>
+                <td colspan="99" class="alert alert-warning">
+                    查無資料!!!
+                </td>
+              </tr>
+              {{/foreach}}
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-pane fade" id="nav-sec" role="tabpanel" aria-labelledby="nav-sec-tab">
+          <table class="table table-bordered table-striped table-hover table-sm">
+            <thead>
+              <tr class="thead-light text-left ">
+                <th>序</th>
+                <th>服務現況</th>
+                <th>服務開始日</th>
+                <th>服務結案日</th>
+                <th>餐別</th>
+                <th>經費來源</th>
+                <th>放置點</th>
+                <th>備註</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_service_case_row key=k item=v}}
+                {{assign var='str_color' value=''}}
+                {{assign var='ssec99' value=''}}
+                {{if $v.sec03 != NULL}}
+                  {{assign var='str_color' value='table-danger'}}
+                  {{assign var='ssec99' value='<span class="text-center font-weight-bold text-danger" style="font-size: 16px">此服務已結案!!</span>'}}
+                {{/if}}
+                <tr class="{{$str_color}}">
+                  <td class="text-left">{{$v@iteration|default:''}}</td><!--序-->
+                  <td class="text-left">{{$v.sec01_str|default:''}}</td><!--服務現況-->
+                  <td class="text-left">{{$v.sec02|default:''}}</td><!--服務結案日-->
+                  <td class="text-left">{{$v.sec03|default:''}}</td><!--服務開始日-->
+                  <td class="text-left">{{$v.sec04_str|default:''}}</td><!--餐別-->
+                  <td class="text-left">{{$v.sec05_str|default:''}}</td><!--經費來源-->
+                  <td class="text-left">{{$v.sec06|default:''}}</td><!--經費來源-->
+                  <td class="text-left">                
+                    {{if $v.sec03 != NULL}}
+                      {{$ssec99|default:''}}
+                    {{else}}
+                      {{$v.sec99|default:''}}
+                    {{/if}}
+                  </td><!--服務備註-->
+                </tr>
+                <tr>
+                  <td colspan="8">
+                    <div class="accordion" id="mil_{{$v.s_num}}">
+                      <div class="card">
+                        <div class="" id="heading_mil_{{$v.s_num}}">
+                          <h4 class="">
+                            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#mil_cotent_{{$v.s_num}}" aria-expanded="false" aria-controls="collapseThree" style="font-size: 14px;">
+                              {{$v@iteration|default:''}}. {{$v.sec01_str|default:''}}-{{$v.sec04_str|default:''}}-異動資料
+                            </button>
+                            <a type="button" href="{{$tv_meal_instruction_log_link}}{{$v.s_num}}" target="_blank" style="font-size: 14px;">查看全部異動資料</a>
+                          </h4>
+                        </div>
+                        <div id="mil_cotent_{{$v.s_num}}" class="collapse" aria-labelledby="heading_mil_{{$v.s_num}}" data-parent="#mil_{{$v.s_num}}">
+                          {{if $v.m == NULL and $v.mp == NULL and $v.s == NULL and $v.p == NULL and $v.i == NULL}}
+                            <table class="table table-bordered table-striped table-hover table-sm">
+                              <td colspan="99" class="alert alert-warning">
+                                查無異動資料!!!
+                              </td>
+                            </table>
+                          {{/if}}
+                          {{if $v.m != NULL}}
+                            <h2 class="bg-secondary text-white text-left">餐點異動</h2>
+                            <table class="table table-bordered table-striped table-hover table-sm">
+                              <thead>
+                                <tr class="thead-light text-left ">
+                                  <th width="02%">序</th>
+                                  <th width="10%">異動生效日</th>
+                                  <th>餐種</th>
+                                  <th>特殊內容</th>
+                                  <th>硬度&份量</th>
+                                  <th>餐食禁忌</th>
+                                  <th>主食禁忌</th>
+                                  <th>治療餐</th>
+                                </tr>
+                              </thead>
+                              {{foreach from=$v.m key=km item=vm}}
+                                <tr>
+                                  <td>{{$vm@iteration|default:''}}</td>
+                                  <td>{{$vm.mil_m02|default:''}}</td>
+                                  <td>{{$vm.ml01|default:''}}</td>
+                                  <td>{{$vm.mil_m01_1_str|default:''}}</td>
+                                  <td>{{$vm.mil_m01_2_str|default:''}}</td>
+                                  <td>{{$vm.mil_m01_3_str|default:''}}</td>
+                                  <td>{{$vm.mil_m01_4_str|default:''}}</td>
+                                  <td>{{$vm.mil_m01_5_str|default:''}}</td>
+                                </tr>
+                              {{/foreach}}
+                            </table>
+                          {{/if}}
+                          {{if $v.mp != NULL}}
+                            <h2 class="bg-secondary text-white text-left">代餐異動</h2>
+                            <table class="table table-bordered table-striped table-hover table-sm">
+                              <thead>
+                                <tr class="thead-light text-left ">
+                                  <th width="02%">序</th>
+                                  <th width="10%">異動生效日</th>
+                                  <th width="10%">是否代餐</th>
+                                  <th>代餐別類</th>
+                                </tr>
+                              </thead>
+                              {{foreach from=$v.mp key=kmp item=vmp}}
+                                <tr>
+                                  <td>{{$vmp@iteration|default:''}}</td>
+                                  <td>{{$vmp.mil_mp02|default:''}}</td>
+                                  <td>{{$vmp.mil_mp01_str|default:''}}</td>
+                                  <td>{{$vmp.mil_mp01_type_str|default:''}}</td>
+                                </tr>
+                              {{/foreach}}
+                            </table>
+                          {{/if}}
+                          {{if $v.s != NULL}}
+                            <h2 class="bg-secondary text-white text-left">停復餐異動</h2>
+                            <table class="table table-bordered table-striped table-hover table-sm">
+                              <thead>
+                                <tr class="thead-light text-left ">
+                                  <th width="02%">序</th>
+                                  <th width="10%">異動生效日</th>
+                                  <th width="10%">是否出餐</th>
+                                  <th>停復餐原因</th>
+                                </tr>
+                              </thead>
+                              {{foreach from=$v.s key=ks item=vs}}
+                                <tr>
+                                  <td>{{$vs@iteration}}</td>
+                                  <td>{{$vs.mil_s02|default:''}}</td>
+                                  <td>{{$vs.mil_s01_str|default:''}}</td>
+                                  <td>{{$vs.mil_s01_reason_str|default:''}}</td>
+                                </tr>
+                              {{/foreach}}
+                            </table>
+                          {{/if}}
+                          {{if $v.p != NULL}}
+                            <h2 class="bg-secondary text-white text-left">固定暫停異動</h2>
+                            <table class="table table-bordered table-striped table-hover table-sm">
+                              <thead>
+                                <tr class="thead-light text-left ">
+                                  <th width="02%">序</th>
+                                  <th width="10%">異動生效日</th>
+                                  <th>固定暫停</th>
+                                </tr>
+                              </thead>
+                              {{foreach from=$v.p key=kp item=vp}}
+                                <tr>
+                                  <td>{{$vp@iteration|default:''}}</td>
+                                  <td>{{$vp.mil_p02|default:''}}</td>
+                                  <td>{{$vp.mil_p01_str|default:''}}</td>
+                                </tr>
+                              {{/foreach}}
+                            </table>
+                          {{/if}}
+                          {{if $v.i != NULL}}
+                            <h2 class="bg-secondary text-white text-left">自費戶異動</h2>
+                            <table class="table table-bordered table-striped table-hover table-sm">
+                              <thead>
+                                <tr class="thead-light text-left ">
+                                  <th width="02%">序</th>
+                                  <th width="10%">異動生效日</th>
+                                  <th width="10%">是否為自費戶</th>
+                                  <th>原因說明</th>
+                                </tr>
+                              </thead>
+                              {{foreach from=$v.i key=ki item=vi}}
+                                <tr>
+                                  <td>{{$vp@iteration|default:''}}</td>
+                                  <td>{{$vi.mil_i02|default:''}}</td>
+                                  <td>{{$vi.mil_i01_str|default:''}}</td>
+                                  <td>{{$vi.mil_i01_reason|default:''|nl2br}}</td>
+                                </tr>
+                              {{/foreach}}
+                            </table>
+                          {{/if}}
+                          {{if $v.d != NULL}}
+                            <h2 class="bg-secondary text-white text-left">一次性出餐異動</h2>
+                            <table class="table table-bordered table-striped table-hover table-sm">
+                              <thead>
+                                <tr class="thead-light text-left ">
+                                  <th width="02%">序</th>
+                                  <th width="10%">異動生效日</th>
+                                  <th width="88%">是否出餐</th>
+                                </tr>
+                              </thead>
+                              {{foreach from=$v.d key=kd item=vd}}
+                                <tr>
+                                  <td>{{$vd@iteration|default:''}}</td>
+                                  <td>{{$vd.mil_d02|default:''}}<td>
+                                  <td>{{$vd.mil_d01_str|default:''}}<td>
+                                </tr>
+                              {{/foreach}}
+                            </table>
+                          {{/if}}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              {{foreachelse}}
+              <tr>
+                <td colspan="99" class="alert alert-warning">
+                    查無資料!!!
+                </td>
+              </tr>
+              {{/foreach}}
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-pane fade" id="nav-reh" role="tabpanel" aria-labelledby="nav-reh-tab">
+          <table class="table table-bordered table-striped table-hover table-sm">
+            <thead>
+              <tr class="thead-light text-left ">
+                <th>序</th>
+                <th>送餐時段</th>
+                <th>路線代碼</th>
+                <th>路線類別</th>
+                <th>送餐順序</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_route_row key=k item=v}}
+                <tr>
+                  <td class="text-left">{{$v@iteration|default:''}}</a></td><!--序-->
+                  <td class="text-left">{{$v.reh05_str|default:''}}</a></td><!--送餐時段-->
+                  <td class="text-left">{{$v.reh01|default:''}}</a></td><!--路線類別-->
+                  <td class="text-left">{{$v.reh03_str|default:''}}</a></td><!--路線代碼-->
+                  <td class="text-left">{{$v.reb01|default:''}}</a></td><!--路線代碼-->
+                </tr>
+              {{foreachelse}}
+              <tr>
+                <td colspan="99" class="alert alert-warning">
+                  查無資料!!!
+                </td>
+              </tr>
+              {{/foreach}}
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-pane fade" id="nav-care_record" role="tabpanel" aria-labelledby="nav-care_record-tab">
+          <table class="table table-bordered table-striped table-hover table-sm">
+            <tr>
+              <td>家訪紀錄</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="accordion" id="home_interview_collapse">
+                  <div class="card">
+                    <div class="" id="heading_home_interview">
+                      <h4 class="">
+                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#home_interview" aria-expanded="false" aria-controls="collapseThree" style="font-size: 14px;">最近三次家訪紀錄</button>
+                        <a type="button" href="{{$tv_home_interview_link}}{{$tv_clients_row->s_num|default:''}}" target="_blank" style="font-size: 14px;">查看全部家訪資料</a>
+                      </h4>
+                    </div>
+                  </div>
+                </div>
+                <div id="home_interview" class="collapse" aria-labelledby="heading_home_interview" data-parent="#home_interview_collapse">
+                  <table class="table table-bordered table-striped table-hover table-sm">
+                    {{if empty($tv_home_interview_row)}}
+                      <td colspan="99" class="alert alert-warning">
+                        查無家訪紀錄!!!
+                      </td>
+                    {{else}}
+                      <thead>
+                        <tr>
+                          <td style="width:25%">訪視時間</td>
+                          <td style="width:25%">到訪者</td>
+                          <td style="width:25%">檢閱者</td>
+                          <td style="width:25%">訪視目的</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {{foreach from=$tv_home_interview_row key=k item=v}}
+                          <tr>
+                            <td class="text-left"><a href="{{$tv_home_interview_disp_link}}{{$v.s_num}}" class="text-dark" target="_blank">{{$v.hew01|default:''}}</a></td><!--訪視時間-->
+                            <td class="text-left"><a href="{{$tv_home_interview_disp_link}}{{$v.s_num}}" class="text-dark" target="_blank">{{$v.sw_name|default:''}}</a></td><!--2.到訪者(tw_social_worker.s_num)-->
+                            <td class="text-left"><a href="{{$tv_home_interview_disp_link}}{{$v.s_num}}" class="text-dark" target="_blank">{{$v.sw_chk_name|default:''}}</a></td><!--3.檢閱者(tw_social_worker.s_num)-->
+                            <td class="text-left"><a href="{{$tv_home_interview_disp_link}}{{$v.s_num}}" class="text-dark" target="_blank">{{$v.hew10_str|default:''}}</a></td><!--6.訪視目的(1=定期關懷,2=特殊問題,3=年度評估,99=其他)-->
+                          </tr>
+                        {{/foreach}}
+                      </tbody>
+                    {{/if}}
+                  </table>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>電訪紀錄</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="accordion" id="phone_interview_collapse">
+                  <div class="card">
+                    <div class="" id="heading_phone_interview">
+                      <h4 class="">
+                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#phone_interview" aria-expanded="false" aria-controls="collapseThree" style="font-size: 14px;">最近三次電訪紀錄</button>
+                        <a type="button" href="{{$tv_phone_interview_link}}{{$tv_clients_row->s_num|default:''}}" target="_blank" style="font-size: 14px;">查看全部電訪資料</a>
+                      </h4>
+                    </div>
+                  </div>
+                </div>
+                <div id="phone_interview" class="collapse" aria-labelledby="heading_phone_interview" data-parent="#phone_interview_collapse">
+                  <table class="table table-bordered table-striped table-hover table-sm">
+                    {{if empty($tv_phone_interview_row)}}
+                      <td colspan="99" class="alert alert-warning">
+                        查無電訪紀錄!!!
+                      </td>
+                    {{else}}
+                      <thead>
+                        <tr>
+                          <td style="width:25%">訪問時間</td>
+                          <td style="width:25%">電訪者</td>
+                          <td style="width:50%">檢閱者</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {{foreach from=$tv_phone_interview_row key=k item=v}}
+                          <tr>
+                            <td class="text-left"><a href="{{$tv_phone_interview_disp_link}}{{$v.s_num}}" class="text-dark" target="_blank">{{$v.phw01|default:''}}</a></td><!--訪視時間-->
+                            <td class="text-left"><a href="{{$tv_phone_interview_disp_link}}{{$v.s_num}}" class="text-dark" target="_blank">{{$v.sw_name|default:''}}</a></td><!--2.到訪者(tw_social_worker.s_num)-->
+                            <td class="text-left"><a href="{{$tv_phone_interview_disp_link}}{{$v.s_num}}" class="text-dark" target="_blank">{{$v.sw_chk_name|default:''}}</a></td><!--3.檢閱者(tw_social_worker.s_num)-->
+                          </tr>
+                        {{/foreach}}
+                      </tbody>
+                    {{/if}}
+                  </table>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>營養評估表</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="accordion" id="clients_hlth_normal_collapse">
+                  <div class="card">
+                    <div class="" id="heading_clients_hlth_normal">
+                      <h4 class="">
+                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#clients_hlth_normal" aria-expanded="false" aria-controls="collapseThree" style="font-size: 14px;">最近三次營養評估表資料</button>
+                        <a type="button" href="{{$tv_clients_hlth_normal_link}}{{$tv_clients_row->s_num|default:''}}" target="_blank" style="font-size: 14px;">查看全部營養評估表資料</a>
+                      </h4>
+                    </div>
+                  </div>
+                </div>
+                <div id="clients_hlth_normal" class="collapse" aria-labelledby="heading_clients_hlth_normal" data-parent="#clients_hlth_normal_collapse">
+                  <table class="table table-bordered table-striped table-hover table-sm">
+                    {{if empty($tv_clients_hlth_normal_row)}}
+                      <td colspan="99" class="alert alert-warning">
+                        查無營養評估表資料!!!
+                      </td>
+                    {{else}}
+                      <thead>
+                        <tr>
+                          <td style="width:25%">填表日期</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {{foreach from=$tv_clients_hlth_normal_row key=k item=v}}
+                          <tr>
+                            <td class="text-left"><a href="{{$tv_clients_hlth_normal_disp_link}}{{$v.s_num}}" class="text-dark" target="_blank">{{$v.chn01|default:''}}</a></td><!--訪視時間-->
+                          </tr>
+                        {{/foreach}}
+                      </tbody>
+                    {{/if}}
+                  </table>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此身分別資料嗎？
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>

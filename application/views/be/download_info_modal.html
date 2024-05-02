@@ -1,0 +1,94 @@
+<script>
+  $(function(){
+    $(".download").click(function() {
+      var strMsg = '';
+      var s_num = $(this).data('s_num');
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('#show_download_info_btn').hide();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_download_link}}'+s_num,
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_download_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $("#download_type").val(""); 
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+  });
+</script>
+
+<!-- 下載資訊視窗彈出 -->
+<div class="modal fade pop-download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content  modal-C1">
+    <div class="modal-body">
+      <div class="text-center paT10">
+        <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> {{$tv_ct_name_str}}下載</i><br></h1>
+        <span id="show_download_info"></span>
+      </div>
+    </div>
+   <div class="modal-footer text-center">
+     <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 下載資訊視窗彈出 end-->
+
+<script>
+  $(function(){    
+    $('#btn_prn').click(function() {
+      var strMsg = '';
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('.pop-id_download #show_download_info').html(download_info);
+      $('.pop-id_download #show_download_info_btn').hide();
+      $.ajax({
+        type:'post',
+        data: $("#fd_input").serialize(),
+        url: '{{$tv_download_link}}',
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_download_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $('.pop-id_download #show_download_info').html(rs);
+          $('.pop-id_download #show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+  });
+</script>
+
+<!-- 下載資訊視窗彈出 -->
+<div class="modal fade pop-id_download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content  modal-C1">
+   <div class="modal-body">
+	<div class="text-center paT10">
+	  <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> 資料下載</i><br></h1>
+	  <span id="show_download_info"></span>
+  </div>
+  </div>
+  <div class="modal-footer text-center">
+    <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 下載資訊視窗彈出 end-->

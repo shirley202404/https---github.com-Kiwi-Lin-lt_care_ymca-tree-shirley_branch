@@ -1,0 +1,153 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>非餐食異動</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">開案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">非餐食異動</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      {{if $tv_other_change_log_h_row->ocl02 == "N" }}
+        <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_other_change_log_h_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      {{/if}}
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_other_change_log_h_row->b_acc_name|default:''}}({{$tv_other_change_log_h_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_other_change_log_h_row->e_acc_name|default:''}}({{$tv_other_change_log_h_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <h2 class="bg-secondary text-white text-left">異動單</h2>
+        <tbody>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主姓名</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_other_change_log_h_row->ct01|default:''}}{{$tv_other_change_log_h_row->ct02|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">異動項目</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_other_change_log_h_row->ocl01_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">審核狀態</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_other_change_log_h_row->ocl02_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">異動備註</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_other_change_log_h_row->ocl99|nl2br|default:''}}</span></td>
+          </tr>
+        </tbody>
+      </table>
+      {{if in_array(1 , $tv_ocl01_arr) }}
+        <table class="table table-bordered table-hover table-sm">
+          <h2 class="bg-secondary text-white text-left">身分別異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width="{{$swidth_left}}" class="table-secondary text-right">異動時間</td>
+              <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_identity_row->ocl_i02_date|default:''}}</td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>身分別(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$tv_other_change_log_identity_row->ocl_i01_before_str|default:''}}</td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>身分別(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$tv_other_change_log_identity_row->ocl_i01_after_str|default:''}}</td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>繳費方式(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$tv_other_change_log_identity_row->ocl_sec09_before_str|default:''}}</td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>繳費方式(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$tv_other_change_log_identity_row->ocl_sec09_after_str|default:''}}</td>
+            </tr>
+          </tbody>
+        </table>
+        {{/if}}
+        {{if in_array(2 , $tv_ocl01_arr) }}     
+          <table class="table table-bordered table-hover table-sm">
+            <h2 class="bg-secondary text-white text-left">失能等級異動</h2>
+            <tbody>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>失能等級(異動前)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$other_change_log_disabled_row->ocl_d01_before_str|default:''}}</td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>失能等級(異動後)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$other_change_log_disabled_row->ocl_d01_after_str|default:''}}</td>
+              </tr>
+            </tbody>
+          </table>
+        {{/if}}
+        {{if in_array(3 , $tv_ocl01_arr) }}
+          <table class="table table-bordered table-hover table-sm">
+            <h2 class="bg-secondary text-white text-left">送餐路線異動</h2>
+            <tbody>
+              <tr class='d-flex'>
+                <td width="{{$swidth_left}}" class="table-secondary text-right">異動時間</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_route_row->ocl_r06|default:''}}</td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>更改送餐路線種類</td>
+                <td width='{{$swidth_right}}' class='table-light'>{{$tv_other_change_log_route_row->ocl_r01_str|default:''}}</td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">送餐路線(異動前)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_route_row->reh01_name|default:''}}</td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">送餐順位(異動前)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_route_row->ocl_r02_reb01|default:''}}</td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">核備人員(異動前)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_route_row->ocl_r02_vp_name|default:''}}</td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">送餐路線(異動後)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_route_row->reh02_name|default:''}}</td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">送餐順位(異動後)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_route_row->ocl_r03_reb01|default:''}}</td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">核備人員(異動後)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_route_row->ocl_r03_vp_name|default:''}}</td>
+              </tr>
+            </tbody>
+          </table>
+        {{/if}}
+        {{if in_array(4 , $tv_ocl01_arr) }}
+          <table class="table table-bordered table-hover table-sm">
+            <h2 class="bg-secondary text-white text-left">服務現況</h2>
+            <tbody>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">服務現況(異動前)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_service_row->ocl_s01_before_str|default:''}}</td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">服務現況(異動後)</td>
+                <td width="{{$swidth_right}}" class="table-light">{{$tv_other_change_log_service_row->ocl_s01_after_str|default:''}}</td>
+              </tr>
+            </tbody>
+          </table>
+        {{/if}}
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

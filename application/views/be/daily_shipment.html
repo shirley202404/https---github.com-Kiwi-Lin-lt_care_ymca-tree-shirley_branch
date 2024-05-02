@@ -1,0 +1,485 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('.fd_que').click(function(){
+      $('#que_kind').val('que');
+    });
+    $('#f_search').click(function(){
+      $('#que_str').val($("#f_que").val());
+      $('#fd_que_input').submit();
+    });
+    $("#f_que").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#que_str').val($(this).val());
+        $('#f_search').click();
+      }
+    });
+    $(".que_enter").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#fd_que_input').submit();
+      }
+    });
+    $("#btn_que").click(function(){
+      $('#fd_que_input').submit();
+      return;
+    });
+    $('#btn_que_close').click(function(){
+      $("#btn_que_reset").click(); // 清除查詢資料
+      $('.pop-que').modal("hide");
+    })
+    
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+            //alert(rs);
+          }
+        }
+      })
+      return;
+    });
+    $("input[name^='is_available']").click(function(){
+      var s_num = $(this).data('s_num');
+      if($(this).prop("checked")) { // 打勾
+        var is_available = 1;
+        var old_is_flag = false;
+      }
+      else {
+        var is_available = 0;
+        var old_is_flag = true;
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}upd_is_available',
+        data: {f_kind:'upd_is_available',f_s_num:s_num,f_is_available:is_available},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_save_link}}]upd_is_available:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+          }
+          else {
+            alert("{{$tv_upd_ng}}");
+            $('#is_available_'+s_num).prop('checked',old_is_flag);
+            //alert(rs);
+          }
+        }
+      })
+    });
+    $(".fd_order").click(function(){
+      $('#que_kind').val('order');
+      var fd_name = $(this).data('fd_name');
+      var order_kind = $(this).data('order_kind');
+      if('asc'==order_kind) {
+        $(this).data('order_kind','desc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-down"></i>');
+        order_kind = 'desc';
+      }
+      else {
+        $(this).data('order_kind','asc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-up"></i>');
+        order_kind = 'asc';
+      }
+      //order_kind = $(this).data('order_kind');
+      $('#que_order_fd_name').val(fd_name);
+      $('#que_order_kind').val(order_kind);
+      //console.log(fd_name);
+      //console.log(order_kind);
+      $('#fd_que_input').submit();
+    });
+    //console.log('{{$tv_que_order_fd_name}}');
+    {{if '' != $tv_que_order_fd_name}}
+      if('asc'=='{{$tv_que_order_kind}}') {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-up"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','asc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','asc');
+      }
+      else {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-down"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','desc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','desc');
+      }
+      $('#que_order_fd_name').val('{{$tv_que_order_fd_name}}');
+      $('#que_order_kind').val('{{$tv_que_order_kind}}');
+      //console.log($('#que_order_fd_name').val());
+      //console.log($('#que_order_kind').val());
+    {{/if}}
+    $('#que_str').val('{{$tv_que_str}}');
+    
+    $("#select_all").click(function() {
+      var change_flag = $(this).prop('checked');
+      $('.select_change').prop('checked',change_flag);
+      $('.select_change').each(function() {
+        var snum = $(this).data('s_num');
+        if(change_flag) {
+          $("#change_"+snum).val(1);
+        }
+        else {
+          $("#change_"+snum).val(0);
+        }
+      });
+    });
+    
+    $(".select_change").click(function() {
+      $('.select_change').each(function() {
+        var snum = $(this).data('s_num');
+         var change_flag = $("#select_change_"+snum).prop('checked');
+        $("#select_change_"+snum).prop('checked',change_flag);
+        if(change_flag) {
+          $("#change_"+snum).val(1);
+        }
+        else {
+          $("#change_"+snum).val(0);
+        }
+      });
+    });
+    
+    $('.reh_s_num').change(function() {
+      var s_num = $(this).data("s_num");  
+      var reh_s_num = $(this).find(":selected").val();
+      var dys06_val = Number($('#dys06_' + s_num).val()); // arr裡的資料為int型態需強制轉型
+      $("#dys06_"+s_num).attr("data-route" , reh_s_num);
+
+      if(chk_duplicate(reh_s_num , s_num , dys06_val)) {
+        alert("該路線已有順序為 "+dys06_val+" 的案主，請重新輸入") 
+        $('#dys06_' + s_num).val("")
+      }
+    });
+    
+    $('.dys06').change(function() {
+      var s_num = $(this).data("s_num");  
+      var reh_s_num = $(this).data("route");
+      var dys06_val = Number($('#dys06_' + s_num).val());
+
+      if(chk_duplicate(reh_s_num , s_num , dys06_val)) {
+        alert("該路線已有順序為 "+dys06_val+" 的案主，請重新輸入") 
+        $('#dys06_' + s_num).val("")
+      }
+    });
+    
+    {{* 確定該路線的dys06值是否重複 *}}
+    function chk_duplicate(reh_s_num , s_num , dys06_val) {
+      var route_arr = [];
+      // 獲取該路線目前的排序資料
+      $('.route'+reh_s_num).each(function(i, obj) {
+        route_arr.push($(this).data("dys06"));
+      });
+      // 更新data的值
+      $("#route"+reh_s_num+"_"+s_num).data("dys06" , dys06_val);
+      // 新增路線變更的判斷
+      if(route_arr.includes(dys06_val , route_arr)) {
+        return true;
+      }
+      return false;
+    }
+    
+    $('#save_change').click(function(){
+      // console.log($("#fd_input").serialize());
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_change_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_change_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_upd_ok}}");
+            location.reload();
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+      return;
+    });
+    
+    $('#save').click(function(){
+      // console.log($("#fd_input").serialize());
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_this_page_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_this_page_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_upd_ok}}");
+            location.reload();
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+      return;
+    });
+    
+    $("#dp_s_num_sel").click(function(){
+      var dp_s_num = $(this).val();
+      $("#dp_s_num").val(dp_s_num);
+    });
+    
+    $("#reh_s_num_sel").click(function(){
+      var reh_s_num = $(this).val();
+      $("#reh_s_num").val(reh_s_num);
+    });
+    
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>配送調整</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">作業專區</a></li>
+        <li class="breadcrumb-item"><a href="#">配送調整</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+        <button type="button" class="btn btn-success btn-sm upd" data-toggle="modal" data-target=".pop-input">送餐調整 <i class="fas fa-cog"></i></button>
+        {{*<button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>*}}
+        <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter">
+        <div class="row">
+          <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-8">
+            <form class="maT20" action="{{$tv_que_link}}" id="fd_que_input" name="fd_que_input" method="GET" enctype="multipart/form-data">
+              <input type='hidden' id='que_kind' name='que_kind' class='form-control form-control-sm que_enter' value='que'>
+              <input type='hidden' id='que_order_fd_name' name='que_order_fd_name' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+              <input type='hidden' id='que_order_kind' name='que_order_kind' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">查詢路線</span>
+                </div>
+                <select id="que_reh_s_num" name="que_reh_s_num" class="form-control form-control-sm">
+                  <option value="" selected>-請選擇-</option>
+                  {{foreach from=$tv_route_h_row key=k item=v}}
+                    <option value="{{$v.s_num}}">{{$v.reh01}}</option>
+                  {{/foreach}}
+                </select>                
+                <div class="input-group-prepend">
+                  <span class="input-group-text ml-1">送餐時段</span>
+                </div>
+                <select id="que_dys09" name="que_dys09" class="form-control form-control-sm">
+                  <option value="1">早上</option>
+                  <option value="2">下午</option>
+                </select>
+                <div class="input-group-prepend">
+                  <span class="input-group-text ml-1">排序</span>
+                </div>
+                <select id="que_order" name="que_order" class="form-control form-control-sm">
+                  <option value="asc">升序</option>
+                  <option value="desc">降序</option>
+                </select>
+                <div class="input-group-prepend">
+                  <button id="f_search" name="f_search" class="btn btn-C1 btn-sm ml-1" type="button">{{$tv_que_btn}}</button>
+                </div>
+              </div>
+              <script>
+                $('#que_reh_s_num').val('{{$tv_que_reh_s_num|default:''}}');
+                $('#que_dys02').val('{{$tv_que_dys02|default:'1'}}');
+                $('#que_order').val('{{$tv_que_order|default:'asc'}}');
+              </script>
+            </form>
+          </div>
+        </div>
+      </div>
+    <!-- 篩選＆搜尋表格 -->
+      <div class="">
+        <table class="table table-bordered table-striped table-hover table-sm">
+          <thead>
+            <tr class="thead-light">
+              <th class="text-nowrap">
+                <input type="checkbox" id="select_all" value="">
+              </th><!--0-->
+              <th class="text-nowrap"><span id="fd_acc_s_num" class="fd_order cursorpointer" data-fd_name="acc_s_num" data-order_kind="">送餐人員</span><span id="icon_acc_s_num"></span></th><!--4-->
+              <th class="text-nowrap"><span id="fd_clnt_s_num" class="fd_order cursorpointer" data-fd_name="acc_s_num" data-order_kind="">案主名稱</span><span id="icon_ct_s_num"></span></th><!--4-->
+              <th class="text-nowrap"><span id="fd_dys01" class="fd_order cursorpointer" data-fd_name="dys02" data-order_kind="">送餐日期</span><span id="icon_dys02"></span></th><!--6-->
+              <th class="text-nowrap"><span id="fd_dys02" class="fd_order cursorpointer" data-fd_name="dys01" data-order_kind="">類型</span><span id="icon_dys01"></span></th><!--5-->
+              <th class="text-nowrap"><span id="fd_dys03" class="fd_order cursorpointer" data-fd_name="dys03" data-order_kind="">餐點名稱</span><span id="icon_dys03"></span></th><!--7-->
+              <th class="text-nowrap" width="05%"><span id="fd_dys07" class="fd_order cursorpointer" data-fd_name="dys07" data-order_kind="">送餐順序</span><span id="icon_dys07"></span></th><!--11-->
+              <th class="text-nowrap"><span id="fd_dys08" class="fd_order cursorpointer" data-fd_name="dys08" data-order_kind="">配送狀況</span><span id="icon_dys08"></span></th><!--12-->
+              <th class="text-nowrap"><span id="fd_dys09" class="fd_order cursorpointer" data-fd_name="dys09" data-order_kind="">送達時間</span><span id="icon_dys09"></span></th><!--13-->
+              {{*<th class="text-left"></th>*}}
+            </tr>
+          </thead>
+          <tbody>
+            <form class="maT20" id="fd_input" name="fd_input" method="POST">
+            <input type="hidden" id="dp_s_num" name="dp_s_num" value="">
+            <input type="hidden" id="reh_s_num" name="reh_s_num" value="">
+            {{foreach from=$tv_daily_shipment_row key=k item=v}}
+              <input type="hidden" id="s_num_{{$v.s_num}}" name="s_num[]" value="{{$v.s_num|default:''}}">
+              <input type="hidden" id="change_{{$v.s_num}}" name="select_change[]" value="0">
+              <tr>
+                <td class="text-left">
+                  <span class='form-group'>
+                    <input type="checkbox" id="select_change_{{$v.s_num}}" data-s_num="{{$v.s_num}}" class="select_change" value="0">
+                  </span>
+                </td><!--0.s_num-->
+                <td class="text-left">{{$v.dp01|default:''}}{{$v.dp02|default:''}}</td><!--人員指派-->
+                <td class="text-left">{{$v.ct_name|default:''}}</td><!--1.tw_clients.s_num-->
+                <td class="text-left">{{$v.dys01|default:''|date_format:"%Y-%m-%d"}}</td><!--5.類型-->
+                <td class="text-left">{{$v.dys02|default:''}}</td><!--6.送餐日期-->
+                <td class="text-left">{{$v.dys03|default:''}}</td><!--7.餐點名稱-->
+                {{*
+                <td class="text-left">
+                  <select id='reh_s_num_{{$v.s_num}}' name='reh_s_num[]' data-placeholder='-請選擇或輸入送餐路線-' data-s_num="{{$v.s_num}}" class='form-control form-control-sm reh_s_num' required>
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=$tv_routes_row key=kr item=vr}}
+                      {{if $vr.s_num == $v.reh_s_num}}
+                        <option value='{{$vr.s_num}}' selected>{{$vr.s_num}}</option>
+                      {{else}}
+                        <option value='{{$vr.s_num}}'>{{$vr.s_num}}</option>
+                      {{/if}}
+                    {{/foreach}}
+                </td><!--10.送餐路線-->
+                *}}
+                <td class="text-right">
+                  <input type="text" id="dys08_{{$v.s_num}}" name="dys08[]" class="form-control form-control-sm dys08" data-s_num="{{$v.s_num}}" data-route="{{$v.reh_s_num}}" value="{{$v.dys08|default:''}}">
+                </td><!--11.送餐順序-->
+                <td class="text-left">{{$v.dys11_str|default:''}}</td><!--12.配送狀況-->
+                <td class="text-left">{{$v.dys12|default:''}}</td><!--13.送達時間-->
+              </tr>
+            {{foreachelse}}
+            <tr>
+              <td colspan="99" class="alert alert-warning">
+                  查無資料!!!
+              </td>
+            </tr>
+            {{/foreach}}
+          </tbody>
+            </form>
+          </tbody>
+        </table>
+      </div>
+      <!-- 頁籤 -->
+      <ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+        {{$tv_pg_link}}
+      </ul>
+      <!-- 頁籤 end-->
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此配送調整資料嗎？
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- 新增、修改 Begin-->
+  <div class="modal fade pop-input" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">    
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content modal-C1 ">
+      <form class="maT20" id="fd_vd_ball_input" name="fd_vd_ball_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+          <input type='hidden' id='msel' value=''>
+          <input type='hidden' id='vd_s_num' name='vd_s_num' value='{{$tv_vd_s_num|default:0}}'>
+          <input type='hidden' id='pt_2d_s_num' name='pt_2d_s_num' value='{{$tv_pt_2d_s_num|default:0}}'>
+          <input type='hidden' id='s_num'>
+          <div class="modal-header">
+            <!-- Heading -->
+            <h2 id="msel_str"></h2><h2>送餐調整</h2>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body text-left">
+            <table class="table xtable-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="col-3"}}
+              {{assign var="swidth_right" value="col-9"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>送餐員調整</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <select id='dp_s_num_sel' data-placeholder='-請選擇或輸入送餐員-' class='form-control form-control-sm' >
+                          <option value='' selected>-請選擇-</option>
+                          {{foreach from=$tv_dp_row key=k item=v}}
+                            <option value="{{$v.s_num}}">{{$v.dp01}}{{$v.dp02}}</option>
+                          {{/foreach}}
+                        </select>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_dp_s_num' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>路線調配</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <select id='reh_s_num_sel' data-placeholder='-請選擇或輸入送餐路線' class='form-control form-control-sm' >
+                          <option value='' selected>-請選擇-</option>
+                          {{foreach from=$tv_route_h_row key=k item=v}}
+                            <option value="{{$v.s_num}}">{{$v.reh01}}</option>
+                          {{/foreach}}
+                        </select>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_reh_s_num' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="close" class="btn btn-sm btn-secondary" data-dismiss="modal">關閉</button>
+            <button type="button" id="save_change" class="btn btn-sm btn-primary"><span class="operate_str"></span>儲存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- 新增、修改 end-->
+</div>

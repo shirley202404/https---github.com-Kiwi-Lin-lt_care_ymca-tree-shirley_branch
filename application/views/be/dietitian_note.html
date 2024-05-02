@@ -1,0 +1,510 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('[data-toggle="tooltip"]').tooltip()
+
+    $('.fd_que').click(function(){
+      $('#que_kind').val('que');
+    });
+    $('#f_search').click(function(){
+      $('#que_str').val($("#f_que").val());
+      $('#fd_que_input').submit();
+    });
+    $("#f_que").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#que_str').val($(this).val());
+        $('#f_search').click();
+      }
+    });
+    $(".que_enter").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#fd_que_input').submit();
+      }
+    });
+    $("#btn_que").click(function(){
+      $('#fd_que_input').submit();
+      return;
+    });
+    $('#btn_que_close').click(function(){
+      $("#btn_que_reset").click(); // 清除查詢資料
+      $('.pop-que').modal("hide");
+    })
+    
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+            //alert(rs);
+          }
+        }
+      })
+      return;
+    });
+
+    $(document).on("click", ".over", function () {
+      var dnn_s_num = $(this).data('dnn_s_num');
+      $(".modal-footer #f_dnn_s_num").val(dnn_s_num);
+    });
+
+    $("#over").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_dnn_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_over_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_over_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function(rs) {
+          rs = JSON.parse(rs);
+          if(rs['rtn_msg']=='ok') {
+            alert("{{$tv_over_ok}}");
+            location.replace(rs['rtn_url']);
+          }
+          else {
+            alert("{{$tv_over_ng}}");
+          }
+        }
+      })
+      return;
+    });
+
+    $("input[name^='is_available']").click(function(){
+      var s_num = $(this).data('s_num');
+      if($(this).prop("checked")) { // 打勾
+        var is_available = 1;
+        var old_is_flag = false;
+      }
+      else {
+        var is_available = 0;
+        var old_is_flag = true;
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}upd_is_available',
+        data: {f_kind:'upd_is_available',f_s_num:s_num,f_is_available:is_available},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_save_link}}]upd_is_available:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+          }
+          else {
+            alert("{{$tv_upd_ng}}");
+            $('#is_available_'+s_num).prop('checked',old_is_flag);
+            //alert(rs);
+          }
+        }
+      })
+    });
+    $(".fd_order").click(function(){
+      $('#que_kind').val('order');
+      var fd_name = $(this).data('fd_name');
+      var order_kind = $(this).data('order_kind');
+      if('asc'==order_kind) {
+        $(this).data('order_kind','desc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-down"></i>');
+        order_kind = 'desc';
+      }
+      else {
+        $(this).data('order_kind','asc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-up"></i>');
+        order_kind = 'asc';
+      }
+      //order_kind = $(this).data('order_kind');
+      $('#que_order_fd_name').val(fd_name);
+      $('#que_order_kind').val(order_kind);
+      //console.log(fd_name);
+      //console.log(order_kind);
+      $('#fd_que_input').submit();
+    });
+    //console.log('{{$tv_que_order_fd_name}}');
+    {{if '' != $tv_que_order_fd_name}}
+      if('asc'=='{{$tv_que_order_kind}}') {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-up"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','asc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','asc');
+      }
+      else {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-down"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','desc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','desc');
+      }
+      $('#que_order_fd_name').val('{{$tv_que_order_fd_name}}');
+      $('#que_order_kind').val('{{$tv_que_order_kind}}');
+      //console.log($('#que_order_fd_name').val());
+      //console.log($('#que_order_kind').val());
+    {{/if}}
+    $('#que_str').val('{{$tv_que_str}}');
+
+    $(".que_dnn02_opt").change(function() { 
+      var object = [];
+      $(".que_dnn02_opt:checked").each(function(){
+        object.push($(this).val());
+      });
+      object = object.join(',');
+      $('#que_dnn02').val(object);
+    });
+
+    $(".track").click(function() {
+      var strMsg = '';
+      $("#download_type_str").html('追蹤紀錄表下載');
+      var source_s_num = $(this).data('s_num');
+      var download_type = $(this).data('sec05');
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('#show_download_info_btn').hide();
+      //console.log(s_num);
+      $.ajax({
+        type:'post',
+        url: '{{$tv_download_link}}',
+        data: {source_s_num:source_s_num, source:'{{$tv_source}}'},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_download_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $("#download_type").val(""); 
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>照會營養師</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">個案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">照會營養師</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      {{*<button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>*}}
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+      <button type="button" class="btn btn-light btn-sm fd_que" data-toggle="modal"  data-backdrop='static' data-keyboard="false" data-target=".pop-que">{{$tv_que_btn}} <i class="fas fa-search"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 Begin-->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 Begin -->
+      <div class="table-filter">
+        <div class="row">
+          <div class="col-6 col-sm-4 col-md-4 col-lg-4 col-xl-3 ml-3">
+            <div class="row">
+              <div class="input-group">
+                <input type="text" id="f_que" name="f_que" class="form-control form-control-sm" placeholder="請輸入搜尋內容" value="{{$tv_f_que}}">
+                <div class="input-group-prepend">
+                  <button id="f_search" name="f_search" class="btn btn-C1 btn-sm ml-1" type="button">{{$tv_que_btn}}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="maT20"></div>
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-link {{$tv_source_arr["meal"]|default:''}}" href="{{$tv_meal_link}}">餐食異動</a>
+          <a class="nav-link {{$tv_source_arr["item"]|default:''}}" href="{{$tv_item_link}}">照會營養師</a>
+          <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+            <p class="text-right">Total: {{$tv_total_rows|number_format|default:''}}</p>
+          </span>
+        </div>
+      </nav>
+      <!-- 篩選＆搜尋表格 End -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover table-sm">
+          <thead>
+            <tr class="thead-light">
+              <th class="text-nowrap"><span id="fd_s_num" class="fd_order cursorpointer" data-fd_name="s_num" data-order_kind="">序</span><span id="icon_s_num"><i class="fas fa-sort"></i></span></th><!--3-->
+              <th class="text-nowrap"><span id="fd_b_date" class="fd_order cursorpointer" data-fd_name="b_date" data-order_kind="">登打時間</span><span id="icon_b_date"><i class="fas fa-sort"></i></span></th><!--3-->
+              <th class="text-nowrap"><span id="fd_ct_name" class="fd_order cursorpointer" data-fd_name="ct_name" data-order_kind="">案主姓名</span><span id="icon_ct_name"><i class="fas fa-sort"></i></span></th><!--3-->
+              {{if 'meal' == $tv_source}}
+                <th class="text-nowrap"><span id="fd_sec01" class="fd_order cursorpointer" data-fd_name="sec01" data-order_kind="">服務現況</span><span id="icon_sec01"><i class="fas fa-sort"></i></span></th><!--3-->
+              {{/if}}
+              <th class="text-nowrap"><span id="fd_dnn_b_date" class="fd_order cursorpointer" data-fd_name="dnn_b_date" data-order_kind="">營養師處理時間</span><span id="icon_dnn_b_date"><i class="fas fa-sort"></i></span></th><!--3-->
+              <th class="text-nowrap"><span id="fd_dnn02" class="fd_order cursorpointer" data-fd_name="dnn02" data-order_kind="">營養師回覆</span><span id="icon_dnn02"><i class="fas fa-sort"></i></span></th><!--3-->
+              <th class="text-nowrap"><span id="fd_dnn02_02_memo" class="fd_order cursorpointer" data-fd_name="dnn02_02_memo" data-order_kind="">原因</span><span id="icon_dnn02_02_memo"><i class="fas fa-sort"></i></span></th><!--4-->
+              <th class="text-nowrap"><span id="fd_dnn02_03_opt" class="fd_order cursorpointer" data-fd_name="dnn02_03_opt" data-order_kind="">照會單位</span><span id="icon_dnn02_03_opt"><i class="fas fa-sort"></i></span></th><!--5-->
+              <th class="text-nowrap"><span id="fd_dnn02_04_s_num" class="fd_order cursorpointer" data-fd_name="dnn02_04_s_num" data-order_kind="">客訴單</span><span id="icon_dnn02_04_s_num"><i class="fas fa-sort"></i></span></th><!--6-->
+              <th class="text-nowrap"><span id="fd_dnn03" class="fd_order cursorpointer" data-fd_name="dnn03" data-order_kind="">結案時間</span><span id="icon_dnn03"><i class="fas fa-sort"></i></span></th><!--6-->
+              <th class="text-left" style="width: 12%"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{foreach from=$tv_dietitian_note_row key=k item=v}}
+              {{assign var='stool_tip' value="此筆{{if 'item' == $tv_source}}照會營養師{{else}}餐食異動{{/if}}已結案!!"}}
+              {{assign var='str_color' value=''}}
+              {{assign var='sclose_color' value='btn-warning'}}
+              {{assign var='supd_color' value='btn-C4'}}
+              {{assign var='sclose_disabled' value=''}}
+              {{assign var='supd_disabled' value=''}}
+              {{if $v.dnn03 != NULL}}
+                {{assign var='sclose_color' value='bgcG5'}}
+                {{assign var='sclose_disabled' value='disabled'}}
+                {{assign var='supd_color' value='bgcG5'}}
+                {{assign var='supd_disabled' value='disabled'}}
+              {{/if}}
+              <tr>
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.s_num|default:''}}</a></td><!--序-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.b_date|default:''}}</a></td><!--登打時間-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.ct01|default:''}}{{$v.ct02|default:''}}</a></td><!--案主姓名-->
+                {{if 'meal' == $tv_source}}
+                  <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.sec01_str|default:''}}</a></td><!--服務現況-->
+                {{/if}}
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.dnn_b_date|default:''}}</a></td><!--2.來源-MEMO(meal=餐食異動，item=非餐食異動)-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.dnn02_str|default:''}}</a></td><!--3.營養師回覆-OPT(1=無需處理;2=原因;3=照會單位;4=連結客訴單)-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.dnn02_02_memo|default:''}}</a></td><!--4.原因-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.dnn02_03_opt_str|default:''}}</a></td><!--5.照會單位-OPT(1=社工組;2=膳務組;3=倉管組;4=行政組;5=交通組;6=志工組)-->
+                <td class="text-left">
+                  {{if NULL != $v.sect}}
+                    <a href="{{$tv_service_case_complaint_link}}{{$v.sect->s_num|default:''}}" target="_blank">
+                      客訴單
+                    </a>
+                  {{/if}}
+                </td><!--6.客訴單s_num-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}" class="text-dark">{{$v.dnn03|default:''}}</a></td><!--6.客訴單s_num-->
+                <td class="text-right">
+                  <button type="button" class="btn btn-info btn-sm track" data-s_num="{{$v.s_num}}" {{if $v.track_cnt == 0}} data-toggle="tooltip" data-placement="top" title="目前無填寫任何追蹤紀錄!!" {{else}} data-toggle="modal" data-target=".pop-download"  {{/if}}>追蹤紀錄表</button>
+                  {{if 0 != $v.dnn_s_num}}
+                    <button type="button" class="btn {{$supd_color}} btn-sm" {{if 'disabled' != $supd_disabled}} onclick="location.href='{{$tv_upd_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}';" {{else}} data-toggle="tooltip" data-placement="top" title="{{$stool_tip|default:''}}" {{/if}}>{{$tv_upd_btn}}</button>
+                  {{else}}
+                    <button type="button" class="btn {{$supd_color}} btn-sm" {{if 'disabled' != $supd_disabled}} onclick="location.href='{{$tv_add_link}}{{$v.s_num}}?que_source={{$tv_source|default:''}}';" {{else}} data-toggle="tooltip" data-placement="top" title="{{$stool_tip|default:''}}" {{/if}}>{{$tv_upd_btn}}</button>
+                  {{/if}}
+                  <button type="button" class="btn {{$sclose_color}} btn-sm over" {{if 'disabled' != $sclose_disabled}} data-dnn_s_num="{{$v.dnn_s_num}}" data-toggle="modal" data-target=".pop-over_container" {{else}} data-toggle="tooltip" data-placement="top" title="{{$stool_tip|default:''}}" {{/if}}>結案</button>
+                </td>
+              </tr>
+            {{foreachelse}}
+            <tr>
+              <td colspan="99" class="alert alert-warning">
+                  查無資料!!!
+              </td>
+            </tr>
+            {{/foreach}}
+          </tbody>
+        </table>
+      </div>
+      <!-- 頁籤 Begin -->
+      <ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+        {{$tv_pg_link|default:''}}
+      </ul>
+      <!-- 頁籤 End -->
+    </div>
+    <!-- 表格區塊 End -->
+  </div>
+  <!-- 刪除確認彈出 Begin -->
+  <div class="modal fade pop-del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此照會營養師資料嗎？
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 End -->
+  <!-- 結案確認彈出 -->
+  <div class="modal fade pop-over_container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要結束此筆{{if 'item' == $tv_source}}照會營養師{{else}}餐食異動{{/if}}嗎？
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_dnn_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="over" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 結案確認彈出 end-->
+  <!-- 下載資訊視窗彈出 -->
+  <div class="modal fade pop-download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+	    <div class="modal-body">
+        <div class="text-center paT10">
+          <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> <span id="download_type_str"></span></i><br></h1>
+          <span id="show_download_info"></span>
+        </div>
+	    </div>
+	   <div class="modal-footer text-center">
+	     <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 下載資訊視窗彈出 end-->
+  <!-- 查詢2彈出 Begin-->
+  <div class="modal fade pop-que" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+      <div class="modal-content modal-C1 ">
+        <form class="maT20" action="{{$tv_que_link}}" id="fd_que_input" name="fd_que_input" method="GET" enctype="multipart/form-data">
+          <input type='hidden' id='que_kind' name='que_kind' class='form-control form-control-sm que_enter' value='que'>
+          <input type='hidden' id='que_order_fd_name' name='que_order_fd_name' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <input type='hidden' id='que_order_kind' name='que_order_kind' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <input type='hidden' id='que_source' name='que_source' class='form-control form-control-sm que_enter' placeholder='' value='{{if $tv_source_arr['item'] == 'active'}}item{{/if}}'>
+          <div class="text-center paTB20">
+            {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+            <h2>請輸入查詢條件</h2>
+          </div>
+          <div class="modal-body text-left">
+            <table class="table xtable-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="col-3"}}
+              {{assign var="swidth_right" value="col-9"}}
+              <tbody>
+                {{if 'meal' == $tv_source}}
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>服務現況</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class='input-group input-group-sm'>
+                          <select id='que_sec01' name='que_sec01' class='col-9 form-control form-control-sm' required>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>長照案</option>
+                            <option value='2'>特殊-老案</option>
+                            <option value='3'>自費戶</option>
+                            <option value='4'>邊緣戶</option>
+                            <option value='5'>身障案</option>
+                            <option value='6'>特殊-身案</option>
+                            <option value='7'>志工</option>
+                            <option value='8'>獨老案</option>
+                          </select>                        
+                          <div class='input-group-append'>
+                            <span id='helpBlock_que_sec01' class='help-block ml-2'></span>
+                          </div>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                {{/if}}
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>營養師回覆</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='hidden' id='que_dnn02' name='que_dnn02' class='col-9 form-control form-control-sm que_enter ' placeholder='請輸入營養師回覆-OPT(1=無需處理;2=原因;3=照會單位;4=連結客訴單)' value=''>
+                        <span class='form-control form-control-sm col-9'>
+                          <input type='checkbox' class='que_dnn02_opt' value='1'> 無需處理
+                          <input type='checkbox' class='que_dnn02_opt' value='2'> 原因
+                          <input type='checkbox' class='que_dnn02_opt' value='3'> 照會單位
+                          <input type='checkbox' class='que_dnn02_opt' value='4'> 連結客訴單
+                        </span>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_que_dnn02' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>原因</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_dnn02_02_memo' name='que_dnn02_02_memo' class='col-9 form-control form-control-sm que_enter ' placeholder='請輸入原因' value=''>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_que_dnn02_02_memo' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>照會單位</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <span class='form-control form-control-sm col-9'>
+                          <input type='radio' name='que_dnn02_03_opt' value='1'> 社工組
+                          <input type='radio' name='que_dnn02_03_opt' value='2'> 膳務組
+                          <input type='radio' name='que_dnn02_03_opt' value='3'> 倉管組
+                          <input type='radio' name='que_dnn02_03_opt' value='4'> 行政組
+                          <input type='radio' name='que_dnn02_03_opt' value='5'> 交通組
+                          <input type='radio' name='que_dnn02_03_opt' value='6'> 志工組 
+                        </span>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_que_dnn02_03_opt' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>全文檢索</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <span class='input-group input-group-sm'>
+                        <input type='text' id='que_str' name='que_str' class='col-9 form-control form-control-sm que_enter' placeholder='' value=''>
+                        <div class="input-group-append">
+                          <span id='helpBlock_que_str' class='help-block ml-2'>(所有欄位搜尋)</span>
+                        </div>
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}}'></td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <button type="button" id="btn_que" class="btn btn-C1 col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                    <button id="btn_que_reset" type="reset" class="btn btn-C1-line col-3">清除 <i class="fas fa-eraser"></i></button>
+                    <button type="button" id="btn_que_close" class="btn btn-C1-line col-3">關閉 <i class="far fa-times-circle"></i></button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- 查詢2彈出 End-->
+</div>

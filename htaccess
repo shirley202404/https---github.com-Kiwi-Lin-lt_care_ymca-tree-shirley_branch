@@ -1,0 +1,32 @@
+order deny,allow
+
+# 系統變數，依據設定決定使用的相關設定(application/config/*)
+# 開發 pc
+SetEnv CI_ENV development
+# 對外測試
+#SetEnv CI_ENV testing
+# 正式機
+#SetEnv CI_ENV production
+
+Allow from ::1
+allow from 127.0.0.1
+allow from 192.168.2.0/24 # 內部網段
+allow from 59.120.147.31 # Tony 公司
+allow from 59.120.147.32 # Tony 公司
+allow from 59.120.147.33 # Tony 公司
+allow from 114.33.18.189 # Daniel Home
+allow from 114.33.18.179 # Daniel Home
+allow from 42.76.208.89 # Tony Mobile(會變動)
+#以下兩行，選擇1個使用
+#deny from all # 這行開就只能上面列出的 ip 可以使用
+allow from all # 這行開就全開
+
+#Rewrite 設定
+<IfModule mod_rewrite.c>
+RewriteEngine on
+#依據使用的目錄去設定↓
+RewriteBase /ci_std/
+#是開放哪一些可以網址上輸入↓
+RewriteCond $1 !^(index\.php|pub|art|favicon.ico|$) 
+RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>

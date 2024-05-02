@@ -1,0 +1,819 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/jquery.fancybox.min.css">
+<script src="{{$tv_pub_url}}/js/jquery.fancybox.min.js"></script>
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      if($("#pt_ech08_pj_vd_s_num").val() == '') {
+        alert("請選擇廠商!!");
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            $.ajax({
+              type:'post',
+              url: '{{$tv_covert_file_to_base64_link}}',
+              data: {file_name:file.name},
+              error: function(xhr) {
+                err_msg = 'Ajax request發生錯誤[{{$tv_covert_file_to_base64_link}}]:'+xhr+'\n請重試';
+                alert(err_msg);
+              },
+              success: function (rs) {
+                if(rs != '') {
+                  $('#'+att_name+'_a').attr('href', rs);
+                  $('#'+att_name+'_img').attr('src', rs);
+                  $('#'+att_name+'_img').show();
+                }
+              }
+            });
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+      $('#'+del_fd_name+'_img').hide();
+    });
+    // 檔案刪除用 End //
+        
+    // vendor receiver 刪除 Begin //
+    $(document).on("click", ".pt_ecb_del", function () {
+      var pt_ecb_s_num = $(this).data('pt_ecb_s_num');
+      $(".pt_ecb_del #f_del_s_num").val(pt_ecb_s_num);
+    });
+        
+    $(document).on('click',"#pt_ecb_del",function() {
+      var pt_ecb_s_num = $(".pt_ecb_del #f_del_s_num").val();
+      $('#pt_ecb_tr_'+pt_ecb_s_num).remove();
+      $(this).vd_revr_item_reset();
+      return;
+    });
+    // vendor receiver 刪除 End //
+    
+    $('.add_pt_ecb_row').click(function(){
+      var add_num = $('#add_num').val(); // 第x筆
+      var add_qty = $('#add_qty').val(); // 新增筆數
+      $(this).reb_add_row(add_num , add_qty);
+      return;
+    });
+    
+    // 重新顯示欄位的序1,2,3... Begin //
+    $.fn.vd_revr_item_reset = function() {
+      var item_num = 1;
+      $('.pt_ecb_item').each(function() {
+        $(this).text(item_num);
+        item_num++;
+      })
+      var item_last = eval($('.pt_ecb_item').last().text()); // 目前 table 的 tbody 總共有幾個 tr
+      var item_last_str = item_last;
+      if(typeof(item_last) === 'undefined') {
+        item_last_str = 0;
+      }
+      $('#add_num').attr('max',item_last);
+      $('#add_num').val(item_last_str);
+      $('#add_qty').val('1');
+    }
+    // 重新顯示欄位的序1,2,3... End //
+
+    // 新增x筆明細 Begin //
+    $.fn.reb_add_row = function(add_num,add_qty) {
+      var wfn_cnt = eval($('#std_vd_revr_cnt').val()); // 目前的筆數，刪除資料這裡不會減少數量，避免id重複
+      var item_last = eval($('.pt_ecb_item').last().text()); // 目前 table 的 tbody 總共有幾個 tr
+      if(typeof(item_last) === 'undefined') {
+        item_last = 0;
+      }
+      
+      if(wfn_cnt == 0 || item_last == 0) {
+        var first_flag = 'Y';
+      }
+      else {
+        var first_flag = 'N';
+      }
+      
+      for (i = 1; i <= add_qty; i++) {
+        var snum = wfn_cnt+1; // 目前的筆數，刪除資料這裡不會減少數量，避免id重複        
+        var new_pt_ecb = $('#pt_ecb_tr_STD_SNUM')[0].outerHTML;
+        var add_pt_ecb_row = replaceAll(new_pt_ecb,'STD_SNUM',snum);
+        var add_pt_ecb_row = replaceAll(add_pt_ecb_row,'STD_ITEM','pt_ecb_item');
+        $('#std_vd_revr_cnt').val(snum);
+        $('#add_num').val(snum);
+        wfn_cnt = eval($('#std_vd_revr_cnt').val());
+        if('Y' == first_flag ) {
+          $('#pt_ecb').append(add_pt_ecb_row);
+        }
+        else {
+          $($('#pt_ecb > tr')[add_num-1]).after(add_pt_ecb_row);
+        }
+      }
+      $(this).vd_revr_item_reset();
+    }
+    // 新增x筆明細 End //
+    
+    {{if isset($tv_partlist_ec_h_row)}}
+      {{foreach from=$tv_partlist_ec_h_row key=k_vd item=v_vd}}
+        $("#pt_ech08_pj_vd_s_num option[value='{{$v_vd.pt_ech08_pj_vd_s_num}}']").prop("selected", true);
+      {{/foreach}}
+      $('#pt_ech08_pj_vd_s_num').trigger("chosen:updated");
+    {{/if}}
+    $(document).on("change", ".edit_dept", function() {
+      var num = $(this).data('num');
+      // console.log(num);
+      var edit_dept = $('#pt_ecb01_'+num).val();
+      upd_select_opt(edit_dept,num);
+    })
+    
+    function upd_select_opt(edit_dept,num) {
+      var select_opt = [];
+      var edit_reason = []; 
+          edit_reason[1] = "客戶要求";
+          edit_reason[2] = "設計補強";
+          edit_reason[3] = "製造組裝要求";
+          edit_reason[4] = "客戶要求";
+          edit_reason[5] = "不符測試規範";
+          edit_reason[6] = "漏做";
+          edit_reason[7] = "尺寸錯誤";
+          edit_reason[8] = "多做";
+          edit_reason[9] = "廠商建議";
+          edit_reason[10] = "模具品質不良";
+          edit_reason[11] = "成形不良";
+
+      $('#pt_ecb02_'+num).prop('required', true);
+      $('#pt_ecb02_'+num).html("");
+      $('#pt_ecb02_'+num).append("<option value='' selected>-請選擇-</option>");
+      switch (edit_dept) { 
+        case '1':
+          select_opt = [1];
+          break;
+        case '2':
+          select_opt = [6,7,8,9,10,11];
+          break;
+        case '3':
+          select_opt = [2,3,4,5];
+          break;
+      }
+
+      $.each(select_opt, function(k, v) {
+        $('#pt_ecb02_'+num).append("<option value='" + edit_reason[v] + "'>" + edit_reason[v] + "</option>");
+      });
+    }
+    {{foreach from=$tv_partlist_ec_h_row key=k item=v}}
+      {{foreach from=$v['partlist_ec_b_row'] key=kb item=vb}}
+        var edit_dept = $('#pt_ecb01_{{$vb.s_num}}').val();
+        upd_select_opt(edit_dept,'{{$vb.s_num}}');
+        $('#pt_ecb02_{{$vb.s_num}}').val('{{$vb.pt_ecb02}}');
+      {{/foreach}}
+    {{/foreach}}
+
+  });
+</script>
+
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>EC申請查詢</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">我的專案</a></li>
+        <li class="breadcrumb-item"><a href="#">EC申請查詢</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button type="button" class="btn btn-light btn-sm"  onclick="history.go(-1);">回上一頁<i class="fas fa-reply"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid ">
+    <br>
+    <!-- Content -->
+    <div class="row">
+      <div class="col-12">
+        <div>   
+          <ul class="nav nav-tabs pt-2" id="new_eva_Tab" role="tablist">
+            {{assign var="aria_selected_true" value="aria-selected='true'"}}
+            {{assign var="aria_selected_false" value="aria-selected='false'"}}
+            {{foreach from=$tv_partlist_ec_h_row key=k item=v}}
+            <li class="nav-item ">
+              <a class="nav-link {{if $v.pt_ech08_pj_vd_s_num == $tv_tab}} active {{/if}} " id="vd{{$v.pt_ech08_pj_vd_s_num}}-tab" data-toggle="tab" href="#vd{{$v.pt_ech08_pj_vd_s_num}}" role="tab" aria-controls="vd{{$v.pt_ech08_pj_vd_s_num}}" {{if $v.pt_ech08_pj_vd_s_num == $tv_tab}} {{$aria_selected_true}} {{else}} {{$aria_selected_false}} {{/if}}>{{$v.pt_ech08_pj_vd_name}}</a>
+            </li>
+            {{/foreach}}
+          </ul>                   
+        </div>
+        <div class="card card-default">
+          <form class="" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator
+          <div class="card-body p-0">
+            <div class="tab-content pb-5" id="new_evaContent">
+              {{foreach from=$tv_partlist_ec_h_row key=k item=v}}
+                {{if $v@iteration == "1"}}
+                <div class="tab-pane fade {{if $v.pt_ech08_pj_vd_s_num == $tv_tab}} show active {{/if}}" id="vd{{$v.pt_ech08_pj_vd_s_num}}" role="tabpanel" aria-labelledby="vd{{$v.pt_ech08_pj_vd_s_num}}-tab">
+                  <div class="table-responsive ">
+                    <input type='hidden' id='s_num_{{$v.s_num}}' name='pt_ech[s_num][]' value='{{$v.s_num|default:''}}'>
+                    <table class="table table-bordered table-hover table-sm">
+                      {{assign var="swidth_left" value="20%"}}
+                      {{assign var="swidth_right" value="80%"}}
+                      <tbody>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">負責人</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech01_em_name|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">發圖日期</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech02|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">單位</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech03|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">機型</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech04_pj01|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">Ilink料號</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech05_pt03|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">Part Name</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt04|default:''}}</span></td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>3D檔案名稱</td>
+                          <td width='{{$swidth_right}}' class='table-light'>
+                            <span class='form-group'>
+                              <div class="input-group input-group-sm">
+                                <div class="input-group-append">
+                                  <a href="javascript:;" class="file">上傳
+                                    <input text='hidden' id='pt_ech06_pt3d04' name='pt_ech[pt_ech06_pt3d04]' value='{{$v.pt_ech06_pt3d04|default:''}}'>
+                                    <input type="file" name="files" data-url="{{$tv_3d_upload_link}}" data-att_name='pt_ech06_pt3d04'>
+                                  </a>
+                                    <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='pt_ech06_pt3d04' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                                </div>
+                                <span id='pt_ech06_pt3d04_str' class="form-control form-control-sm" readonly>{{$v.pt_ech06_pt3d04|default:''}}</span>
+                              </div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">3D版本</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech06_pt3d05_next|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">Build</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech07_pj05_str|default:''}}</span></td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left}}' class='table-secondary text-right'>Vendor</td>
+                          <td width='{{$swidth_right}}' class='table-light'>
+                            <span class='form-group'>
+                               <select id='pt_ech08_pj_vd_s_num' name='pt_ech08_pj_vd_s_num[]' class='form-control form-control-sm chosen-select-deselect' multiple>
+                                 {{foreach from=$tv_pes_vendor_row key=k_vd item=v_vd}}
+                                   {{if $v_vd.is_available == 1}}
+                                     <option value='{{$v_vd.pt_pes02_vd_s_num}}'>{{$v_vd.pt_pes02_vd04}}-{{$v_vd.pt_pes02_vd02}}</option>
+                                   {{/if}}
+                                 {{/foreach}}
+                               </select>
+                              <span id='helpBlock_pt_ech08_pj_vd_s_num' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <h2 class="bg-secondary text-white text-center">修模內容</h2>
+                    <table class="table table-bordered table-striped table-hover table-sm">
+                      <thead>
+                        <tr class="thead-light">
+                          <th style="width:3.5%">項目</th>
+                          <th style="width:08%">責任單位</th>
+                          <th style="width:15%">修改原因</th>
+                          <th style="width:05%">修改點</th>
+                          <th style="width:20%">修改說明</th>
+                          <th style="width:08%">修改位置</th>
+                          <th style="width:08%">修改處2D公差標註截圖</th>
+                          <th style="width:08%">修模前</th>
+                          <th style="width:08%">修模後</th>
+                          <th style="width:5.5%">修模狀況</th>
+                          <th style="width:03%"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="pt_ecb">
+                        {{assign var="snum" value="1"}}
+                        <input type="hidden" id='std_vd_revr_cnt' value="{{count($v['partlist_ec_b_row'])|default:'1'}}">
+                        {{foreach from=$v['partlist_ec_b_row'] key=kb item=vb}}
+                          <tr id="pt_ecb_tr_{{$snum}}" class="pt_ecb_tr" data-item="{{$snum}}">
+                            <input type="hidden" id="s_num_{{$vb.s_num}}" name="pt_ecb[s_num][]" value="{{$vb.s_num|default:'0'}}">
+                            <td class='text-center'><span class="pt_ecb_item">{{$snum}}</span></td>
+                            <td>                          
+                              <span class="form-group">
+                                <select id="pt_ecb01_{{$vb.s_num}}" name="pt_ecb[pt_ecb01][]" class="form-control form-control-sm edit_dept" data-num="{{$vb.s_num}}">
+                                  <option value="">-請選擇-</option>
+                                  <option value="1">客戶</option>
+                                  <option value="2">供應商</option>
+                                  <option value="3">英業達</option>
+                                </select>
+                                <span id='helpBlock_pt_ecb01_{{$vb.s_num}}' class='text-danger'></span>
+                                <div class='help-block with-errors'></div>
+                              </span>
+                              <script>
+                                $("#pt_ecb01_{{$vb.s_num}}").val("{{$vb.pt_ecb01|default:''}}");
+                              </script>
+                            </td>
+                            <td>
+                              <span class="form-group">
+                                <select id="pt_ecb02_{{$vb.s_num}}" name="pt_ecb[pt_ecb02][]" class="form-control form-control-sm edit_reason" data-num="{{$vb.s_num}}">
+                                  <option value="">-請選擇-</option>
+                                  <option value="客戶要求">客戶要求</option>
+                                  <option value="設計補強">設計補強</option>
+                                  <option value="製造組裝要求">製造組裝要求</option>
+                                  <option value="客戶要求">客戶要求</option>
+                                  <option value="不符測試規範">不符測試規範</option>
+                                  <option value="漏做">漏做</option>
+                                  <option value="尺寸錯誤">尺寸錯誤</option>
+                                  <option value="多做">多做</option>
+                                  <option value="廠商建議">廠商建議</option>
+                                  <option value="模具品質不良">模具品質不良</option>
+                                  <option value="成形不良">成形不良</option>
+                                </select>
+                              </span>
+                              <script>
+                                $("#pt_ecb02_{{$vb.s_num}}").val("{{$vb.pt_ecb02|default:''}}");
+                              </script>
+                            </td>
+                            <td>
+                              <span class="form-group">
+                                <input type="number" min="1" id="pt_ecb03_{{$vb.s_num}}" name="pt_ecb[pt_ecb03][]" class="form-control form-control-sm text-right" value="{{$vb.pt_ecb03|default:''}}">
+                              </span>
+                            </td>
+                            <td>
+                              <span class="form-group">
+                                <textarea class='form-control' id="pt_ecb04_{{$vb.s_num}}" name='pt_ecb[pt_ecb04][]' rows='3' >{{$vb.pt_ecb04|default:''}}</textarea>
+                              </span>
+                            </td>
+                            <td>
+                              <span class='form-group'>
+                                <div class="maB10" >
+                                  <a id="pt_ecb20_{{$vb.s_num}}_a" href="{{$vb.pt_ecb20_img_base64}}" data-fancybox >
+                                    <img id='pt_ecb20_{{$vb.s_num}}_img' src="{{$vb.pt_ecb20_img_base64}}" class="img-fluid image" style="max-width: 100px;">
+                                  </a>
+                                </div>
+                                <div class="input-group input-group-sm">
+                                  <div class="input-group-append">
+                                    <a href="javascript:;" class="file">上傳
+                                      <input type='hidden' id='pt_ecb20_{{$vb.s_num}}' name='pt_ecb[pt_ecb20][]' value='{{$vb.pt_ecb20|default:''}}'>
+                                      <input type="file" class="file_upload" name="files" data-url="{{$tv_upload_link}}" data-att_name='pt_ecb20_{{$vb.s_num}}'>
+                                    </a>
+                                    <button type='button' class='btn btn-C2 btn-sm del' data-del_fd_name='pt_ecb20_{{$vb.s_num}}' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                                  </div>
+                                  {{*<span id='pt_ecb20_{{$vb.s_num}}_str' class="form-control form-control-sm" readonly>{{$vb.pt_ecb20|default:''}}</span>*}}
+                                </div>
+                              </span>
+                            </td>
+                            <td>
+                              <div class="maB10" >
+                                <a id="pt_ecb21_{{$vb.s_num}}_a" href="{{$vb.pt_ecb21_img_base64}}" data-fancybox >
+                                  <img id='pt_ecb21_{{$vb.s_num}}_img' src="{{$vb.pt_ecb21_img_base64}}" class="img-fluid image" style="max-width: 100px;">
+                                </a>
+                              </div>
+                              <span class='form-group'>
+                                <div class="input-group input-group-sm">
+                                  <div class="input-group-append">
+                                    <a href="javascript:;" class="file">上傳
+                                      <input type='hidden' id='pt_ecb21_{{$vb.s_num}}' name='pt_ecb[pt_ecb21][]' value='{{$vb.pt_ecb21|default:''}}'>
+                                      <input type="file" class="file_upload" name="files" data-url="{{$tv_upload_link}}" data-att_name='pt_ecb21_{{$vb.s_num}}'>
+                                    </a>
+                                    <button type='button' class='btn btn-C2 btn-sm del' data-del_fd_name='pt_ecb21_{{$vb.s_num}}' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                                  </div>
+                                  {{*<span id='pt_ecb21_{{$vb.s_num}}_str' class="form-control form-control-sm" readonly>{{$vb.pt_ecb21|default:''}}</span>*}}
+                                </div>
+                              </span>
+                            </td>
+                            <td>
+                              <span class='form-group'>
+                                <div class="maB10" >
+                                  <a id="pt_ecb11_b_{{$vb.s_num}}_a" href="{{$vb.pt_ecb11_b_img_base64}}" data-fancybox >
+                                    <img id='pt_ecb11_b_{{$vb.s_num}}_img' src="{{$vb.pt_ecb11_b_img_base64}}" class="img-fluid image" style="max-width: 100px;">
+                                  </a>
+                                </div>
+                                <div class="input-group input-group-sm">
+                                  <div class="input-group-append">
+                                    <a href="javascript:;" class="file">上傳
+                                      <input type='hidden' id='pt_ecb11_b_{{$vb.s_num}}' name='pt_ecb[pt_ecb11_b][]' value='{{$vb.pt_ecb11_b|default:''}}'>
+                                      <input type="file" class="file_upload" name="files" data-url="{{$tv_upload_link}}" data-att_name='pt_ecb11_b_{{$vb.s_num}}'>
+                                    </a>
+                                    <button type='button' class='btn btn-C2 btn-sm del' data-del_fd_name='pt_ecb11_b_{{$vb.s_num}}' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                                  </div>
+                                  {{*<span id='pt_ecb11_b_{{$vb.s_num}}_str' class="form-control form-control-sm" readonly>{{$vb.pt_ecb11_b|default:''}}</span>*}}
+                                </div>
+                              </span>
+                            </td>
+                            <td> 
+                              <span class='form-group'>
+                                <div class="maB10" >
+                                  <a id="pt_ecb11_a_{{$vb.s_num}}_a" href="{{$vb.pt_ecb11_a_img_base64}}" data-fancybox >
+                                    <img id='pt_ecb11_a_{{$vb.s_num}}_img' src="{{$vb.pt_ecb11_a_img_base64}}" class="img-fluid image" style="max-width: 100px;">
+                                  </a>
+                                </div>
+                                <div class="input-group input-group-sm">
+                                  <div class="input-group-append">
+                                    <a href="javascript:;" class="file">上傳
+                                      <input type='hidden' id='pt_ecb11_a_{{$vb.s_num}}' name='pt_ecb[pt_ecb11_a][]' value='{{$vb.pt_ecb11_a|default:''}}'>
+                                      <input type="file" class="file_upload" name="files" data-url="{{$tv_upload_link}}" data-att_name='pt_ecb11_a_{{$vb.s_num}}'>
+                                    </a>
+                                      <button type='button' class='btn btn-C2 btn-sm del' data-del_fd_name='pt_ecb11_a_{{$vb.s_num}}' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                                  </div>
+                                  {{*<span id='pt_ecb11_a_{{$vb.s_num}}_str' class="form-control form-control-sm" readonly>{{$vb.pt_ecb11_a|default:''}}</span>*}}
+                                </div>
+                              </span>
+                            </td>
+                            <td>
+                              <input type='hidden' id='pt_ecb09_{{$vb.s_num}}' name='pt_ecb[pt_ecb09][]' value='{{$vb.pt_ecb09|default:''}}'>
+                              {{$vb.pt_ecb09_str|default:''}}
+                            </td>
+                            <td class="text-right">
+                              <button type='button' class='btn btn-C2 btn-sm pt_ecb_del' data-pt_ecb_s_num='{{$snum}}' data-toggle='modal' data-target='.pop-pt_ecb_del'>{{$tv_del_btn}}</button>
+                            </td>
+                          </tr>
+                          {{assign var="snum" value="{{$snum+1}}"}}
+                        {{/foreach}}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colspan="11" class="text-left">
+                            <div class="input-group input-group-sm">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">序第</span>
+                              </div>
+                              <input type="number" id="add_num" min="1" step="1" max="{{count($v['partlist_ec_b_row'])}}" style="text-align:right;width: 3em;" value="{{count($v['partlist_ec_b_row'])}}">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">筆後新增</span>
+                              </div>
+                              <input type="number" id="add_qty" min="1" step="1" size="2" style="text-align:right;width: 3em;" value="1">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text">筆</span>
+                              </div>
+                              <button class="btn btn-warning btn-sm add_pt_ecb_row" type="button">確定 <i class="fa fa-plus" aria-hidden="true"></i></button>
+                            </div>
+                          </td>
+                        </tr>
+                      </tfoot>    
+                    </table>
+                  </div>
+                </div>
+                {{else}}
+                <div class="tab-pane fade {{if $v.pt_ech08_pj_vd_s_num == $tv_tab}} show active {{/if}}" id="vd{{$v.pt_ech08_pj_vd_s_num}}" role="tabpanel" aria-labelledby="vd{{$v.pt_ech08_pj_vd_s_num}}-tab">
+                  <div class="table-responsive ">
+                    <input type='hidden' id='s_num_{{$v.s_num}}' name='pt_ech[s_num][]' value='{{$v.s_num|default:''}}'>
+                    <table class="table table-bordered table-hover table-sm">
+                      {{assign var="swidth_left" value="20%"}}
+                      {{assign var="swidth_right" value="80%"}}
+                      <div class="maTB10 text-info">
+                        <h2>如為多個廠商，只需在第一間廠商進行修改!!</h2>
+                      </div>
+                      <tbody>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">負責人</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech01_em_name|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">發圖日期</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech02|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">單位</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech03|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">機型</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech04_pj01|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">Ilink料號</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech05_pt03|default:''}}</span></td>
+                        </tr>
+                        <tr class="d-flex">
+                          <td width="{{$swidth_left}}" class="table-secondary text-right">3D檔案名稱</td>
+                          <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech06_pt3d04|default:''}}</span></td>
+                        </tr>
+                         <tr class="d-flex">
+                           <td width="{{$swidth_left}}" class="table-secondary text-right">3D目前版本</td>
+                           <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech06_pt3d05|default:''}}</span></td>
+                         </tr>
+                         <tr class="d-flex">
+                           <td width="{{$swidth_left}}" class="table-secondary text-right">簽核完成3D版本</td>
+                           <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech06_pt3d05_next|default:''}}</span></td>
+                         </tr>
+                         <tr class="d-flex">
+                           <td width="{{$swidth_left}}" class="table-secondary text-right">Build</td>
+                           <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech07_pj05_str|default:''}}</span></td>
+                         </tr>
+                         <tr class="d-flex">
+                           <td width="{{$swidth_left}}" class="table-secondary text-right">廠商</td>
+                           <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$v.pt_ech08_pj_vd_name|default:''}}</span></td>
+                         </tr>
+                       </tbody>
+                       </table>
+                       <h2 class="bg-secondary text-white text-center">修模內容</h2>
+                       <table class="table table-bordered table-striped table-hover table-sm">
+                         <thead>
+                           <tr class="thead-light">
+                             <th style="width:3.5%">項目</th>
+                             <th style="width:08%">責任單位</th>
+                             <th style="width:15%">修改原因</th>
+                             <th style="width:05%">修改點</th>
+                             <th style="width:20%">修改說明</th>
+                             <th style="width:08%">修改位置</th>
+                             <th style="width:08%">修改處2D公差標註截圖</th>
+                             <th style="width:08%">修模前</th>
+                             <th style="width:08%">修模後</th>
+                             <th style="width:5.5%">修模狀況</th>
+                           </tr>
+                         </thead>
+                         <tbody>
+                           {{assign var="snum" value="1"}}
+                           {{foreach from=$v['partlist_ec_b_row'] key=kb item=vb}}
+                             <input type="hidden" id="s_num_{{$vb.s_num}}" name="pt_ecb[s_num][]" value="{{$vb.s_num|default:'0'}}">
+                             <tr class="thead-light">
+                               <td class="text-center">{{$snum}}</td>
+                               <td class="">{{$vb.pt_ecb01_str|default:''}}</td>
+                               <td class="">{{$vb.pt_ecb02|default:''}}</td>
+                               <td class="text-right">{{$vb.pt_ecb03|default:''}}</td>
+                               <td class="">{{$vb.pt_ecb04|nl2br|default:''}}</td>
+                               <td class="">
+                                 {{if NULL != $vb.pt_ecb21}}
+                                   <a href="{{$vb.pt_ecb21_img_base64}}" data-fancybox >
+                                     <img src="{{$vb.pt_ecb21_img_base64}}" class="img-fluid" alt="{{$vb.pt_ecb21|default:''}}" title="{{$vb.pt_ecb21|default:''}}" style="max-width: 50px;">
+                                   </a>
+                                   <br/>
+                                 {{/if}}
+                               </td>
+                               <td>
+                                 {{if NULL != $vb.pt_ecb20}}
+                                   <a href="{{$vb.pt_ecb20_img_base64}}" data-fancybox >
+                                     <img src="{{$vb.pt_ecb20_img_base64}}" class="img-fluid" alt="{{$vb.pt_ecb20|default:''}}" title="{{$vb.pt_ecb20|default:''}}" style="max-width: 50px;">
+                                   </a>
+                                 {{/if}}
+                               </td>
+                               <td class="">
+                                 {{if NULL != $vb.pt_ecb11_b}}
+                                   <a href="{{$vb.pt_ecb11_b_img_base64}}" data-fancybox >
+                                     <img src="{{$vb.pt_ecb11_b_img_base64}}" class="img-fluid" alt="{{$vb.pt_ecb11_b|default:''}}" title="{{$vb.pt_ecb11_b|default:''}}" style="max-width: 50px;">
+                                   </a>
+                                   <br/>
+                                 {{/if}}
+                                 {{if NULL != $vb.pt_ecb12_b}}
+                                   <a href="{{$vb.pt_ecb12_b_img_base64}}" data-fancybox >
+                                     <img src="{{$vb.pt_ecb12_b_img_base64}}" class="img-fluid" alt="{{$vb.pt_ecb12_b|default:''}}" title="{{$vb.pt_ecb12_b|default:''}}" style="max-width: 50px;">
+                                   </a>
+                                 {{/if}}
+                               </td>
+                               <td class="">
+                                 {{if NULL != $vb.pt_ecb11_a}}
+                                   <a href="{{$vb.pt_ecb11_a_img_base64}}" data-fancybox >
+                                     <img src="{{$vb.pt_ecb11_a_img_base64}}" class="img-fluid" alt="{{$vb.pt_ecb11_a|default:''}}" title="{{$vb.pt_ecb11_a|default:''}}" style="max-width: 50px;">
+                                   </a>
+                                   <br/>
+                                 {{/if}}
+                                 {{if NULL != $vb.pt_ecb12_a}}
+                                   <a href="{{$vb.pt_ecb12_a_img_base64}}" data-fancybox >
+                                     <img src="{{$vb.pt_ecb12_a_img_base64}}" class="img-fluid" alt="{{$vb.pt_ecb12_a|default:''}}" title="{{$vb.pt_ecb12_a|default:''}}" style="max-width: 50px;">
+                                   </a>
+                                 {{/if}}
+                               </td>
+                               <td class="">{{$vb.pt_ecb09_str|default:''}}</td>
+                             </tr>
+                           {{assign var="snum" value="{{$snum+1}}"}}
+                         {{/foreach}}
+                         </tbody>    
+                       </table>
+                     </div>
+                  </div>
+                {{/if}}
+              {{/foreach}}
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- pt_ecb 明細刪除確認彈出 -->
+  <div class="modal fade pop-pt_ecb_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="pt_ecb_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="pt_ecb_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- pt_ecb 明細刪除確認彈出 end-->
+  {{*預先增加一筆空白資料，主要用來複製用。 Begin*}}
+    <table style="display:none;">
+      <tr id="pt_ecb_tr_STD_SNUM" class="pt_ecb_tr" data-item="STD_SNUM">
+        <input type="hidden" id="s_num_STD_SNUM" name="pt_ecb[s_num][]" value="0">
+         <td class='text-center'><span class="STD_ITEM"></span></td>
+         <td width="08%">                          
+           <span class="form-group">
+             <select id="pt_ecb01_NEW_STD_SNUM" name="pt_ecb[pt_ecb01][]" class="form-control form-control-sm edit_dept" data-num="NEW_STD_SNUM">
+               <option value="">-請選擇-</option>
+               <option value="1">客戶</option>
+               <option value="2">供應商</option>
+               <option value="3">英業達</option>
+             </select>
+             <span id='helpBlock_pt_ecb01_STD_SNUM' class='text-danger'></span>
+             <div class='help-block with-errors'></div>
+           </span>
+         </td>
+         <td width="10%">
+           <span class="form-group">
+             <select id="pt_ecb02_NEW_STD_SNUM" name="pt_ecb[pt_ecb02][]" class="form-control form-control-sm edit_reason" data-num="NEW_STD_SNUM">
+              <option value="">-請選擇-</option>
+            </select>
+          </span>
+         </td>
+         <td width="06%">
+           <span class="form-group">
+             <input type="number" min="1" id="pt_ecb03_STD_SNUM" name="pt_ecb[pt_ecb03][]" class="form-control form-control-sm text-right" >
+           </span>
+         </td>
+         <td width="10%">
+           <span class="form-group">
+             <textarea class='form-control' id="pt_ecb04_STD_SNUM" name='pt_ecb[pt_ecb04][]' rows='3' ></textarea>
+           </span>
+         </td>
+         <td width="08%">
+           <span class='form-group'>
+             <div class="maB10" >
+               <a id="pt_ecb20_STD_SNUM_a" href="" data-fancybox >
+                 <img id='pt_ecb20_STD_SNUM_img' src="" class="img-fluid image" style="max-width: 100px;">
+               </a>
+             </div>
+             <div class="input-group input-group-sm">
+               <div class="input-group-append">
+                 <a href="javascript:;" class="file">上傳
+                   <input type='hidden' id='pt_ecb20_STD_SNUM' name='pt_ecb[pt_ecb20][]' value=''>
+                   <input type="file" class="file_upload" name="files" data-url="{{$tv_upload_link}}" data-att_name='pt_ecb20_STD_SNUM'>
+                 </a>
+                 <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='pt_ecb20_STD_SNUM' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+               </div>
+             </div>
+           </span>
+         </td>
+         <td width="08%">
+           <span class='form-group'>
+             <div class="maB10" >
+               <a id="pt_ecb21_STD_SNUM_a" href="" data-fancybox >
+                 <img id='pt_ecb21_STD_SNUM_img' src="" class="img-fluid image" style="max-width: 100px;">
+               </a>
+             </div>
+             <div class="input-group input-group-sm">
+               <div class="input-group-append">
+                 <a href="javascript:;" class="file">上傳
+                   <input type='hidden' id='pt_ecb21_STD_SNUM' name='pt_ecb[pt_ecb21][]' value=''>
+                   <input type="file" class="file_upload" name="files" data-url="{{$tv_upload_link}}" data-att_name='pt_ecb21_STD_SNUM'>
+                 </a>
+                 <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='pt_ecb21_STD_SNUM' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+               </div>
+             </div>
+           </span>
+         </td>
+         <td width="08%">
+           <span class='form-group'>
+             <div class="maB10" >
+               <a id="pt_ecb11_b_STD_SNUM_a" href="" data-fancybox >
+                 <img id='pt_ecb11_b_STD_SNUM_img' src="" class="img-fluid image" style="max-width: 100px;">
+               </a>
+             </div>
+             <div class="input-group input-group-sm">
+               <div class="input-group-append">
+                 <a href="javascript:;" class="file">上傳
+                   <input type='hidden' id='pt_ecb11_b_STD_SNUM' name='pt_ecb[pt_ecb11_b][]' value=''>
+                   <input type="file" class="file_upload" name="files" data-url="{{$tv_upload_link}}" data-att_name='pt_ecb11_b_STD_SNUM'>
+                 </a>
+                 <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='pt_ecb11_b_STD_SNUM' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+               </div>
+             </div>
+           </span>
+         </td>
+         <td width="08%">
+           <span class='form-group'>
+             <div class="maB10" >
+               <a id="pt_ecb11_a_STD_SNUM_a" href="" data-fancybox >
+                 <img id='pt_ecb11_a_STD_SNUM_img' src="" class="img-fluid image" style="max-width: 100px;">
+               </a>
+             </div>
+             <div class="input-group input-group-sm">
+               <div class="input-group-append">
+                 <a href="javascript:;" class="file">上傳
+                   <input text='hidden' id='pt_ecb11_a_STD_SNUM' name='pt_ecb[pt_ecb11_a][]' value=''>
+                   <input type="file" class="file_upload" name="files" data-url="{{$tv_upload_link}}" data-att_name='pt_ecb11_a_STD_SNUM'>
+                 </a>
+                 <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='pt_ecb11_a_STD_SNUM' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+               </div>
+             </div>
+           </span>
+         </td>
+         <td width="5.5%">
+           <input type='hidden' id='pt_ecb09_STD_SNUM' name='pt_ecb[pt_ecb09][]' value='1'>
+           OPEN
+         </td>
+         <td class="text-right" width="03%">
+           <button type='button' class='btn btn-C2 btn-xs pt_ecb_del' data-pt_ecb_s_num='STD_SNUM' data-toggle='modal' data-target='.pop-pt_ecb_del'>{{$tv_del_btn}}</button>
+         </td>
+        </tr>
+      </table>
+    {{*預先增加一筆空白資料，主要用來複製用。 End*}}
+</div>

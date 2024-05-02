@@ -1,0 +1,346 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('.fd_que').click(function(){
+      $('#que_kind').val('que');
+    });
+    $('#f_search').click(function(){
+      $('#que_str').val($("#f_que").val());
+      $('#fd_que_input').submit();
+    });
+    $("#f_que").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#que_str').val($(this).val());
+        $('#f_search').click();
+      }
+    });
+    $(".que_enter").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#fd_que_input').submit();
+      }
+    });
+    $("#btn_que").click(function(){
+      $('#fd_que_input').submit();
+      return;
+    });
+    $('#btn_que_close').click(function(){
+      $("#btn_que_reset").click(); // 清除查詢資料
+      $('.pop-que').modal("hide");
+    })
+    
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+            //alert(rs);
+          }
+        }
+      })
+      return;
+    });
+    $("input[name^='is_available']").click(function(){
+      var s_num = $(this).data('s_num');
+      if($(this).prop("checked")) { // 打勾
+        var is_available = 1;
+        var old_is_flag = false;
+      }
+      else {
+        var is_available = 0;
+        var old_is_flag = true;
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}upd_is_available',
+        data: {f_kind:'upd_is_available',f_s_num:s_num,f_is_available:is_available},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_save_link}}]upd_is_available:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+          }
+          else {
+            alert("{{$tv_upd_ng}}");
+            $('#is_available_'+s_num).prop('checked',old_is_flag);
+            //alert(rs);
+          }
+        }
+      })
+    });
+    $(".fd_order").click(function(){
+      $('#que_kind').val('order');
+      var fd_name = $(this).data('fd_name');
+      var order_kind = $(this).data('order_kind');
+      if('asc'==order_kind) {
+        $(this).data('order_kind','desc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-down"></i>');
+        order_kind = 'desc';
+      }
+      else {
+        $(this).data('order_kind','asc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-up"></i>');
+        order_kind = 'asc';
+      }
+      //order_kind = $(this).data('order_kind');
+      $('#que_order_fd_name').val(fd_name);
+      $('#que_order_kind').val(order_kind);
+      //console.log(fd_name);
+      //console.log(order_kind);
+      $('#fd_que_input').submit();
+    });
+    //console.log('{{$tv_que_order_fd_name}}');
+    {{if '' != $tv_que_order_fd_name}}
+      if('asc'=='{{$tv_que_order_kind}}') {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-up"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','asc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','asc');
+      }
+      else {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-down"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','desc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','desc');
+      }
+      $('#que_order_fd_name').val('{{$tv_que_order_fd_name}}');
+      $('#que_order_kind').val('{{$tv_que_order_kind}}');
+      //console.log($('#que_order_fd_name').val());
+      //console.log($('#que_order_kind').val());
+    {{/if}}
+    $('#que_str').val('{{$tv_que_str}}');
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>捐款資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">捐款管理</a></li>
+        <li class="breadcrumb-item"><a href="#">捐款資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      {{*<button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>*}}
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+      <button type="button" class="btn btn-light btn-sm fd_que" data-toggle="modal"  data-backdrop='static' data-keyboard="false" data-target=".pop-que">{{$tv_que_btn}} <i class="fas fa-search"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 Begin-->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 Begin -->
+      <div class="table-filter">
+        <div class="row">
+          <div class="col-6 col-sm-4 col-md-4 col-lg-4 col-xl-3 ml-3">
+            <div class="row">
+              <div class="input-group">
+                <input type="text" id="f_que" name="f_que" class="form-control form-control-sm" placeholder="請輸入搜尋內容" value="{{$tv_f_que}}">
+                <div class="input-group-prepend">
+                  <button id="f_search" name="f_search" class="btn btn-C1 btn-sm ml-1" type="button">{{$tv_que_btn}}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <p class="text-right">Total: {{$tv_total_rows|number_format|default:''}}</p>
+          </div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <ul class="nav nav-tabs">
+            <li class="nav-item">
+              <a class="nav-link {{$tv_action[1]|default:''}}" href="{{$tv_type_link}}1">捐款成功</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {{$tv_action[2]|default:''}}" href="{{$tv_type_link}}2">捐款失敗</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {{$tv_action[3]|default:''}}" href="{{$tv_type_link}}3">等待入帳</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <!-- 篩選＆搜尋表格 End -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover table-sm">
+          <thead>
+            <tr class="thead-light">
+              <th class="text-nowrap"><span id="fd_de17" class="fd_order cursorpointer" data-fd_name="de17" data-order_kind="">捐款時間</span><span id="icon_de17"><i class="fas fa-sort"></i></span></th><!--1-->
+              <th class="text-nowrap"><span id="fd_de18" class="fd_order cursorpointer" data-fd_name="de18" data-order_kind="">藍新交易序號</span><span id="icon_de18"><i class="fas fa-sort"></i></span></th><!--1-->
+              <th class="text-nowrap"><span id="fd_de01" class="fd_order cursorpointer" data-fd_name="de01" data-order_kind="">姓名</span><span id="icon_de01"><i class="fas fa-sort"></i></span></th><!--1-->
+              <th class="text-nowrap"><span id="fd_de04_zipcode" class="fd_order cursorpointer" data-fd_name="de04_zipcode" data-order_kind="">聯絡地址</span><span id="icon_de04_zipcode"><i class="fas fa-sort"></i></span></th><!--3-->
+              <th class="text-nowrap"><span id="fd_de05" class="fd_order cursorpointer" data-fd_name="de05" data-order_kind="">是否需要收據</span><span id="icon_de05"><i class="fas fa-sort"></i></span></th><!--8-->
+              <th class="text-nowrap"><span id="fd_de06" class="fd_order cursorpointer" data-fd_name="de06" data-order_kind="">捐款金額</span><span id="icon_de06"><i class="fas fa-sort"></i></span></th><!--9-->
+              <th class="text-nowrap"><span id="fd_de09" class="fd_order cursorpointer" data-fd_name="de09" data-order_kind="">捐款方式</span><span id="icon_de09"><i class="fas fa-sort"></i></span></th><!--12-->
+              <th class="text-nowrap"><span id="fd_di01" class="fd_order cursorpointer" data-fd_name="di01" data-order_kind="">捐款項目</span><span id="icon_di01"><i class="fas fa-sort"></i></span></th>
+              <!-- <th class="text-left"></th> -->
+            </tr>
+          </thead>
+          <tbody>
+            {{foreach from=$tv_donate_row key=k item=v}}
+              <tr>
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.de17|default:''}}</a></td><!--17.捐款時間-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.de18|default:''}}</a></td><!--18.藍新交易序號-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.de01|default:''}}{{$v.de02|default:''}}</a></td><!--1.姓名-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.de04_zipcode|default:''}}{{$v.de04_county|default:''}}{{$v.de04_district|default:''}}{{$v.de04_addr|default:''}}</a></td><!--3.Email-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.de05_str|default:''}}</a></td><!--8.是否需要收據-->
+                <td class="text-right"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.de06|number_format:0|default:''}}</a></td><!--9.捐款金額-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.de09_str|default:''}}</a></td><!--12.捐款方式-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.di01|default:''}}</a></td><!--捐款項目-->
+                {{*
+                <td class="text-right">
+                  <button type="button" class="btn btn-info btn-sm" onclick="location.href='{{$tv_disp_link}}{{$v.s_num}}';">{{$tv_disp_btn}}</button>
+                  <button type="button" class="btn btn-C4 btn-sm" onclick="location.href='{{$tv_upd_link}}{{$v.s_num}}';">{{$tv_upd_btn}}</button>
+                  <button type="button" class="btn btn-C1 btn-sm" onclick="location.href='{{$tv_cpy_link}}{{$v.s_num}}';">{{$tv_cpy_btn}}</button>
+                  <button type="button" class="btn btn-C2 btn-sm del" data-s_num="{{$v.s_num}}" data-toggle="modal" data-backdrop='static' data-keyboard="false" data-target=".pop-del">{{$tv_del_btn}}</button>
+                </td>
+                *}}
+              </tr>
+            {{foreachelse}}
+            <tr>
+              <td colspan="99" class="alert alert-warning">
+                  查無資料!!!
+              </td>
+            </tr>
+            {{/foreach}}
+          </tbody>
+        </table>
+      </div>
+      <!-- 頁籤 Begin -->
+      <ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+        {{$tv_pg_link|default:''}}
+      </ul>
+      <!-- 頁籤 End -->
+    </div>
+    <!-- 表格區塊 End -->
+  </div>
+  <!-- 刪除確認彈出 Begin -->
+  <div class="modal fade pop-del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此捐款資料資料嗎？
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 End -->
+  <!-- 查詢2彈出 Begin-->
+  <div class="modal fade pop-que" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+      <div class="modal-content modal-C1 ">
+        <form class="maT20" action="{{$tv_que_link}}" id="fd_que_input" name="fd_que_input" method="GET" enctype="multipart/form-data">
+          <input type='hidden' id='que_kind' name='que_kind' class='form-control form-control-sm que_enter' value='que'>
+          <input type='hidden' id='que_order_fd_name' name='que_order_fd_name' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <input type='hidden' id='que_order_kind' name='que_order_kind' class='form-control form-control-sm que_enter' value=''>
+          <input type='hidden' id='que_de19' name='que_de19' class='form-control form-control-sm que_enter' value='{{$tv_de19}}'>
+          <div class="text-center paTB20">
+            {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+            <h2>請輸入查詢條件</h2>
+          </div>
+          <div class="modal-body text-left">
+            <table class="table xtable-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="col-3"}}
+              {{assign var="swidth_right" value="col-9"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>姓</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_de01' name='que_de01' class='col-7 form-control form-control-sm que_enter ' placeholder='請輸入姓' value=''>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_que_de01' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>名字</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_de02' name='que_de02' class='col-7 form-control form-control-sm que_enter ' placeholder='請輸入名字' value=''>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_que_de02' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>Email</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_de03' name='que_de03' class='col-7 form-control form-control-sm que_enter ' placeholder='請輸入Email' value=''>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_que_de03' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>全文檢索</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <span class='input-group input-group-sm'>
+                        <input type='text' id='que_str' name='que_str' class='col-7 form-control form-control-sm que_enter' placeholder='' value=''>
+                        <div class="input-group-append">
+                          <span id='helpBlock_que_str' class='help-block ml-2'>(所有欄位搜尋)</span>
+                        </div>
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}}'></td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <button type="button" id="btn_que" class="btn btn-C1 col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                    <button id="btn_que_reset" type="reset" class="btn btn-C1-line col-3">清除 <i class="fas fa-eraser"></i></button>
+                    <button type="button" id="btn_que_close" class="btn btn-C1-line col-3">關閉 <i class="far fa-times-circle"></i></button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- 查詢2彈出 End-->
+</div>

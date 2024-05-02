@@ -1,0 +1,140 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<link rel="stylesheet" href="{{$tv_pub_url}}/leaflet/dist/leaflet.css" />
+<script src="{{$tv_pub_url}}/leaflet/dist/leaflet.js"></script>
+<!--
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+-->
+<style>
+  #map {
+    height: 75vh;
+  }
+
+  .leaflet-div-event-new {
+    background: transparent;
+    border: 0px transparent;
+    text-align: center;
+  }
+</style>
+
+<script>
+  $(function() {
+    
+    {{* 宣告圖標 Begin*}}
+      {{foreach from=$tv_route_row key=k item=v}}  
+        var icon_{{$v.s_num}} = L.divIcon({
+          html: "<span style='font-size:30px'><i style='color:{{$v.reh08}};' class='fas fa-map-marker-alt'></i></span>",
+          iconAnchor: [12,25],
+          popupAnchor: [0,-25],
+          className: "leaflet-div-event-new"
+        });
+      {{/foreach}}      
+    {{* 宣告圖標 End *}}
+     
+    var map = L.map('map', {
+      maxZoom: 15,
+      attributionControl: false, // 是否秀出「leaflet」的貢獻標記
+      zoomControl: true , // 是否秀出 - + 按鈕
+    }).setView(['24.25799087995934', '120.71303191579813'], 11);
+
+    L.control.attribution({prefix: '<a href="https://leafletjs.com/">Leaflet</a> | 弗傳慈心基金會'}).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    {{foreach from=$tv_punch_log_row key=k item=v}}  
+      {{if $v.phl03 != 0 and $v.phl04 != 0 and $v.reh_s_num <= 100}}
+        var popup_str = '';
+        popup_str += "案主名稱：{{$v.ct01}}{{$v.ct02}}<br/>";
+        popup_str += "送達時間：{{$v.phl01|date_format:'%H:%M:%S'}}<br/>";
+        var item = L.marker(["{{$v.phl04}}" , "{{$v.phl03}}"] , {icon:icon_{{$v.reh_s_num|default:'none_set'}}}).bindPopup(popup_str).addTo(map);
+      {{/if}}
+      {{if $v@last}}
+        console.log("{{$v['phl01']|date_format:''}}");
+        var finish_send_time = "{{$v['phl01']|date_format:'%H:%M:%S'}}";
+      {{/if}}
+    {{/foreach}}
+    
+    function getDisance(lat1, lng1, lat2, lng2) {
+      var lat1 = Math.PI * lat1 / 180;
+      var lat2 = Math.PI * lat2 / 180;
+      var theta = lng1-lng2;
+      var radtheta = Math.PI * theta / 180;
+      var dist = Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(radtheta);
+      if (dist > 1) {
+          dist = 1;
+      }
+      dist = Math.acos(dist);
+      dist = dist * 180 / Math.PI;
+      return dist * 60 * 1.1515 * 1.609344;
+    }
+    
+    var record = [];
+    {{assign var="scnt" value="1"}}
+    {{assign var="lon_prev_2" value=""}}
+    {{assign var="lat_prev_2" value=""}}
+    {{foreach from=$tv_gps_log_row key=k item=v}}
+      {{if $scnt == 2}}
+        {{assign var="lon_prev_2" value="{{$v['gsl01']}}"}}
+        {{assign var="lat_prev_2" value="{{$v['gsl02']}}"}}
+      {{/if}}
+      {{assign var="scnt" value="{{$scnt+1}}"}}
+    {{/foreach}}
+    {{assign var="scnt" value="0"}}
+    {{assign var="prev_k" value="0"}}
+
+    var total_dist = 0;
+    {{foreach from=$tv_gps_log_row key=k item=v}}
+      {{if $scnt > 0}}
+        var dist = 0;
+        var lon_1 = {{$tv_gps_log_row[{{$prev_k}}]['gsl01']}};
+        var lon_2 = {{$v['gsl01']}};
+        var lat_1 = {{$tv_gps_log_row[{{$prev_k}}]['gsl02']}};
+        var lat_2 = {{$v['gsl02']}};
+        dist = getDisance(lat_1, lon_1, lat_2, lon_2);
+        if(Math.floor(dist) < 1) {
+          record.push([{{$v['gsl01']}},{{$v['gsl02']}}]);
+        }
+      {{else}}
+        dist = getDisance({{$v['gsl02']}}, {{$v['gsl01']}}, {{$lat_prev_2}}, {{$lon_prev_2}});
+        if(Math.floor(dist) < 1) {
+          record.push([{{$v['gsl01']}},{{$v['gsl02']}}]);
+        }
+      {{/if}}
+      {{if $v@first}}
+        var begin_send_time = "{{$v['b_date']|date_format:'%H:%M:%S'}}";
+      {{/if}}
+      {{assign var="scnt" value="{{$scnt+1}}"}}
+      {{assign var="prev_k" value="{{$k}}"}}
+      total_dist += dist;
+    {{/foreach}}
+
+    var polyline = L.polyline(record, {color: 'red'}).addTo(map);
+    map.fitBounds(polyline.getBounds());
+    
+    $("#total_dist").html(Math.round(total_dist * 10) / 10);
+    $("#send_time").html(begin_send_time + " ~ " + finish_send_time);
+  });
+</script>
+
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>送餐歷史路徑 - {{$tv_history_date|date_format:"%Y/%m/%d"|default:''}} {{$tv_delivery_person_row->dp01|default:''}}{{$tv_delivery_person_row->dp02|default:''}}</h1>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT20"></div></div>
+      <div class="row">
+        <h4>總公里數(估算值)：</h4><h4 id="total_dist"></h4><h4>km</h4>
+        <h4 class="ml-4">送餐時間：</h4><h4 id="send_time"></h4>
+        <h4 class="ml-4">送達個案數量：{{$tv_punch_log_row|count|default:0}}位</h4>
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="white-wrapper">
+      <div id="map" style="width: 100%;"></div>
+    </div>
+  </div>
+</div>

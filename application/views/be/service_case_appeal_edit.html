@@ -1,0 +1,655 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<style>
+  .pagination {
+    z-index:99999;
+    position:fixed;
+    bottom: 10px;
+    opacity:1;
+    box-shadow:5px 5px 5px 0px #7777778e;
+    margin: 0px; 
+  }
+  .pagination li a {
+    color: #676a6c; 
+  }
+  .pagination li.active a {
+    background-color: #1ABC9C;
+    border: 1px solid #1ABC9C; 
+  }
+  .pagination li.active a:hover {
+    background-color: #17a689;
+    border: 1px solid #17a689; 
+  }
+  .fixed-dialog{
+    position: fixed;
+  }
+</style>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $('#ct_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此案主"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        // console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              // console.log(rs);  
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#ct_s_num').val(item[2]);
+        $('#ct_name').val(item[0]);
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+
+    // secat刪除 Begin //
+    $(document).on("click", ".secat_del", function () {
+      var secat_s_num = $(this).data('secat_s_num');
+      $(".pop-secat_del #f_del_s_num").val(secat_s_num);
+    });
+        
+    $(document).on('click',"#secat_del",function() {
+      var secat_s_num = $(".pop-secat_del #f_del_s_num").val();
+      $('#secat_table_'+secat_s_num).remove();
+      $(this).secat_item_reset();
+      return;
+    });
+    // secat刪除 End //
+    
+    $('.add_secat_row').click(function(){
+      $(this).secat_add_row(1);
+      return;
+    });
+    
+    // 重新顯示欄位的序1,2,3... Begin //
+    $.fn.secat_item_reset = function() {
+      var item_num = 1;
+      $('.secat_item').each(function() {
+        $(this).text(item_num);
+        item_num++;
+      })
+    }
+    // 重新顯示欄位的序1,2,3... End //
+
+    // 新增x筆明細 Begin //
+    $.fn.secat_add_row = function(add_qty) {
+      var wfn_cnt = eval($('#std_secat_cnt').val()); // 目前的筆數，刪除資料這裡不會減少數量，避免id重複
+      for (i = 1; i <= add_qty; i++) {
+        var snum = wfn_cnt+i; // 目前的筆數，刪除資料這裡不會減少數量，避免id重複        
+        var new_add_secat_row = $('#secat_table_STD_SNUM')[0].outerHTML;
+        var add_secat_row = replaceAll(new_add_secat_row,'STD_SNUM',snum);
+        var add_secat_row = replaceAll(add_secat_row,'STD_ITEM','secat_item');
+        $('#std_secat_cnt').val(snum);
+        std_secat_cnt = eval($('#std_secat_cnt').val());
+        $('#dietitian_track_div').append(add_secat_row);
+      }
+      $(this).secat_item_reset();
+      $(".form_date").datetimepicker({
+        locale: 'tw',
+        format: 'YYYY-MM-DD',
+        showTodayButton: true,
+        showClear: true,
+        showClose: true,
+        allowInputToggle: true,
+        tooltips: {
+            today: '今天',
+            clear: '清除',
+            close: '關閉',
+            selectMonth: '選取月',
+            prevMonth: '上個月',
+            nextMonth: '下個月',
+            selectYear: '選擇年',
+            prevYear: '上一年',
+            nextYear: '下一年',
+            selectDecade: '選取十年',
+            prevDecade: '上十年',
+            nextDecade: '下十年',
+            prevCentury: '上世紀',
+            nextCentury: '下世紀'
+        },
+        icons: {
+          time: 'far fa-clock',
+          date: 'far fa-calendar',
+          up: 'fas fa-arrow-up',
+          down: 'fas fa-arrow-down',
+          previous: 'fas fa-chevron-left',
+          next: 'fas fa-chevron-right',
+          today: 'fas fa-calendar-check',
+          clear: 'far fa-trash-alt',
+          close: 'far fa-times-circle'
+        }
+      });
+      $(".form_month").datetimepicker({
+        locale: 'tw',
+        format: 'YYYY-MM',
+        showTodayButton: true,
+        showClear: true,
+        showClose: true,
+        allowInputToggle: true,
+        tooltips: {
+            today: '今天',
+            clear: '清除',
+            close: '關閉',
+            selectMonth: '選取月',
+            prevMonth: '上個月',
+            nextMonth: '下個月',
+            selectYear: '選擇年',
+            prevYear: '上一年',
+            nextYear: '下一年',
+            selectDecade: '選取十年',
+            prevDecade: '上十年',
+            nextDecade: '下十年',
+            prevCentury: '上世紀',
+            nextCentury: '下世紀'
+        },
+        icons: {
+          time: 'far fa-clock',
+          date: 'far fa-calendar',
+          up: 'fas fa-arrow-up',
+          down: 'fas fa-arrow-down',
+          previous: 'fas fa-chevron-left',
+          next: 'fas fa-chevron-right',
+          today: 'fas fa-calendar-check',
+          clear: 'far fa-trash-alt',
+          close: 'far fa-times-circle'
+        }
+      });
+
+      $("input[name*='secat11']").change(function() {
+        var snum = $(this).data('snum'); 
+        if($(this).val() == "Y") {
+          $("#secat11_date_"+snum).prop('readonly', false);
+        }
+        else {
+          $("#secat11_date_"+snum).val('');
+          $("#secat11_date_"+snum).prop('readonly', true);
+        }
+      });
+    }
+    // 新增x筆明細 End //
+
+    $("input[name='seca[seca36]']").change(function() {
+      if($(this).val() == "Y") {
+        $("#seca36_date").prop('readonly', false);
+      }
+      else {
+        $("#seca36_date").val('');
+        $("#seca36_date").prop('readonly', true);
+      }
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>客訴處理單(其他)</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">個案管理</a></li>
+        <li class="breadcrumb-item"><a href="#">客訴處理單(其他)</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm one_click" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id='s_num' name='seca[s_num]' value='{{$tv_service_case_appeal_row->s_num|default:'0'}}'>
+      {{/if}}
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-appeal-tab" data-toggle="tab" href="#nav-appeal" role="tab" aria-controls="nav-appeal" aria-selected="true">客訴處理單</a>
+          <a class="nav-item nav-link" id="nav-track-tab" data-toggle="tab" href="#nav-track" role="tab" aria-controls="nav-track" aria-selected="false">追蹤紀錄</a>
+          {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+            <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+              <div class="float-right">建檔:<span class="mainC1">{{$tv_service_case_appeal_row->b_acc_name|default:''}}({{$tv_service_case_appeal_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_service_case_appeal_row->e_acc_name|default:''}}({{$tv_service_case_appeal_row->e_date|default:""}})</span></div>
+            </span>
+          {{/if}}
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-appeal" role="tabpanel" aria-labelledby="nav-appeal-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="20%"}}
+              {{assign var="swidth_right" value="80%"}}
+              {{assign var="swidth_left_2" value="10%"}}
+              {{assign var="swidth_right_2" value="90%"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='hidden' id='ct_s_num' name='seca[ct_s_num]' value='{{$tv_service_case_appeal_row->ct_s_num|default:''}}'>
+                      <input type='text' id='ct_name' class='col-12 form-control form-control-sm' placeholder='請輸入案主姓名' autocomplete="off" value='{{$tv_service_case_appeal_row->ct01|default:''}}{{$tv_service_case_appeal_row->ct02|default:''}}' {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                      <span id='helpBlock_ct_name' class='help-block'></span>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>客訴類型</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <span class='form-control form-control-sm'>
+                      <input type='radio' name='seca[seca01]' value='1' {{if $tv_service_case_appeal_row->seca01|default:0==1}} checked {{/if}}> 長照
+                      <input type='radio' name='seca[seca01]' value='2' {{if $tv_service_case_appeal_row->seca01|default:0==2}} checked {{/if}}> 老人
+                      <input type='radio' name='seca[seca01]' value='3' {{if $tv_service_case_appeal_row->seca01|default:0==3}} checked {{/if}}> 身障
+                      </span>
+                      <span id='helpBlock_seca01' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>申訴情形</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <table class="table table-hover table-sm">
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'><span class="text-danger">*</span>受理日期</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <div class='input-group form_date'>
+                              <div class='input-group-prepend'>
+                                <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                              </div>
+                              <input type='text' id='seca11' name='seca[seca11]' class='form-control form-control-sm' placeholder='請輸入受理日期' value='{{$tv_service_case_appeal_row->seca11|default:''}}' required>
+                            </div>
+                            <span id='helpBlock_seca11' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'><span class="text-danger">*</span>申訴人</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <input type='text' id='seca12' name='seca[seca12]' class='form-control form-control-sm' placeholder='請輸入申訴人' value='{{$tv_service_case_appeal_row->seca12|default:''}}' required>
+                            <span id='helpBlock_seca12' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'>申訴人關係</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <input type='text' id='seca13' name='seca[seca13]' class='form-control form-control-sm' placeholder='請輸入申訴人關係' value='{{$tv_service_case_appeal_row->seca13|default:''}}' >
+                            <span id='helpBlock_seca13' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'>申訴事由</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <textarea id='seca14' class='form-control form-control-sm' name='seca[seca14]' rows='5' >{{$tv_service_case_appeal_row->seca14|default:''}}</textarea>
+                            <span id='helpBlock_seca14' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>受理情形</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <table class="table table-hover table-sm">
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'><span class="text-danger">*</span>受理人員</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <input type='text' id='seca22' name='seca[seca22]' class='form-control form-control-sm' placeholder='請輸入受理人員' value='{{$tv_service_case_appeal_row->seca22|default:''}}' required>
+                            <span id='helpBlock_seca22' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'><span class="text-danger">*</span>填表日期</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <div class='input-group form_date'>
+                              <div class='input-group-prepend'>
+                                <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                              </div>
+                              <input type='text' id='seca23' name='seca[seca23]' class='form-control form-control-sm' placeholder='請輸入填表日期' value='{{$tv_service_case_appeal_row->seca23|default:''}}' required>
+                            </div>
+                            <span id='helpBlock_seca23' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>處理情形</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <table class="table table-hover table-sm">
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'>處理過程</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <textarea id='seca34' class='form-control form-control-sm' name='seca[seca34]' rows='5' >{{$tv_service_case_appeal_row->seca34|default:''}}</textarea>
+                            <span id='helpBlock_seca34' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'>處置建議</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <textarea id='seca35' class='form-control form-control-sm' name='seca[seca35]' rows='5' >{{$tv_service_case_appeal_row->seca35|default:''}}</textarea>
+                            <span id='helpBlock_seca35' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>            
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='text-right'><span class="text-danger">*</span>後續追蹤</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <div class="input-group input-group-sm">
+                            <div class="input-group-prepend">
+                              <div class="input-group-text">
+                                <input type='radio' name='seca[seca36]' value='N' {{if $tv_service_case_appeal_row->seca36|default:"N"=="N"}} checked {{/if}}> 結案
+                                &nbsp;
+                                <input type='radio' name='seca[seca36]' value='Y' {{if $tv_service_case_appeal_row->seca36|default:"N"=="Y"}} checked {{/if}}> 需要
+                              </div>
+                            </div>
+                            <input type='text' id='seca36_date' name='seca[seca36_date]' class='form_month form-control form-control-sm' placeholder='請輸入後續追蹤月份' value='{{$tv_service_case_appeal_row->seca36_date|default:''}}' {{if $tv_service_case_appeal_row->seca36|default:"N"=="N"}} readonly {{/if}}>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="nav-track" role="tabpanel" aria-labelledby="nav-track-tab">
+          <div class="table-responsive" id="dietitian_track_div" style="overflow: visible;">
+            {{assign var="snum" value="1"}}
+            <input type="hidden" id='std_secat_cnt' value="{{$tv_service_case_appeal_track_row|default:'1'|count}}">
+            {{foreach from=$tv_service_case_appeal_track_row key=k item=v}}
+              <table class="table table-bordered table-hover table-sm" id="secat_table_{{$snum}}" data-item="{{$snum}}">
+                <input type='hidden' id='s_num_{{$snum}}' name='secat[{{$snum}}][s_num]' value='{{$v.s_num}}'>
+                <span class="secat_item" style="display:none;">{{$snum}}</span>
+                <tr class='d-flex'>
+                  <td class="text-right" style="border: 1px solid Transparent!important;">
+                    <button type='button' class='btn btn-C2 btn-sm secat_del' data-secat_s_num='{{$snum}}' data-toggle='modal' data-target='.pop-secat_del'>{{$tv_del_btn}}</button>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤人員</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='secat01_{{$snum}}' name='secat[{{$snum}}][secat01]' class='form-control form-control-sm' placeholder='請輸入追蹤人員' value='{{$v.secat01|default:''}}' >
+                      <span id='helpBlock_secat01_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤月份</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='secat02_{{$snum}}' name='secat[{{$snum}}][secat02]' class='form-control form-control-sm' placeholder='請輸入追蹤月份' value='{{$v.secat02|default:''}}' >
+                      </div>
+                      <span id='helpBlock_secat02_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤內容</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='secat03_{{$snum}}' name='secat[{{$snum}}][secat03]' class='form-control form-control-sm' placeholder='請輸入追蹤內容' rows='3' >{{$v.secat03|default:''}}</textarea>
+                      <span id='helpBlock_secat03_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>是否持續追蹤</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-prepend">
+                        <div class="input-group-text">
+                          <input type='radio' name='secat[{{$snum}}][secat11]' value='N' data-snum="{{$snum}}" {{if $v.secat11|default:N==N}} checked {{/if}}> 結案
+                          &nbsp;
+                          <input type='radio' name='secat[{{$snum}}][secat11]' value='Y' data-snum="{{$snum}}" {{if $v.secat11|default:N==Y}} checked {{/if}}> 持續追蹤
+                        </div>
+                      </div>
+                      <input type='text' id='secat11_date' name='secat[{{$snum}}][secat11_date]' class='form_month form-control form-control-sm' placeholder='請輸入後續追蹤月份' value='{{$v.secat11_date|default:''}}' {{if $v.secat11|default:"N"=="N"}} readonly {{/if}}>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              {{assign var="snum" value="{{$snum+1}}"}}
+            {{/foreach}}
+            <script>
+              $(function(){
+                $(this).secat_add_row(1); // 預設再多1筆空白
+              });
+            </script>
+          </div>
+          <ul class="pagination justify-content-center pagination-sm">
+            <button class="btn btn-warning btn-sm add_secat_row" type="button">新增追蹤紀錄 <i class="fa fa-plus" aria-hidden="true"></i></button>
+          </ul>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- secat 明細刪除確認彈出 -->
+  <div class="modal fade pop-secat_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="sw_ra_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="secat_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- secat 明細刪除確認彈出 end-->
+  {{*預先增加一筆空白資料，主要用來複製用。 Begin*}}
+  <div style="display:none;">
+    <table class="table table-bordered table-hover table-sm secat_table" id="secat_table_STD_SNUM" data-item="STD_SNUM">
+      <span class="STD_ITEM" style="display:none;"></span>
+      <input type='hidden' id='s_num_STD_SNUM' name='secat[STD_SNUM][s_num]' value='0'>
+      <tr class='d-flex'>
+        <td class="text-right" style="border: 1px solid Transparent!important;">
+          <button type='button' class='btn btn-C2 btn-sm secat_del' data-secat_s_num='STD_SNUM' data-toggle='modal' data-target='.pop-secat_del'>{{$tv_del_btn}}</button>
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤人員</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <input type='text' id='secat01_STD_SNUM' name='secat[STD_SNUM][secat01]' class='form-control form-control-sm' placeholder='請輸入追蹤人員' value='' >
+            <span id='helpBlock_secat01_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤月份</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <div class='input-group form_date'>
+              <div class='input-group-prepend'>
+                <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+              </div>
+              <input type='text' id='secat02_STD_SNUM' name='secat[STD_SNUM][secat02]' class='form-control form-control-sm' placeholder='請輸入追蹤月份' value='' >
+            </div>
+            <span id='helpBlock_secat02_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤內容</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <textarea id='secat03_STD_SNUM' name='secat[STD_SNUM][secat03]' class='form-control form-control-sm' placeholder='請輸入追蹤內容' rows='3' ></textarea>
+            <span id='helpBlock_secat03_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>是否持續追蹤</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <div class="input-group input-group-sm">
+            <div class="input-group-prepend">
+              <div class="input-group-text">
+                <input type='radio' name='secat[STD_SNUM][secat11]' data-snum="STD_SNUM" value='N'> 結案
+                &nbsp;
+                <input type='radio' name='secat[STD_SNUM][secat11]' data-snum="STD_SNUM" value='Y'> 持續追蹤
+              </div>
+            </div>
+            <input type='text' id='secat11_date_STD_SNUM' name='secat[STD_SNUM][secat11_date]' class='form_month form-control form-control-sm' placeholder='請輸入後續追蹤月份' value='' readonly>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  {{*預先增加一筆空白資料，主要用來複製用。 End*}}
+</div>

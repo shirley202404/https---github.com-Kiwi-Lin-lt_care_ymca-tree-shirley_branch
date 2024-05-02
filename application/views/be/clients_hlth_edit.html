@@ -1,0 +1,801 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+
+      if($("#ct_s_num").val() == '') {
+        alert("請重新選擇案主!!");
+        return;  
+      }
+
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $('#ct_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此案主"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              console.log(rs);
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#cth21_ct_s_num').val(item[2]);
+        $('#ct_name').val(item[0]);
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+
+    // 計算BMI
+    $(".bmi").blur(function() {
+      var cth22 = $("#cth22").val(); // 身高
+      var cth23 = $("#cth23").val(); // 體重
+      if(cth22 != '' && cth23 != '') {
+        var bmi = cth23 / ((cth22*cth22) / 10000);
+        bmi = Math.round(bmi * 10) / 10
+        $("#cth25").val(bmi);
+        auto_select('bmi', bmi);
+      }
+    });
+
+    // 計算MNA總分
+    $.fn.all_sel = function(type) {
+      var cth45 = Number($("#cth45").val());
+      var cth70 = Number($("#cth70").val());
+      var cth02 = cth45 + cth70;
+      $("#cth02").val(cth02);
+      if(type == 'click') {
+        auto_select('cth02', cth02);
+      }
+    }
+
+    $("#fd_input").change(function() {
+      $(this).all_sel('click');
+    }); 
+    
+    // 計算營養篩檢總分
+    $.fn.health_sel = function(type) {
+      var cth45 = 0;      
+      var radio_name = [];
+      // 先過濾radio_name
+      $("#health input[type='radio']").each(function(){  
+        var name = $(this).attr('name');
+        if(name == 'cth45_opt') {
+          return;
+        }
+        if(!radio_name.includes(name)) {
+          radio_name.push(name)
+        }
+      });
+      // 找到radio總分相加
+      $.each(radio_name , function (k , v) {
+        var val = $("input[name="+radio_name[k]+"]:checked").val();
+        if(typeof val === 'undefined' || isNaN(val)) {
+          val = 0
+        }
+        cth45 += Number(val);   
+      })
+      $("#cth45").val(Number(cth45));
+      if(type == 'click') {
+        auto_select('cth45', cth45);
+      }
+    }
+
+    $("#health").change(function() {
+      $(this).health_sel('click');
+    }); 
+
+    // 計算一般評估總分
+    $.fn.normal_sel = function(type) {
+      var cth70 = 0;      
+      var radio_name = [];
+      // 先過濾radio_name
+      $("#normal input[type='radio']").each(function(){  
+        var name = $(this).attr('name');
+        if(name == 'cth55_1' || name == 'cth55_2' || name == 'cth55_3') {
+          return;
+        }
+        if(!radio_name.includes(name)) {
+          radio_name.push(name)
+        }
+      });
+      // 找到radio總分相加
+      $.each(radio_name , function (k , v) {
+        var val = $("input[name="+radio_name[k]+"]:checked").val();
+        if(typeof val === 'undefined' || isNaN(val)) {
+          val = 0
+        }
+        cth70 += Number(val);   
+      })
+      $("#cth70").val(Number(cth70));
+    }
+
+    $("#normal").change(function() {
+      $(this).normal_sel('click');
+    }); 
+
+    $(".auto_select_col").blur(function() {
+      var val = $(this).val();
+      var col_name = $(this).attr('name');
+      auto_select(col_name, val);
+    });
+
+    function auto_select(col, val='') {
+      val = parseFloat(val);
+      switch (col) {
+        case 'cth02':
+          if(val < 17) {
+            $("input[name=cth02_opt][value=3]").prop('checked', true);
+          }
+          else if (17 <= val && val <= 23.5) {
+            $("input[name=cth02_opt][value=2]").prop('checked', true); 
+          }
+          else if (val >= 23.5) {
+            $("input[name=cth02_opt][value=1]").prop('checked', true); 
+          }
+          break;
+        case 'cth45':
+          if(val >= 12) {
+            $("input[name=cth45_opt][value=1]").prop('checked', true); 
+          }
+          if(val <= 11) {
+            $("input[name=cth45_opt][value=2]").prop('checked', true); 
+          }
+          break;
+        case 'bmi':
+          if(val < 19) {
+            $("input[name=cth36][value=0]").prop('checked', true);
+          }
+          else if (19 <= val && val <= 21) {
+            $("input[name=cth36][value=1]").prop('checked', true); 
+          }
+          else if (21 <= val && val <= 23) {
+            $("input[name=cth36][value=2]").prop('checked', true); 
+          }
+          else if (val >= 23) {
+            $("input[name=cth36][value=3]").prop('checked', true); 
+          }
+          break;
+        case 'cth61_mac':
+          if(val < 21) {
+            $("input[name=cth61][value=0]").prop('checked', true);
+          }
+          else if (21 <= val && val <= 21.9) {
+            console.log($("input[name=cth61]:nth-child(2)"))
+            $("input[name=cth61]:nth-child(2)").prop('checked', true);
+          }
+          else if (val >= 22) {
+            $("input[name=cth61][value=1]").prop('checked', true); 
+          }
+          break;
+        case 'cth62_cc':
+          if(val < 31) {
+            $("input[name=cth62][value=0]").prop('checked', true);
+          }
+          else if (val >= 31) {
+            $("input[name=cth62][value=1]").prop('checked', true); 
+          }
+          break;
+      }
+      $(this).all_sel('reclick');
+      $(this).health_sel('reclick');
+      $(this).normal_sel('reclick');
+    }
+
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>迷你營養評估表</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">迷你營養評估表</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm one_click" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_clients_hlth_row->b_acc_name|default:''}}({{$tv_clients_hlth_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_clients_hlth_row->e_acc_name|default:''}}({{$tv_clients_hlth_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id='s_num' name='s_num' value='{{$tv_clients_hlth_row->s_num|default:'0'}}'>
+      {{/if}}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>填表日期</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class='input-group form_date'>
+                    <div class='input-group-prepend'>
+                      <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                    </div>
+                    <input type='text' id='cth01' name='cth01' class='form-control form-control-sm' placeholder='請輸入填表日期' value='{{$tv_clients_hlth_row->cth01|default:''}}' >
+                  </div>
+                  <span id='helpBlock_cth01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>MNA合計分數</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group input-group-sm">
+                    <input type='number' min='0' step='any' id='cth02' name='cth02' class='form-control form-control-sm col-3' placeholder='請輸入MNA合計分數' value='{{$tv_clients_hlth_row->cth02|default:''}}' readonly>
+                    <div class="input-group-append">
+                      <span class="input-group-text">選項</span>
+                    </div>
+                    <span class='form-control form-control-sm'>
+                      <input type='radio' name='cth02_opt' value='1' {{if $tv_clients_hlth_row->cth02_opt|default:0==1}} checked {{/if}}> MNA > 23.5 具營養良好
+                      <input type='radio' name='cth02_opt' value='2' {{if $tv_clients_hlth_row->cth02_opt|default:0==2}} checked {{/if}}> MAN 17~23.5 具營養不良危險性
+                      <input type='radio' name='cth02_opt' value='3' {{if $tv_clients_hlth_row->cth02_opt|default:0==3}} checked {{/if}}> MNA < 17 營養不良
+                    </span>
+                  </div>
+                </span>
+                <span id='helpBlock_cth02_opt' class='help-block'>*MNA合計分數，滿分30分(不開放輸入，由系統計算)</span>
+                <div class='help-block with-errors'></div>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='hidden' id='cth21_ct_s_num' name='cth21_ct_s_num' value='{{$tv_clients_hlth_row->cth21_ct_s_num|default:''}}'>
+                  <input type='text' id='ct_name' class='col-12 form-control form-control-sm' placeholder='請輸入案主姓名' autocomplete="off" value='{{$tv_clients_hlth_row->ct01|default:''}}{{$tv_clients_hlth_row->ct02|default:''}}' {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                  <span id='helpBlock_ct_name' class='help-block'></span>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>基本資料</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-hover table-sm" id="basic">
+                  <tbody>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>案主身高(公分)</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type='text' id='cth22' name='cth22' class='form-control form-control-sm bmi' placeholder='請輸入案主身高(公分)' value='{{$tv_clients_hlth_row->cth22|default:''}}' >
+                          <span id='helpBlock_cth22' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>案主體重(公斤)</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type='text' id='cth23' name='cth23' class='form-control form-control-sm bmi' placeholder='請輸入案主體重(公斤)' value='{{$tv_clients_hlth_row->cth23|default:''}}' >
+                          <span id='helpBlock_cth23' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>案主BMI</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type='text' id='cth25' name='cth25' class='form-control form-control-sm' placeholder='請輸入案主BMI' value='{{$tv_clients_hlth_row->cth25|default:''}}' readonly>
+                          <span id='helpBlock_cth25' class='help-block'>* 不開放輸入，由系統計算</span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>案主膝高(公分)</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type='text' id='cth24' name='cth24' class='form-control form-control-sm' placeholder='請輸入案主膝高(公分)' value='{{$tv_clients_hlth_row->cth24|default:''}}' >
+                          <span id='helpBlock_cth24' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>營養篩檢</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-hover table-sm" id="health">
+                  <tbody>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>1. 過去三個月之中，是否因食慾不佳消化問題、咀嚼或吞嚥困難以致進食量越來越少?</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth31' value='0' {{if $tv_clients_hlth_row->cth31|default:0==0}} checked {{/if}}> 嚴重食慾不佳
+                            <input type='radio' name='cth31' value='1' {{if $tv_clients_hlth_row->cth31|default:0==1}} checked {{/if}}> 中度食慾不佳
+                            <input type='radio' name='cth31' value='2' {{if $tv_clients_hlth_row->cth31|default:0==2}} checked {{/if}}> 食慾無變化
+                          </span>
+                          <span id='helpBlock_cth31' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>2. 近三個月體重變化</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth32' value='0' {{if $tv_clients_hlth_row->cth32|default:0==0}} checked {{/if}}> 體重減輕 > 3公斤
+                            <input type='radio' name='cth32' value='1' {{if $tv_clients_hlth_row->cth32|default:0==1}} checked {{/if}}> 不知道
+                            <input type='radio' name='cth32' value='2' {{if $tv_clients_hlth_row->cth32|default:0==2}} checked {{/if}}> 體重減輕 1~3 公斤
+                            <input type='radio' name='cth32' value='3' {{if $tv_clients_hlth_row->cth32|default:0==3}} checked {{/if}}> 體重無改變
+                          </span>
+                          <span id='helpBlock_cth32' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>3. 行動力</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth33' value='0' {{if $tv_clients_hlth_row->cth33|default:0==0}} checked {{/if}}> 臥床或輪椅
+                            <input type='radio' name='cth33' value='1' {{if $tv_clients_hlth_row->cth33|default:0==1}} checked {{/if}}> 可以下床活動或離開輪椅，但無法自由走動
+                            <input type='radio' name='cth33' value='2' {{if $tv_clients_hlth_row->cth33|default:0==2}} checked {{/if}}> 可以自由走動
+                          </span>
+                          <span id='helpBlock_cth33' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>4. 過去三個月內曾有精神性壓力或急性疾病發作</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth34' value='0' {{if $tv_clients_hlth_row->cth34|default:0==0}} checked {{/if}}> 是
+                            <input type='radio' name='cth34' value='2' {{if $tv_clients_hlth_row->cth34|default:0==2}} checked {{/if}}> 否
+                          </span>
+                          <span id='helpBlock_cth34' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>5. 神經精神問題</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth35' value='0' {{if $tv_clients_hlth_row->cth35|default:0==0}} checked {{/if}}> 嚴重痴呆或抑鬱
+                            <input type='radio' name='cth35' value='1' {{if $tv_clients_hlth_row->cth35|default:0==1}} checked {{/if}}> 輕度痴呆
+                            <input type='radio' name='cth35' value='2' {{if $tv_clients_hlth_row->cth35|default:0==2}} checked {{/if}}> 無精神問題
+                          </span>
+                          <span id='helpBlock_cth35' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>6. 身體質量指數(BMI)</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth36' value='0' {{if $tv_clients_hlth_row->cth36|default:0==0}} checked {{/if}}> BMI < 19
+                            <input type='radio' name='cth36' value='1' {{if $tv_clients_hlth_row->cth36|default:0==1}} checked {{/if}}> 19 ≦ BMI < 21
+                            <input type='radio' name='cth36' value='2' {{if $tv_clients_hlth_row->cth36|default:0==2}} checked {{/if}}> 21 ≦ BMI < 23
+                            <input type='radio' name='cth36' value='3' {{if $tv_clients_hlth_row->cth36|default:0==3}} checked {{/if}}> BMI ≧ 23
+                          </span>
+                          <span id='helpBlock_cth36' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>營養篩檢分數</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <div class="input-group input-group-sm">
+                            <input type='number' min='0' step='any' id='cth45' name='cth45' class='form-control form-control-sm col-3' placeholder='請輸入營養篩檢分數' value='{{$tv_clients_hlth_row->cth45|default:''}}' readonly>
+                            <div class="input-group-append">
+                              <span class="input-group-text">選項</span>
+                            </div>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='cth45_opt' value='1' {{if $tv_clients_hlth_row->cth45_opt|default:0==1}} checked {{/if}}> ≧ 12
+                              <input type='radio' name='cth45_opt' value='2' {{if $tv_clients_hlth_row->cth45_opt|default:0==2}} checked {{/if}}> ≦ 11
+                            </span>
+                          </div>
+                        </span>
+                        <span id='helpBlock_cth45_opt' class='help-block'>
+                          * 篩檢分數，小計滿分14分(不開放輸入，由系統計算)
+                          * 大於或等於12分：表示正常(無營養不良危險性)<br/>
+                          * 小於或等於11分：表示可能營養不良
+                        </span>
+                        <div class='help-block with-errors'></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>一般評估</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-hover table-sm" id="normal">
+                  <tbody>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>7. 可以獨立生活</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth51' value='0' {{if $tv_clients_hlth_row->cth51|default:0==0}} checked {{/if}}> 否
+                            <input type='radio' name='cth51' value='1' {{if $tv_clients_hlth_row->cth51|default:0==1}} checked {{/if}}> 是
+                          </span>
+                          <span id='helpBlock_cth51' class='help-block'>*非住在護理之家或醫院</span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>8. 每天需服用三種以上的處方藥物</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth52' value='0' {{if $tv_clients_hlth_row->cth52|default:0==0}} checked {{/if}}> 否
+                            <input type='radio' name='cth52' value='1' {{if $tv_clients_hlth_row->cth52|default:0==1}} checked {{/if}}> 是
+                          </span>
+                          <span id='helpBlock_cth52' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>9. 褥瘡或皮膚潰瘍</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth53' value='0' {{if $tv_clients_hlth_row->cth53|default:0==0}} checked {{/if}}> 否
+                            <input type='radio' name='cth53' value='1' {{if $tv_clients_hlth_row->cth53|default:0==1}} checked {{/if}}> 是
+                          </span>
+                          <span id='helpBlock_cth53' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>10. 一天中可以吃幾餐完整的餐食</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth54' value='0' {{if $tv_clients_hlth_row->cth54|default:0==0}} checked {{/if}}> 1餐
+                            <input type='radio' name='cth54' value='1' {{if $tv_clients_hlth_row->cth54|default:0==1}} checked {{/if}}> 2餐
+                            <input type='radio' name='cth54' value='2' {{if $tv_clients_hlth_row->cth54|default:0==2}} checked {{/if}}> 3餐
+                          </span>
+                          <span id='helpBlock_cth54' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>11-1. 蛋白質攝取量-每天至少攝取一份乳製品</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth55_1' value='0' {{if $tv_clients_hlth_row->cth55_1|default:0==0}} checked {{/if}}> 否
+                            <input type='radio' name='cth55_1' value='1' {{if $tv_clients_hlth_row->cth55_1|default:0==1}} checked {{/if}}> 是
+                          </span>
+                          <span id='helpBlock_cth55_1' class='help-block'>*牛奶、乳酪、優酪乳</span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>11-2. 蛋白質攝取量-每週攝取兩份以上的豆類或蛋類</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth55_2' value='0' {{if $tv_clients_hlth_row->cth55_2|default:0==0}} checked {{/if}}> 否
+                            <input type='radio' name='cth55_2' value='1' {{if $tv_clients_hlth_row->cth55_2|default:0==1}} checked {{/if}}> 是
+                          </span>
+                          <span id='helpBlock_cth55_2' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>11-3. 蛋白質攝取量-每天均吃些肉、魚、雞鴨類</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth55_3' value='0' {{if $tv_clients_hlth_row->cth55_3|default:0==0}} checked {{/if}}> 否
+                            <input type='radio' name='cth55_3' value='1' {{if $tv_clients_hlth_row->cth55_3|default:0==1}} checked {{/if}}> 是
+                          </span>
+                          <span id='helpBlock_cth55_3' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>11. 蛋白質攝取量</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth55_total' value='0' {{if $tv_clients_hlth_row->cth55_total|default:0==0}} checked {{/if}}> 都是否
+                            <input type='radio' name='cth55_total' value='0.5' {{if $tv_clients_hlth_row->cth55_total|default:0==0.5}} checked {{/if}}> 2個是
+                            <input type='radio' name='cth55_total' value='1' {{if $tv_clients_hlth_row->cth55_total|default:0==1}} checked {{/if}}> 3個是
+                          </span>
+                          <span id='helpBlock_cth55_total' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>12. 每天至少攝取二份或二份以上的蔬菜或水果</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth56' value='0' {{if $tv_clients_hlth_row->cth56|default:0==0}} checked {{/if}}> 否
+                            <input type='radio' name='cth56' value='1' {{if $tv_clients_hlth_row->cth56|default:0==1}} checked {{/if}}> 是
+                          </span>
+                          <span id='helpBlock_cth56' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>13. 每天攝取多少液體</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth57' value='0' {{if $tv_clients_hlth_row->cth57|default:0==0}} checked {{/if}}> 少於三杯
+                            <input type='radio' name='cth57' value='0.5' {{if $tv_clients_hlth_row->cth57|default:0==0.5}} checked {{/if}}> 3~5杯
+                            <input type='radio' name='cth57' value='1' {{if $tv_clients_hlth_row->cth57|default:0==1}} checked {{/if}}> 大於5杯
+                          </span>
+                          <span id='helpBlock_cth57' class='help-block'>*包括開水、果汁、 咖啡、茶、牛奶，一杯 = 240 c.c.</span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>14. 進食的形式</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth58' value='0' {{if $tv_clients_hlth_row->cth58|default:0==0}} checked {{/if}}> 無人協助則無法進食
+                            <input type='radio' name='cth58' value='1' {{if $tv_clients_hlth_row->cth58|default:0==1}} checked {{/if}}> 可以自己進食但較吃力
+                            <input type='radio' name='cth58' value='2' {{if $tv_clients_hlth_row->cth58|default:0==2}} checked {{/if}}> 可以自己進食
+                          </span>
+                          <span id='helpBlock_cth58' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>15. 他們覺得自己營養方面有沒有問題?</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                            <input type='radio' name='cth59' value='0' {{if $tv_clients_hlth_row->cth59|default:0==0}} checked {{/if}}> 覺得自己營養非常不好
+                            <input type='radio' name='cth59' value='1' {{if $tv_clients_hlth_row->cth59|default:0==1}} checked {{/if}}> 不太清楚或營養不太好
+                            <input type='radio' name='cth59' value='2' {{if $tv_clients_hlth_row->cth59|default:0==2}} checked {{/if}}> 覺得自己沒有營養問題
+                          </span>
+                          <span id='helpBlock_cth59' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>16. 與其他同年齡的人比較，他們認為自己的健康狀況如何?</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <span class='form-control form-control-sm'>
+                          <input type='radio' name='cth60' value='0' {{if $tv_clients_hlth_row->cth60|default:0==0}} checked {{/if}}> 不如同年齡的人
+                            <input type='radio' name='cth60' value='0.5' {{if $tv_clients_hlth_row->cth60|default:0==0.5}} checked {{/if}}> 不知道
+                            <input type='radio' name='cth60' value='1' {{if $tv_clients_hlth_row->cth60|default:0==1}} checked {{/if}}> 和同年齡的人差不多
+                            <input type='radio' name='cth60' value='2' {{if $tv_clients_hlth_row->cth60|default:0==2}} checked {{/if}}> 比同年齡的人好
+                          </span>
+                          <span id='helpBlock_cth60' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>
+                        17. 臀中圍MAC
+                      </td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <div class="input-group input-group-sm">
+                            <input type='number' min='0' step='any' id='cth61_mac' name='cth61_mac' class='form-control form-control-sm col-3 auto_select_col' placeholder='請輸入臀中圍(*公分)' value='{{$tv_clients_hlth_row->cth61_mac|default:''}}'>
+                            <div class="input-group-append">
+                              <span class="input-group-text">選項</span>
+                            </div>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='cth61' value='0' {{if $tv_clients_hlth_row->cth61|default:0==0}} checked {{/if}}> MAC < 21
+                              <input type='radio' name='cth61' value='0.5' {{if $tv_clients_hlth_row->cth61|default:0==0.5}} checked {{/if}}> MAC 21 ~ 21.9
+                              <input type='radio' name='cth61' value='1' {{if $tv_clients_hlth_row->cth61|default:0==1}} checked {{/if}}> MAC ≧ 22
+                            </span>
+                          </div>
+                        </span>
+                        <span id='helpBlock_cth62' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>
+                        18. 小腿圍C.C.
+                      </td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <div class="input-group input-group-sm">
+                            <input type='number' min='0' step='any' id='cth62_cc' name='cth62_cc' class='form-control form-control-sm col-3 auto_select_col' placeholder='請輸入小腿圍(*公分)' value='{{$tv_clients_hlth_row->cth62_cc|default:''}}'>
+                            <div class="input-group-append">
+                              <span class="input-group-text">選項</span>
+                            </div>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='cth62' value='0' {{if $tv_clients_hlth_row->cth62|default:0==0}} checked {{/if}}> C.C. < 31
+                              <input type='radio' name='cth62' value='1' {{if $tv_clients_hlth_row->cth62|default:0==1}} checked {{/if}}> C.C. ≧ 31
+                            </span>
+                          </div>
+                        </span>
+                        <span id='helpBlock_cth62' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left}}'>一般評估分數</td>
+                      <td width='{{$swidth_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type='number' min='0' step='any' id='cth70' name='cth70' class='form-control form-control-sm' placeholder='請輸入一般評估分數' value='{{$tv_clients_hlth_row->cth70|default:''}}' readonly>
+                          <span id='helpBlock_cth70' class='help-block'>*小計滿分16分(不開放輸入，由系統計算)</span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>備註</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <textarea id='cth99' class='form-control form-control-sm' name='cth99' rows='3' >{{$tv_clients_hlth_row->cth99|default:''}}</textarea>
+                  <span id='helpBlock_cth99' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>

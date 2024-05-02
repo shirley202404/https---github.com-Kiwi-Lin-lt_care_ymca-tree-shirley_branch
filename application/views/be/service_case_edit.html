@@ -1,0 +1,834 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    
+    {{if $tv_msel == 'add' or $tv_service_case_row->sec03 == NULL}}
+    CKEDITOR.replace('sec99', { height: '300px', width: '100%'});
+    {{/if}}
+    $("#save").click(function(){
+      if($("#ct_s_num").val() == '') {
+        alert("請重新選擇案主!!");
+        return;
+      }
+      if($("#sec01").val() == 3) {
+        var sec07 = $("#sec07").val();
+        if(sec07 == '0' || sec07 == '') {
+          alert("請輸入繳費金額!!");
+          return;
+        }
+      }
+
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            {{if $tv_msel == 'add'}}
+              $(".pop-add_route").modal('show');
+            {{else}}
+              location.replace("{{$tv_return_link}}");
+            {{/if}}
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+    
+    $('#ct_s_num').val('{{$tv_service_case_row->ct_s_num|default:''}}');
+    $('#sec01').val('{{$tv_service_case_row->sec01|default:''}}');
+    $('#sec03').val('{{$tv_service_case_row->sec03|default:''}}');
+    $('#sec04').val('{{$tv_service_case_row->sec04|default:''}}');
+    $('#sec05').val('{{$tv_service_case_row->sec05|default:''}}');
+    $('#sec09').val('{{$tv_service_case_row->sec09|default:''}}');
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+        
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $('#ct_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此案主"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        // console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_link}}',
+          data: {q:q , source:'sec'},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              console.log(rs);  
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#ct_s_num').val(item[2]);
+        $('#ct_name').val(item[0]);
+        $('#mil_h_ct_s_num').val(item[2]);
+        $('#mil_h_ct_name').val(item[0]);
+        $('#helpBlock_sec09').html("個案身分別：" + item[3]);
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+    
+    var sec07_val = $("#sec07").val();
+    $("#sec01").change(function() {
+      if($(this).val() == "4") {
+        $("#sec07").val("80");
+      }
+      else {
+        $("#sec07").val(sec07_val);
+      }
+    });
+    
+    $("#sec07").blur(function() {
+      sec07_val = $("#sec07").val();
+    });
+
+    $(".object").click(function(){
+      var fd_name = $(this).data("fd_name");
+      var ckeck_flag = $("."+fd_name).prop('checked');
+      var object = [];
+      var v = $("."+fd_name).val();
+      $("."+fd_name+":checkbox:checked").each(function(){
+        object.push($(this).val());
+      });
+      object = object.join(',');
+      $('#'+fd_name).val(object );
+    });    
+
+    {{* 停付餐及代餐選項連動 Begin*}}
+    $("input[type='radio'][name='mil_mp[mil_mp01]']").click(function() {
+      var select_val = $(this).val();
+      if(select_val == "N") {
+        $(".mil_mp01_type_object").prop("disabled" , true);
+        $(".mil_mp01_type_object").prop("checked" , false);
+        $(".mil_mp01_type_object").prop("required" , false);
+      }
+      else {
+        $(".mil_mp01_type_object").prop("disabled" , false);
+        $(".mil_mp01_type_object").prop("required" , true);
+      }
+    });
+    
+    $("input[type='radio'][name='mil_s[mil_s01]']").click(function() { // 由停復餐來調整代餐的東西
+      var select_val = $(this).val();
+      if(select_val == "Y") {
+        $(".mil_mp01_type_object").prop("disabled" , false);
+        $(".mil_mp01_type_object").prop("required" , true);
+        $("input[type='radio'][name='mil_mp[mil_mp01]'][value='Y']").prop("checked",true);
+        $("input[type='radio'][name='mil_mp[mil_mp01]'][value='N']").prop("checked",false);
+      }
+      else {
+        $("input[type='radio'][name='mil_mp[mil_mp01]'][value='Y']").prop("checked",false); // 把代餐狀況"Y"取消
+        $("input[type='radio'][name='mil_mp[mil_mp01]'][value='N']").prop("checked",true); // 把代餐狀況"N"打勾
+        $(".mil_mp01_type_object").prop("required" , false);
+        $(".mil_mp01_type_object").prop("checked" , false);
+        $(".mil_mp01_type_object").prop("disabled" , true);
+      }
+    });
+    
+    {{if $tv_msel == 'upd'}}
+      {{if isset($tv_meal_instruction_log_mp_row->mil_mp01)}}
+        {{if $tv_meal_instruction_log_mp_row->mil_mp01 == "N"}}
+          $(".mil_mp01_type_object").prop("required" , false);
+          $(".mil_mp01_type_object").prop("checked" , false);
+          $(".mil_mp01_type_object").prop("disabled" , true);
+        {{else}}
+          $(".mil_mp01_type_object").prop("disabled" , false);
+          $(".mil_mp01_type_object").prop("required" , true);
+        {{/if}}
+      {{/if}}
+    {{/if}}
+    {{* 停付餐及代餐選項連動 End*}}
+
+    $("#sec04").change(function() {
+      $("#reh_s_num").val('');
+      var sec04 = $(this).val();
+      $("#reh_s_num option").each(function() {
+        var reh05 = $(this).data('reh05');
+        if(sec04 == 1 || sec04 == 2) {
+          if(reh05 == 1) {
+            $(this).show();
+          }
+          if(reh05 == 2) {
+            $(this).hide();
+          }
+        }
+        else {
+          if(reh05 == 1) {
+            $(this).hide();
+          }
+          if(reh05 == 2) {
+            $(this).show();
+          }
+        }
+      });
+    });
+
+    $("#reh_s_num").change(function(){
+      var select_val = $("#reh_s_num :selected").val();
+      location.href = "{{$tv_route_link}}" + select_val;
+    });
+
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>開結案服務</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">個案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">開結案服務</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    {{if $tv_msel == 'upd' and NULL != $tv_service_case_row->sec03}}
+      <div class="alert alert-warning mt-2">
+        此服務已結案，結案日期：{{$tv_service_case_row->sec03|default:''}}，結案原因：{{$tv_service_case_row->sec03_memo|default:''}}
+      </div>
+    {{/if}}
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_service_case_row->b_acc_name|default:''}}({{$tv_service_case_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_service_case_row->e_acc_name|default:''}}({{$tv_service_case_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="s_num" value="{{$tv_service_case_row->s_num|default:'0'}}">
+      {{/if}}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>
+                    <input type='hidden' id='ct_s_num' name='ct_s_num' value='{{$tv_service_case_row->ct_s_num|default:''}}'>
+                    <input type='text' id='ct_name' name="ct_name" class='col-12 form-control form-control-sm' placeholder='請輸入案主姓名' autocomplete="off" value='{{$tv_service_case_row->ct01|default:''}}{{$tv_service_case_row->ct02|default:''}}' {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                    <span id='helpBlock_ct_name' class='help-block'></span>
+                  </span>
+                {{else}}
+                  <span class='form-group'>{{$tv_service_case_row->ct01|default:''}}{{$tv_service_case_row->ct02|default:''}}</span>
+                {{/if}}
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>服務現況</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>
+                    <select id='sec01' name='sec01' class='form-control form-control-sm' required>
+                      <option value='' selected>-請選擇-</option>
+                      {{foreach from=hlp_opt_setup("sec01", null, "get") key=k item=v}}
+                        <option value='{{$k}}'>{{$v}}</option>
+                      {{/foreach}}
+                    </select>
+                    <span id='helpBlock_sec01' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                {{else}}
+                  {{if $tv_acc_kind == "M" and $tv_group_s_num == 12}}
+                    <span class='form-group'>
+                      <select id='sec01' name='sec01' class='form-control form-control-sm' required>
+                        <option value='' selected>-請選擇-</option>
+                        {{foreach from=hlp_opt_setup("sec01", null, "get") key=k item=v}}
+                          <option value='{{$k}}'>{{$v}}</option>
+                        {{/foreach}}
+                      </select>
+                      <span id='helpBlock_sec01' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  {{else}}
+                    <span class='form-group'>{{$tv_service_case_row->sec01_str|default:''}}</span>
+                  {{/if}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>服務開始日</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>
+                    <div class='input-group form_date'>
+                      <div class='input-group-prepend'>
+                        <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                      </div>
+                      <input type='text' id='sec02' name='sec02' class='form-control form-control-sm' placeholder='請輸入服務開始日' value='{{$tv_service_case_row->sec02|date_format:'%Y-%m-%d'|default:''}}' required>
+                    </div>
+                    <span id='helpBlock_sec02' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                {{else}}
+                  {{if $tv_acc_kind == "M" and $tv_group_s_num == 12}}
+                  <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='sec02' name='sec02' class='form-control form-control-sm' placeholder='請輸入服務開始日' value='{{$tv_service_case_row->sec02|date_format:'%Y-%m-%d'|default:''}}' required>
+                      </div>
+                      <span id='helpBlock_sec02' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  {{else}}
+                    <span class='form-group'>{{$tv_service_case_row->sec02|default:''}}</span>
+                  {{/if}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>餐別</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>
+                    <select id='sec04' name='sec04' class='form-control form-control-sm' required>
+                      <option value='' selected>-請選擇-</option>
+                      {{foreach from=hlp_opt_setup("sec04", null, "get") key=k item=v}}
+                        <option value='{{$k}}'>{{$v}}</option>
+                      {{/foreach}}
+                    </select>
+                    <span id='helpBlock_sec04' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                {{else}}
+                  {{if $tv_acc_kind == "M" and $tv_group_s_num == 12}}
+                    <span class='form-group'>
+                      <select id='sec04' name='sec04' class='form-control form-control-sm' required>
+                        <option value='' selected>-請選擇-</option>
+                        {{foreach from=hlp_opt_setup("sec04", null, "get") key=k item=v}}
+                          <option value='{{$k}}'>{{$v}}</option>
+                        {{/foreach}}
+                      </select>
+                      <span id='helpBlock_sec04' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  {{else}}
+                    <span class='form-group'>{{$tv_service_case_row->sec04_str|default:''}}</span>
+                  {{/if}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>繳費方式</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>
+                    <select id='sec09' name='sec09' class='form-control form-control-sm' required>
+                      <option value='' selected>-請選擇-</option>
+                      {{foreach from=hlp_opt_setup("sec09", null, "get") key=k item=v}}
+                        <option value='{{$k}}'>{{$v}}</option>
+                      {{/foreach}}
+                    </select>
+                    <span id='helpBlock_sec09' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                {{else}}
+                  {{if $tv_acc_kind == "M" and $tv_group_s_num == 12}}
+                    <span class='form-group'>
+                      <select id='sec09' name='sec09' class='form-control form-control-sm' required>
+                        <option value='' selected>-請選擇-</option>
+                        {{foreach from=hlp_opt_setup("sec09", null, "get") key=k item=v}}
+                          <option value='{{$k}}'>{{$v}}</option>
+                        {{/foreach}}
+                      </select>
+                      <span id='helpBlock_sec09' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  {{else}}
+                    <span class='form-group'>{{$tv_service_case_row->sec09_str|default:''}}</span>
+                  {{/if}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>經費來源</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>                  
+                    <select id='sec05' name='sec05' class='form-control form-control-sm' required>
+                      <option value='' selected>-請選擇-</option>
+                      {{foreach from=hlp_opt_setup("sec05", null, "get") key=k item=v}}
+                        <option value='{{$k}}'>{{$v}}</option>
+                      {{/foreach}}
+                    </select>
+                    <span id='helpBlock_sec05' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                {{else}}
+                  {{if $tv_acc_kind == "M" and $tv_group_s_num == 12}}
+                    <span class='form-group'>
+                      <select id='sec05' name='sec05' class='form-control form-control-sm' required>
+                        {{foreach from=hlp_opt_setup("sec05", null, "get") key=k item=v}}
+                          <option value='{{$k}}'>{{$v}}</option>
+                        {{/foreach}}
+                      </select>
+                      <span id='helpBlock_sec05' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  {{else}}
+                    <span class='form-group'>{{$tv_service_case_row->sec05_str|default:''}}</span>
+                  {{/if}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>放置點</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>
+                    {{if 'add' == $tv_msel}}
+                      <textarea id='sec06' class='form-control form-control-sm' name='sec06' rows='3' required>
+個案親取
+放置固定地點
+由第三人轉交
+其他</textarea>
+                    {{else}}
+                      <textarea id='sec06' class='form-control form-control-sm' name='sec06' rows='3' required>{{$tv_service_case_row->sec06|default:''}}</textarea>
+                    {{/if}}
+                    <span id='helpBlock_sec06' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                {{else}}
+                  {{if $tv_acc_kind == "M" and $tv_group_s_num == 12}}
+                    <span class='form-group'>
+                      {{if 'add' == $tv_msel}}
+                        <textarea id='sec06' class='form-control form-control-sm' name='sec06' rows='3' required>
+個案親取
+放置固定地點
+由第三人轉交
+其他</textarea>
+                      {{else}}
+                        <textarea id='sec06' class='form-control form-control-sm' name='sec06' rows='3' required>{{$tv_service_case_row->sec06|default:''}}</textarea>
+                      {{/if}}
+                      <span id='helpBlock_sec06' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  {{else}}
+                    <span class='form-group'>{{$tv_service_case_row->sec06|default:''}}</span>
+                  {{/if}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr id="tr_sec07"  class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>繳費金額</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>
+                    <input type='text' id='sec07' name="sec07" class='form-control form-control-sm' placeholder='請輸入繳費金額' value='{{$tv_service_case_row->sec07|default:''}}'>
+                    <span id='helpBlock_sec07' class='help-block'></span>
+                  </span>
+                {{else}}
+                  {{if $tv_acc_kind == "M" and $tv_group_s_num == 12}}
+                    <span class='form-group'>
+                      <input type='text' id='sec07' name="sec07" class='form-control form-control-sm' placeholder='請輸入繳費金額' value='{{$tv_service_case_row->sec07|default:''}}'>
+                      <span id='helpBlock_sec07' class='help-block'></span>
+                    </span>
+                  {{else}}
+                    <span class='form-group'>{{$tv_service_case_row->sec07|default:''}}</span>
+                  {{/if}}
+                {{/if}}
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>備註</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                {{if $tv_service_case_row->sec03 == NULL}}
+                  <span class='form-group'>
+                    <textarea id='sec99' class='form-control form-control-sm' name='sec99' rows='5' >{{$tv_service_case_row->sec99|default:''}}</textarea>
+                    <span id='helpBlock_sec99' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                {{else}}
+                  {{if $tv_acc_kind == "M" and $tv_group_s_num == 12}}
+                    <span class='form-group'>
+                      <textarea id='sec99' class='form-control form-control-sm' name='sec99' rows='5' >{{$tv_service_case_row->sec99|default:''}}</textarea>
+                      <span id='helpBlock_sec99' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  {{else}}
+                    <span class='form-group'>{{$tv_service_case_row->sec99|default:''}}</span>
+                  {{/if}}
+                {{/if}}
+              </td>
+            </tr>
+            {{if $tv_msel == 'upd' and  $tv_service_case_row->sec03 != NULL}}
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>結案備註</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <textarea id='sec03_memo' class='form-control form-control-sm' name='sec03_memo' rows='3' >{{$tv_service_case_row->sec03_memo|default:''}}</textarea>
+                  <span id='helpBlock_sec03_memo' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            {{/if}}
+          </tbody>
+        </table>
+        {{if $tv_msel == 'add'}}
+          {{assign var="swidth_left_2" value="10%"}}
+          {{assign var="swidth_right_2" value="90%"}}
+          <table class="table table-bordered table-hover table-sm">
+            <thead>
+              <tr class="tr-class-1 gbcF7e">
+                <th data-field="title" colspan="5" class="bg-secondary text-white text-left"><h2>餐食異動資料</h2></th>
+              </tr>
+            </thead>
+            <tbody>
+              <input type='hidden' id='mil_h_ct_s_num' name='mil_h[ct_s_num]' value=''>
+              <input type='hidden' id='mil_h_ct_name' name='mil_h[ct_name]' value=''>
+              <input type='hidden' id='mil02' name='mil_h[mil02]' value='1,2,3,4,5'>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>生效日期</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class='input-group'>
+                      <div class='input-group-prepend'>
+                        <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                      </div>
+                      <input type='text' id='mil01' name='mil_h[mil01]' class='form-control form-control-sm form_date' placeholder='請輸入生效日期' value='{{$tv_meal_instruction_log_h_row->mil01|default:''}}' required>
+                    </div>
+                    <span id='helpBlock_mil01' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>異動備註</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <textarea id='mil99' class='form-control form-control-sm' name='mil_h[mil99]' rows='5' >{{$tv_meal_instruction_log_h_row->mil99|default:''}}</textarea>
+                    <span id='helpBlock_mil99' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>停復餐異動</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>出餐狀況</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          {{foreach from=hlp_opt_setup("mil_s01", null, "get") key=k item=v}}
+                            <input type="radio" name="mil_s[mil_s01]" value="{{$k}}" {{if $tv_meal_instruction_log_s_row->mil_s01|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>原因說明</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          {{foreach from=hlp_opt_setup("mil_s01_reason", null, "get") key=k item=v}}
+                            <input type="radio" name="mil_s[mil_s01_reason]" value="{{$k}}" {{if $tv_meal_instruction_log_s_row->mil_s01_reason|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>餐點異動</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>餐種</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          <select id='ml_s_num' name='mil_m[ml_s_num]' data-placeholder='-請選擇或輸入餐種名稱-' class='form-control form-control-sm ml_s_num chosen-select-deselect' data-fd_name="ml">
+                            <option value='' selected>-請選擇-</option>
+                            {{foreach from=$tv_meals_row key=k item=v}}
+                              <option value='{{$v.s_num}}' data-ml01="{{$v.ml01}}">{{$v.ml01}}</option>
+                            {{/foreach}}
+                          </select>
+                          <span id='helpBlock_ml_s_num' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>飯糰：</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="mil_m[mil_m01_1]" id="mil_m01_1_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_1|default:''}}">
+                          {{foreach from=hlp_opt_setup("mil_m01_1", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="mil_m01_1_{{$k}}" data-fd_name="mil_m01_1_object" class="mil_m01_1_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_1_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>菜盒：</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="mil_m[mil_m01_2]" id="mil_m01_2_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_2|default:''}}">
+                          {{foreach from=hlp_opt_setup("mil_m01_2", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="mil_m01_2_{{$k}}" data-fd_name="mil_m01_2_object" class="mil_m01_2_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_2_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>菜盒內容：</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="mil_m[mil_m01_3]" id="mil_m01_3_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_3|default:''}}">
+                          {{foreach from=hlp_opt_setup("mil_m01_3", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="mil_m01_3_{{$k}}" data-fd_name="mil_m01_3_object" class="mil_m01_3_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_3_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>素食：</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="mil_m[mil_m01_4]" id="mil_m01_4_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_4|default:''}}">
+                          {{foreach from=hlp_opt_setup("mil_m01_4", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="mil_m01_4_{{$k}}" data-fd_name="mil_m01_4_object" class="mil_m01_4_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_4_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>初一、十五素食：</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="mil_m[mil_m01_5]" id="mil_m01_5_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_5|default:''}}">
+                          {{foreach from=hlp_opt_setup("mil_m01_5", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="mil_m01_5_{{$k}}" data-fd_name="mil_m01_5_object" class="mil_m01_5_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_5_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>代餐異動</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>代餐狀況</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          {{foreach from=hlp_opt_setup("mil_mp01", null, "get") key=k item=v}}
+                            <input type="radio" name="mil_mp[mil_mp01]" value="{{$k}}" {{if $tv_meal_instruction_log_mp_row->mil_mp01|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>代餐種類</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          {{foreach from=hlp_opt_setup("mil_mp01_type", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="radio" name="mil_mp[mil_mp01_type]" data-fd_name="mil_mp01_type_object" class="mil_mp01_type_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_mp_row->mil_mp01_type_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>固定暫停異動</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>固定暫停</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="mil_p[mil_p01]" id="mil_p01_object" value="{{$tv_meal_instruction_log_p_row->mil_p01|default:''}}">
+                          {{foreach from=hlp_opt_setup("mil_p01", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="mil_p01_{{$k}}" data-fd_name="mil_p01_object" class="mil_p01_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_p_row->mil_p01_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>自費異動</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>是否為自費戶</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          {{foreach from=hlp_opt_setup("mil_i01", null, "get") key=k item=v}}
+                            <input type="radio" name="mil_i[mil_i01]" value="{{$k}}" {{if $tv_meal_instruction_log_i_row->mil_i01|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_2}}' class='table-primary text-right'>變更說明：</td>
+                      <td width='{{$swidth_right_2}}' class='table-light'>
+                        <span class='form-group'>
+                          <textarea id='mil_i01_reason' class='form-control form-control-sm' name='mil_i[mil_i01_reason]' rows='3' >{{$tv_meal_instruction_log_i_row->mil_i01_reason|default:''}}</textarea>
+                          <span id='helpBlock_mil_i01_reason' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        {{/if}}
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- 路徑新增 BEGIN -->
+  <div class="modal fade pop-add_route" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"> 路徑選擇</i><br></h1>
+          <div class='maT10'></div>
+          <div class="row">
+            <div class="col-12">
+              <div class="text-left ml-4">
+                <label for="reh_s_num" class="d-inline">服務路徑：</label>
+                <select id='reh_s_num' class='col-6 form-control form-control-sm d-inline' >
+                  <option value='' selected>-請選擇-</option>
+                  {{foreach from=$tv_route_row key=k item=v}}
+                   <option value='{{$v.s_num}}' data-reh05='{{$v.reh05|default:''}}'>{{$v.reh01}}</option>
+                  {{/foreach}}
+                </select>       
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 路徑新增 end-->
+</div>

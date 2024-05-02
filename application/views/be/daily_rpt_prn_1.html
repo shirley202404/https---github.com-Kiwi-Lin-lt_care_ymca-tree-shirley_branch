@@ -1,0 +1,191 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<!-- BT TABLE -->
+<link rel="stylesheet" href="{{$tv_pub_url}}/bootstrap-table/bootstrap-table.min.css">
+<script src="{{$tv_pub_url}}/bootstrap-table/bootstrap-table.min.js"></script>
+<style>
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .table::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .table {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    display: none;
+  }
+
+  .table-responsive {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+</style>
+<script>
+  $(function(){ 
+    $("#save").click(function(){
+      var err_msg = '';
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            // location.replace("{{$tv_return_link}}");
+            $('#return_href').submit();
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>訂單資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">作業專區</a></li>
+        <li class="breadcrumb-item"><a href="#">訂單資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_exit_link}}';">{{$tv_exit_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <form class="maT10" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+        <div id="prn_data" class="table-responsive">
+          <div class="text-info">*以黃底表示的資料，代表該日無送餐</div>
+          <table class="table table-bordered table-hover table-sm bt-table" data-toggle='table' data-height="450" data-search-highlight="true">
+            <thead>
+              <tr class="thead-light">
+                <th class="text-nowrap bgcGB" width="5%"><span id="fd_reh_s_num">送餐路線</span></th>
+                <th class="text-nowrap bgcGB" width="5%"><span id="fd_dyp06">送餐順序</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys02">送餐日期</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys01">送餐時段</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_acc_s_num">送餐員名稱</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_ct_s_num">案主名稱</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys02">餐別</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys03">餐種</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys10">出餐狀況</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys21">簽到時間</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys22">簽到方式</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys23">簽退時間</span></th>
+                <th class="text-nowrap bgcGB"><span id="fd_dys24">簽退方式</span></th>
+                <th class="text-nowrap bgcGB" style="width: 15%"><span id="fd_dys25">備註</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_prn_send_data key=k item=v name=prn_data}}
+                {{assign var="str_bg" value=""}}
+                {{if "N" == $v.dys10}}
+                  {{assign var="str_bg" value="table-warning"}}
+                {{/if}}
+                <tr class="{{$str_bg}}">
+                  <td class="text-left">{{$v.reh02|default:''}}</td><!--路線代碼-->
+                  <td class="text-right">{{$v.dys08|default:''}}</td><!--送餐順序-->
+                  <td class="text-left">{{$v.dys01|default:''|date_format:"%Y-%m-%d"}}</td><!--送餐日期-->
+                  <td class="text-left">{{$v.dys09_str|default:''}}</td><!--送餐時段-->
+                  <td class="text-left">{{$v.dp01|default:''}}{{$v.dp02|default:''}}</td><!--外送員名稱-->
+                  <td class="text-left">{{$v.ct_name|default:''}}</td><!--案主名稱-->
+                  <td class="text-left">{{$v.dys02|default:''}}</td><!--餐點名稱-->
+                  <td class="text-left">{{$v.dys03|default:''}}</td><!--餐點名稱-->
+                  <td class="text-left">{{$v.dys10_str|default:''}}</td><!--是否出餐-->
+                  {{if "Y" == $v.dys10}}
+                    <td class="text-left">
+                      {{if "0000-00-00 00:00:00" != $v.dys21}}
+                        {{$v.dys21|default:''}}
+                      {{/if}}
+                    </td><!--簽到時間-->
+                    <td class="text-left">
+                      {{if '' == $v.dys22|default:''}}
+                        <input type="hidden" class='form-control form-control-sm' name="punch[{{$v.s_num}}][s_num]" value="{{$v.s_num}}">
+                        <input type="hidden" class='form-control form-control-sm' name="punch[{{$v.s_num}}][dp_s_num]" value="{{$v.dp_s_num}}">
+                        <input type="hidden" class='form-control form-control-sm' name="punch[{{$v.s_num}}][ct_s_num]" value="{{$v.ct_s_num}}">
+                        <input type="hidden" class='form-control form-control-sm' name="punch[{{$v.s_num}}][sec_s_num]" value="{{$v.sec_s_num}}">
+                        <input type="hidden" class='form-control form-control-sm' name="punch[{{$v.s_num}}][mlo_s_num]" value="{{$v.mlo_s_num}}">
+                        <input type="hidden" class='form-control form-control-sm' name="punch[{{$v.s_num}}][reh_s_num]" value="{{$v.reh_s_num}}">
+                        <input type="hidden" class='form-control form-control-sm' name="punch[{{$v.s_num}}][type]" value="{{$tv_post_data['type']|default:''}}">
+                        <select class="form-control form-control-sm" id="dys22_{{$v.s_num}}" name="punch[{{$v.s_num}}][dys22]">
+                          <option value="" selected>-請選擇-</option>
+                          <option value="1">有網路</option>
+                          <option value="2">無網路</option>
+                          <option value="3">補登</option>
+                        </select>
+                      {{else}}
+                        {{$v.dys22_str|default:''}}
+                      {{/if}}
+                    </td><!--簽到方式-->
+                    <td class="text-left">
+                      {{if "0000-00-00 00:00:00" != $v.dys23}}
+                        {{$v.dys23|default:''}}
+                      {{/if}}
+                    </td><!--簽退時間-->
+                    <td class="text-left">
+                      {{if '' == $v.dys24|default:''}}
+                        <select class="form-control form-control-sm" id="dys24_{{$v.s_num}}" name="punch[{{$v.s_num}}][dys24]">
+                          <option value="" selected>-請選擇-</option>
+                          <option value="1">有網路</option>
+                          <option value="2">無網路</option>
+                          <option value="3">補登</option>
+                        </select>
+                      {{else}}
+                        {{$v.dys24_str|default:''}}
+                      {{/if}}
+                    </td><!--簽退方式-->
+                    <td class="text-left">
+                      {{if '' == $v.dys22 and '' == $v.dys24 and '' == $v.dys25|default:''}}
+                        <input type="text" class='form-control form-control-sm' id="dys25_{{$v.s_num}}" name="punch[{{$v.s_num}}][dys25]" placeholder="請輸入補登原因">
+                      {{else}}
+                        {{$v.dys25|default:''}}
+                      {{/if}}
+                    </td><!--備註-->
+                  {{else}}
+                    <td class="text-left"></td><!--簽到時間-->
+                    <td class="text-left"></td><!--簽到方式-->
+                    <td class="text-left"></td><!--簽退時間-->
+                    <td class="text-left"></td><!--簽退方式-->
+                    <td class="text-left"></td><!--備註-->
+                  {{/if}}
+                </tr>
+              {{foreachelse}}
+                <tr>
+                  <td colspan="99" class="alert alert-warning">
+                    查無資料!!!
+                  </td>
+                </tr>
+              {{/foreach}}
+            </tbody>
+          </table>
+        </div>
+      </form>
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+</div>
+
+<form id="return_href" action="{{$tv_prn_link}}" method="post" hidden>
+  <input type="hidden" id="dlvry_date" name="dlvry_date" value="{{$tv_post_data['dlvry_date']|default:''}}" />
+  <input type="hidden" id="rpt" name="rpt" value="{{$tv_post_data['rpt']|default:''}}" />
+  <input type="hidden" id="type" name="type" value="{{$tv_post_data['type']|default:''}}" />
+  <input type="hidden" id="reh_s_num" name="reh_s_num" value="{{$tv_post_data['reh_s_num']|default:''}}" />
+  <input type="hidden" id="taboo_type" name="taboo_type" value="{{$tv_post_data['taboo_type']|default:''}}" />
+</form>

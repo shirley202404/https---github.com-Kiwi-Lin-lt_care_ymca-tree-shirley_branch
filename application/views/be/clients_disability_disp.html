@@ -1,0 +1,523 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<style type="text/css">
+  body {
+   counter-reset: page_num;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .page_num {
+    /* position: absolute; */
+    position: relative;
+    page-break-before: always;
+    /* bottom: 0; */
+    /* right: -50; */
+  }
+  .page_num::before {
+    /* position: relative; */
+    /* bottom: -20px; */
+    counter-increment: page_num;
+    content: '頁次: ' counter(page_num);
+  }
+  @page {
+    size: A4;
+    margin-top: 1.2cm;
+    margin-bottom: 0.7cm;
+    margin-left: 0.5cm;
+    margin-right: 0.5cm;
+  }
+  
+  @media print { 
+    .prn_table td.bgwarning { 
+      background-color: #ffc107 !important;
+    }
+  }
+</style>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left no_print">
+      <h1>失能評估表</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">失能評估表</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right no_print">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_clients_disability_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right no_print">建檔:<span class="mainC1">{{$tv_clients_disability_row->b_acc_name|default:''}}({{$tv_clients_disability_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_clients_disability_row->e_acc_name|default:''}}({{$tv_clients_disability_row->e_date|default:""}})</span></div>
+      <div class="table-responsive">
+        <meta charset="utf-8">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          {{assign var="swidth_50" value="50%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right no_print'><span class="text-danger">*</span>評估者</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span>{{$tv_clients_disability_row->sw01|default:''}}{{$tv_clients_disability_row->sw02|default:''}}</span>
+                  <span id='helpBlock_ct_name' class='help-block'></span>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right no_print'><span class="text-danger">*</span>評估日期</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  {{$tv_clients_disability_row->il_date|date_format:'%Y-%m-%d'|default:''}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right no_print'><span class="text-danger">*</span>案主姓名</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  {{$tv_clients_disability_row->ct01|default:''}}{{$tv_clients_disability_row->ct02|default:''}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right no_print'><span class="text-danger">*</span>A、基本日常生活活動能力(ADL)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-bordered table-hover table-sm" id="adl">
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>1. <span class="table-secondary">進食</span>：吃飯時是否需要協助？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <!--1. 進食-->
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il01' value='10' {{if $tv_clients_disability_row->il01|default:0==10}} checked {{/if}}> 10分－
+                      <br/>
+                      (1)	可自行取食眼前食物<br/>
+                      (2)	吃完一餐<br/>
+                      (3)	合理時間內吃完<br/>
+                      (4)	自行穿脫輔具<br/>
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il01' value='5' {{if $tv_clients_disability_row->il01|default:0==5}} checked {{/if}}> 5分－
+                      <br/>
+                      (1)	要幫忙切食物、弄碎<br/>
+                      (2)	要先幫忙穿脫進食輔具<br/>
+                      <input class="adl_cal" type='radio' name='il01' value='0' {{if $tv_clients_disability_row->il01|default:0==0}} checked {{/if}}> 0分－
+                      <br/>
+                      (1)	灌食<br/>
+                      (2)	只能嘴動，手不會舀(需人餵食)<br/>                    
+                    </td>
+                  </tr>
+
+                  <!--2. 移位-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>2. <span class="table-secondary">移位</span>：從床上坐起及移位到椅子(或輪椅)上，是否需要幫忙？如何幫忙？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il02' value='15' {{if $tv_clients_disability_row->il02|default:0==15}} checked {{/if}}> 15分－
+                      <br/>
+                      (1)	可自行坐起、移位，並回到原位<br/>
+                      (2)	若使用輪椅，包含自行煞車、移開踏板<br/>
+                      (3)	沒有安全上顧慮，不需有人在旁監督<br/>                      
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il02' value='10' {{if $tv_clients_disability_row->il02|default:0==10}} checked {{/if}}> 10分－坐起及移位過程中需些微協助(如：輕扶以保持平衡，或提醒，或因安全顧慮需有人在旁監督)<br/>
+                      <input class="adl_cal" type='radio' name='il02' value='5' {{if $tv_clients_disability_row->il02|default:0==5}} checked {{/if}}> 5分－可自行獨立坐起，但由床移位到椅子上時，須1人大量的肢體協助<br/>
+                      <input class="adl_cal" type='radio' name='il02' value='0' {{if $tv_clients_disability_row->il02|default:0==0}} checked {{/if}}> 0分－需人協助才能坐起，或需2人幫忙扶持才可移位<br/>                    
+                    </td>
+                  </tr>
+
+                  <!--3. 如廁-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>3. <span class="table-secondary">如廁</span>：吃飯時是否需要協助？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il03' value='10' {{if $tv_clients_disability_row->il03|default:0==10}} checked {{/if}}> 10分－
+                      <br/>
+                      (1)	可自行上下馬桶<br/>
+                      (2)	穿脫衣物且不弄髒<br/>
+                      (3)	使用後擦拭清潔<br/>
+                      (4)	不需有人監督安全<br/>
+                      (5)	若使用便盆，包含自行取放及清洗<br/>                
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il03' value='5' {{if $tv_clients_disability_row->il03|default:0==5}} checked {{/if}}> 5分－只需協助保持平衡，整理衣物或使用衛生紙<br/>
+                      <input class="adl_cal" type='radio' name='il03' value='0' {{if $tv_clients_disability_row->il03|default:0==0}} checked {{/if}}> 0分－需人協助<br/>
+                    </td>
+                  </tr>
+
+                  <!--4. 洗澡-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>4. <span class="table-secondary">洗澡</span>：洗澡是否協助？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il04' value='5' {{if $tv_clients_disability_row->il04|default:0==5}} checked {{/if}}> 5分－可自行完成盆浴或淋浴<br/>
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il04' value='0' {{if $tv_clients_disability_row->il04|default:0==0}} checked {{/if}}> 0分－需別人協助或監督才能完成盆浴或淋浴<br/>
+                    </td>
+                  </tr>
+
+
+                  <!--5. 平地走動-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>5. <span class="table-secondary">平地走動</span></td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left'>(a) 是否可以在平地走50公尺以上？需要人協助嗎？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il05_a' value='15' {{if $tv_clients_disability_row->il05_a|default:0==15}} checked {{/if}}> 15分－<br/>
+                      (1)	使用或不使用輔具(包含支架、義肢、無輪之助行器)，可行走50公尺以上<br/>
+                      (2)	並可起立/坐下<br/>
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il05_a' value='0' {{if $tv_clients_disability_row->il05_a|default:0==0}} checked {{/if}}> 10分－需稍微扶持或口頭教導，即可行走50公尺以上<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left'>(b) 是否可操作輪椅或電動輪椅(包含轉彎、進門、接近桌子、床沿)？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il05_b' value='5' {{if $tv_clients_disability_row->il05_b|default:0==5}} checked {{/if}}> 5分－可以操作輪椅<br/>
+                     <input class="adl_cal" type='radio' name='il05_b' value='0' {{if $tv_clients_disability_row->il05_b|default:0==0}} checked {{/if}}> 0分－操作輪椅需要幫忙，或行走時需大量扶持，或無法行走<br/>               
+                    </td>
+                  </tr>
+
+                  <!--6. 穿脫衣褲鞋襪狀況-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>6. <span class="table-secondary">穿脫衣褲鞋襪</span>：是否需人協助穿脫衣褲鞋襪(義肢、支架)？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il06' value='10' {{if $tv_clients_disability_row->il06|default:0==10}} checked {{/if}}> 10分－
+                      <br/>
+                      (1)	可自行穿脫衣褲鞋襪(義肢、支架)，包含有必要時之繫緊、綁帶子、扣扣子等
+                      (2)	合理時間內完成
+                      (3)	可使用輔具                                  
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il06' value='5' {{if $tv_clients_disability_row->il06|default:0==6}} checked {{/if}}> 5分－在別人幫忙下，可自行完成一半以上動作<br/>
+                      <input class="adl_cal" type='radio' name='il06' value='0' {{if $tv_clients_disability_row->il06|default:0==0}} checked {{/if}}> 0分－需別人完全幫忙<br/>
+                    </td>
+                  </tr>
+
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-danger text-left font-weight-bold' style="font-size: 20px">失能項數：
+                      <input type='radio' name='il01_il06_total' value='1' {{if $tv_clients_disability_row->il01_il06_total|default:0==1}} checked {{/if}}> 無
+                      <input type='radio' name='il01_il06_total' value='2' {{if $tv_clients_disability_row->il01_il06_total|default:0==2}} checked {{/if}}> 輕度(1~2項)
+                      <input type='radio' name='il01_il06_total' value='3' {{if $tv_clients_disability_row->il01_il06_total|default:0==3}} checked {{/if}}> 中度(3~4項)
+                      <input type='radio' name='il01_il06_total' value='4' {{if $tv_clients_disability_row->il01_il06_total|default:0==4}} checked {{/if}}> 重度(≧五項)
+                    </td>
+                  </tr>
+
+                  <!--7. 個人衛生-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>7. <span class="table-secondary">個人衛生</span>：刷牙、洗臉、洗手、梳頭髪、(刮鬍子)是否需要幫忙？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il07' value='5' {{if $tv_clients_disability_row->il07|default:0==5}} checked {{/if}}> 5分－可自行完成上列所有項目，且不需監督<br/>
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il07' value='0' {{if $tv_clients_disability_row->il07|default:0==0}} checked {{/if}}> 0分－需協助才能完成上列項目<br/>
+                    </td>
+                  </tr>
+
+                  <!--8. 上下樓梯一層樓是否需要協助-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>8. <span class="table-secondary">上下樓梯</span>：上下樓梯一層樓是否需要協助？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il08' value='10' {{if $tv_clients_disability_row->il08|default:0==10}} checked {{/if}}> 10分－可自行上下樓梯(可抓扶手或用枴杖)<br/>
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il08' value='5' {{if $tv_clients_disability_row->il08|default:0==5}} checked {{/if}}> 5分－需稍扶持或口頭指導或監督<br/>
+                      <input class="adl_cal" type='radio' name='il08' value='0' {{if $tv_clients_disability_row->il08|default:0==0}} checked {{/if}}> 0分－需協助才能完成上列項目<br/>
+                    </td>
+                  </tr>
+
+                  <!--9. 大便控制-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>9. <span class="table-secondary">大便控制</span>是否曾發生大便失禁的情形？(若有)失禁頻率為何？是否需人協助處理？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il09' value='10' {{if $tv_clients_disability_row->il09|default:0==10}} checked {{/if}}> 10分－不會失禁，必要時會自行使用塞劑(軟便劑)<br/>
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il09' value='5' {{if $tv_clients_disability_row->il09|default:0==5}} checked {{/if}}> 5分－
+                      <br/>
+                      (1)	偶爾會失禁(每週不超過一次)<br/>
+                      (2)	使用塞劑(軟便劑)時需人幫忙<br/>
+                      <input class="adl_cal" type='radio' name='il09' value='0' {{if $tv_clients_disability_row->il09|default:0==0}} checked {{/if}}> 0分－需人協助處理<br/>
+                    </td>
+                  </tr>
+
+                  <!--10. 小便控制-->
+                  <tr class='d-flex'>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold'><span class="text-danger">*</span>10. <span class="table-secondary">小便控制</span>：是否曾發生小便失禁的情形？(若有)失禁頻率為何？是否需人協助處理？</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>不需協助</td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>需協助</td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_50}}' class='table-success text-left'>
+                      <input class="adl_cal" type='radio' name='il10' value='10' {{if $tv_clients_disability_row->il10|default:0==10}} checked {{/if}}> 10分－不會失禁，必要時會自行使用並清理尿布尿袋<br/>
+                    </td>
+                    <td width='{{$swidth_50}}' class='table-warning text-left'>
+                      <input class="adl_cal" type='radio' name='il10' value='5' {{if $tv_clients_disability_row->il10|default:0==5}} checked {{/if}}> 5分－
+                      <br/>
+                      (1)	偶爾會失禁(每週不超過一次)<br/>
+                      (2)	使用尿布尿袋時需人幫忙<br/>
+                      <input class="adl_cal" type='radio' name='il10' value='0' {{if $tv_clients_disability_row->il10|default:0==0}} checked {{/if}}> 0分－需人協助處理<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex table-danger'>
+                    <input type='hidden' min='0' step='any' id='il11' name='il11' class='form-control form-control-sm' placeholder='請輸入基本日常生活活動能力總分' value='{{$tv_clients_disability_row->il11|default:''}}' required>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold' style="font-size: 20px">基本日常生活活動能力總分：<span id="adl_total_str">{{$tv_clients_disability_row->il11|default:''}}</span></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right no_print'><span class="text-danger">*</span>B、工具性日常生活活動能力(IADL)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-bordered table-hover table-sm" id="iadl">
+                  <!--1. 上街購物-->
+                  <tr class='d-flex'>
+                    <td width='15%' class='table-light text-left font-weight-bold'><span class="text-danger">*</span>1. <span class="table-secondary">上街購物</span>：</td>
+                    <td width='90%' class='table-light text-left font-weight-bold'>
+                      <input class="iadl_cal" type='radio' name='il31' value='99' data-score='3' {{if $tv_clients_disability_row->il31|default:0==99}} checked {{/if}}> 不適用 (勾選“不適用”者，此項分數視為滿分)<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='70%' class='text-left'>
+                      <input class="iadl_cal" type='radio' name='il31' value='3' {{if $tv_clients_disability_row->il31|default:0==3}} checked {{/if}}> 3. 獨立完成所有購物需求<br/>
+                      <input class="iadl_cal" type='radio' name='il31' value='2' {{if $tv_clients_disability_row->il31|default:0==2}} checked {{/if}}> 2. 獨立購買日常生活用品<br/>
+                      <input class="iadl_cal" type='radio' name='il31' value='1' {{if $tv_clients_disability_row->il31|default:0==1}} checked {{/if}}> 1. 每一次上街購物都需要有人陪<br/>
+                      <input class="iadl_cal" type='radio' name='il31' value='0' {{if $tv_clients_disability_row->il31|default:0==0}} checked {{/if}}> 0. 完全不會上街購物<br/>
+                    </td>
+                    <td width='30%' class='text-left'>
+                      勾選1.或0.者，列為失能項目。
+                    </td>
+                  </tr>
+
+                  <!--2. 外出活動-->
+                  <tr class='d-flex'>
+                    <td width='15%' class='table-light text-left font-weight-bold'><span class="text-danger">*</span>2. <span class="table-secondary">外出活動</span>：</td>
+                    <td width='90%' class='table-light text-left font-weight-bold'>
+                      <input class="iadl_cal" type='radio' name='il32' value='99' data-score='4' {{if $tv_clients_disability_row->il32|default:0==99}} checked {{/if}}> 不適用 (勾選“不適用”者，此項分數視為滿分)<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='70%' class='text-left'>
+                      <input class="iadl_cal" type='radio' name='il32' value='4' {{if $tv_clients_disability_row->il32|default:0==4}} checked {{/if}}> 4. 能夠自己開車、騎車<br/>
+                      <input class="iadl_cal" type='radio' name='il32' value='3' {{if $tv_clients_disability_row->il32|default:0==3}} checked {{/if}}> 3. 能夠自己搭乘大眾運輸工具<br/>
+                      <input class="iadl_cal" type='radio' name='il32' value='2' {{if $tv_clients_disability_row->il32|default:0==2}} checked {{/if}}> 2. 能夠自己搭乘計程車但不會搭乘大眾運輸工具<br/>
+                      <input class="iadl_cal" type='radio' name='il32' value='1' {{if $tv_clients_disability_row->il32|default:0==1}} checked {{/if}}> 1. 當有人陪同可搭計程車或大眾運輸工具<br/>
+                      <input class="iadl_cal" type='radio' name='il32' value='0' {{if $tv_clients_disability_row->il32|default:0==0}} checked {{/if}}> 0. 完全不能出門<br/>
+                    </td>
+                    <td width='30%' class='text-left'>
+                      勾選1.或0.者，列為失能項目。
+                    </td>
+                  </tr>
+                  
+                  <!--3. 食物烹調-->
+                  <tr class='d-flex'>
+                    <td width='15%' class='table-light text-left font-weight-bold'><span class="text-danger">*</span>3. <span class="table-secondary">食物烹調</span>：</td>
+                    <td width='90%' class='table-light text-left font-weight-bold'>
+                      <input class="iadl_cal" type='radio' name='il33' value='99' data-score='3' {{if $tv_clients_disability_row->il33|default:0==99}} checked {{/if}}> 不適用 (勾選“不適用”者，此項分數視為滿分)<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='70%' class='text-left'>
+                      <input class="iadl_cal" type='radio' name='il33' value='3' {{if $tv_clients_disability_row->il33|default:0==3}} checked {{/if}}> 3. 能獨立計畫、烹煮和擺設一頓適當的飯菜<br/>
+                      <input class="iadl_cal" type='radio' name='il33' value='2' {{if $tv_clients_disability_row->il33|default:0==2}} checked {{/if}}> 2. 如果準備好一切佐料，會做一頓適當的飯菜<br/>
+                      <input class="iadl_cal" type='radio' name='il33' value='1' {{if $tv_clients_disability_row->il33|default:0==1}} checked {{/if}}> 1. 會將已做好的飯菜加熱<br/>
+                      <input class="iadl_cal" type='radio' name='il33' value='0' {{if $tv_clients_disability_row->il33|default:0==0}} checked {{/if}}> 0. 需要別人把飯菜煮好、擺好 <br/>
+                    </td>
+                    <td width='30%' class='text-left'>
+                      勾選0.者，列為失能項目。
+                    </td>
+                  </tr>
+
+                  <!--4. 家務維持-->
+                  <tr class='d-flex'>
+                    <td width='15%' class='table-light text-left font-weight-bold'><span class="text-danger">*</span>4. <span class="table-secondary">家務維持</span>：</td>
+                    <td width='90%' class='table-light text-left font-weight-bold'>
+                      <input class="iadl_cal" type='radio' name='il34' value='99' data-score='4' {{if $tv_clients_disability_row->il34|default:0==99}} checked {{/if}}> 不適用 (勾選“不適用”者，此項分數視為滿分)<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='70%' class='text-left'>
+                      <input class="iadl_cal" type='radio' name='il34' value='4' {{if $tv_clients_disability_row->il34|default:0==4}} checked {{/if}}> 4. 能做較繁重的家事或需偶爾家事協助（如搬動沙發、擦地板、洗窗戶）<br/>
+                      <input class="iadl_cal" type='radio' name='il34' value='3' {{if $tv_clients_disability_row->il34|default:0==3}} checked {{/if}}> 3. 能做較簡單的家事，如洗碗、鋪床、疊被<br/>
+                      <input class="iadl_cal" type='radio' name='il34' value='2' {{if $tv_clients_disability_row->il34|default:0==2}} checked {{/if}}> 2. 能做家事，但不能達到可被接受的整潔程度<br/>
+                      <input class="iadl_cal" type='radio' name='il34' value='1' {{if $tv_clients_disability_row->il34|default:0==1}} checked {{/if}}> 1. 所有的家事都需要別人協助<br/>
+                      <input class="iadl_cal" type='radio' name='il34' value='0' {{if $tv_clients_disability_row->il34|default:0==0}} checked {{/if}}> 0. 完全不會做家事<br/>
+                    </td>
+                    <td width='30%' class='text-left'>
+                      勾選1.或0.者，列為失能項目。
+                    </td>
+                  </tr>
+
+                  <!--5. 洗衣服-->
+                  <tr class='d-flex'>
+                    <td width='15%' class='table-light text-left font-weight-bold'><span class="text-danger">*</span>5. <span class="table-secondary">洗衣服</span>：</td>
+                    <td width='90%' class='table-light text-left font-weight-bold'>
+                      <input class="iadl_cal" type='radio' name='il35' value='99' data-score='2' {{if $tv_clients_disability_row->il35|default:0==99}} checked {{/if}}> 不適用 (勾選“不適用”者，此項分數視為滿分)<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='70%' class='text-left'>
+                      <input class="iadl_cal" type='radio' name='il35' value='2' {{if $tv_clients_disability_row->il35|default:0==2}} checked {{/if}}> 2. 自己清洗所有衣物<br/>
+                      <input class="iadl_cal" type='radio' name='il35' value='1' {{if $tv_clients_disability_row->il35|default:0==1}} checked {{/if}}> 1. 只清洗小件衣物<br/>
+                      <input class="iadl_cal" type='radio' name='il35' value='0' {{if $tv_clients_disability_row->il35|default:0==0}} checked {{/if}}> 0. 完全依賴他人<br/>
+                    </td>
+                    <td width='30%' class='text-left'>
+                      勾選0.者，列為失能項目。
+                    </td>
+                  </tr>
+
+                  <!--6. 使用電話能力-->
+                  <tr class='d-flex'>
+                    <td width='15%' class='table-light text-left font-weight-bold'><span class="text-danger">*</span>6. <span class="table-secondary">使用電話能力</span>：</td>
+                    <td width='90%' class='table-light text-left font-weight-bold'>
+                      <input class="iadl_cal" type='radio' name='il36' value='99' data-score='3' {{if $tv_clients_disability_row->il36|default:0==99}} checked {{/if}}> 不適用 (勾選“不適用”者，此項分數視為滿分)<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='70%' class='text-left'>
+                      <input class="iadl_cal" type='radio' name='il36' value='3' {{if $tv_clients_disability_row->il36|default:0==3}} checked {{/if}}> 3. 獨立使用電話，含查電話簿、撥號等<br/>
+                      <input class="iadl_cal" type='radio' name='il36' value='2' {{if $tv_clients_disability_row->il36|default:0==2}} checked {{/if}}> 2. 僅可撥熟悉的電話號碼<br/>
+                      <input class="iadl_cal" type='radio' name='il36' value='1' {{if $tv_clients_disability_row->il36|default:0==1}} checked {{/if}}> 1. 僅會接電話，不會撥電話<br/>
+                      <input class="iadl_cal" type='radio' name='il36' value='0' {{if $tv_clients_disability_row->il36|default:0==0}} checked {{/if}}> 0. 完全不會使用電話<br/>
+                    </td>
+                    <td width='30%' class='text-left'>
+                      勾選1.或0.者，列為失能項目。
+                    </td>
+                  </tr>
+
+                  <!--7. 服用藥物-->
+                  <tr class='d-flex'>
+                    <td width='15%' class='table-light text-left font-weight-bold'><span class="text-danger">*</span>7. <span class="table-secondary">服用藥物</span>：</td>
+                    <td width='90%' class='table-light text-left font-weight-bold'>
+                      <input class="iadl_cal" type='radio' name='il37' value='99' data-score='3' {{if $tv_clients_disability_row->il37|default:0==99}} checked {{/if}}> 不適用 (勾選“不適用”者，此項分數視為滿分)<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='70%' class='text-left'>
+                      <input class="iadl_cal" type='radio' name='il37' value='3' {{if $tv_clients_disability_row->il37|default:0==3}} checked {{/if}}> 3. 能自己負責在正確的時間用正確的藥物<br/>
+                      <input class="iadl_cal" type='radio' name='il37' value='2' {{if $tv_clients_disability_row->il37|default:0==2}} checked {{/if}}> 2. 需要提醒或少許協助<br/>
+                      <input class="iadl_cal" type='radio' name='il37' value='1' {{if $tv_clients_disability_row->il37|default:0==1}} checked {{/if}}> 1. 如果事先準備好服用的藥物分量，可自行服用<br/>
+                      <input class="iadl_cal" type='radio' name='il37' value='0' {{if $tv_clients_disability_row->il37|default:0==0}} checked {{/if}}> 0. 不能自己服用藥物<br/>
+                    </td>
+                    <td width='30%' class='text-left'>
+                      勾選1.或0.者，列為失能項目。
+                    </td>
+                  </tr>
+
+                  <!--8. 處理財務能力-->
+                  <tr class='d-flex'>
+                    <td width='15%' class='table-light text-left font-weight-bold'><span class="text-danger">*</span>8. <span class="table-secondary">處理財務能力</span>：</td>
+                    <td width='90%' class='table-light text-left font-weight-bold'>
+                      <input class="iadl_cal" type='radio' name='il38' value='99' data-score='2' {{if $tv_clients_disability_row->il38|default:0==99}} checked {{/if}}> 不適用 (勾選“不適用”者，此項分數視為滿分)<br/>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='70%' class='text-left'>
+                      <input class="iadl_cal" type='radio' name='il38' value='2' {{if $tv_clients_disability_row->il38|default:0==2}} checked {{/if}}> 2. 可以獨立處理財務<br/>
+                      <input class="iadl_cal" type='radio' name='il38' value='1' {{if $tv_clients_disability_row->il38|default:0==1}} checked {{/if}}> 1. 可以處理日常的購買，但需要別人協助與銀行往來或大宗買賣<br/>
+                      <input class="iadl_cal" type='radio' name='il38' value='0' {{if $tv_clients_disability_row->il38|default:0==0}} checked {{/if}}> 0. 不能處理錢財<br/>
+                    </td>
+                    <td width='30%' class='text-left'>
+                      勾選0.者，列為失能項目。
+                    </td>
+                  </tr>
+                  <tr class='d-flex table-danger'>
+                    <input type='hidden' min='0' step='any' id='il39' name='il39' class='form-control form-control-sm' placeholder='請輸入基本日常生活活動能力總分' value='{{$tv_clients_disability_row->il39|default:''}}' required>
+                    <td width='100%' colspan="2" class='table-light text-left font-weight-bold' style="font-size: 20px">工具性日常生活活動能力總分：<span id="iadl_total_str">{{$tv_clients_disability_row->il39|default:''}}</span></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>是否符合失能補助標準</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span class='form-control form-control-sm'>
+                    <input type='radio' name='il51' value='Y' {{if $tv_clients_disability_row->il51|default:'N'=='Y'}} checked {{/if}}> 是
+                    <input type='radio' name='il51' value='N' {{if $tv_clients_disability_row->il51|default:'N'=='N'}} checked {{/if}}> 否
+                  </span>
+                  <span id='helpBlock_il51' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+</div>

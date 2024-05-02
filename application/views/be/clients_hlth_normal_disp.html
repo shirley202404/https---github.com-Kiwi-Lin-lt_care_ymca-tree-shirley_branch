@@ -1,0 +1,478 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>營養評估表</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">營養評估表</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_clients_hlth_normal_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="nav-note-tab" data-toggle="tab" href="#nav-note" role="tab" aria-controls="nav-note" aria-selected="true">照會營養師</a>
+        <a class="nav-item nav-link" id="nav-track-tab" data-toggle="tab" href="#nav-track" role="tab" aria-controls="nav-track" aria-selected="false">追蹤紀錄表</a>
+        {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+          <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+            <div class="float-right">建檔:<span class="mainC1">{{$tv_clients_hlth_normal_row->b_acc_name|default:''}}({{$tv_clients_hlth_normal_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_clients_hlth_normal_row->e_acc_name|default:''}}({{$tv_clients_hlth_normal_row->e_date|default:""}})</span></div>
+          </span>
+        {{/if}}
+      </div>
+    </nav>
+    {{assign var="swidth_left" value="20%"}}
+    {{assign var="swidth_right" value="80%"}}
+    {{assign var="swidth_left_2" value="30%"}}
+    {{assign var="swidth_right_2" value="70%"}}
+    {{assign var="swidth_left_3" value="10.2%%"}}
+    {{assign var="swidth_right_3" value="89.8%"}}
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-note" role="tabpanel" aria-labelledby="nav-note-tab">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover table-sm">
+            <tbody>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">填表日期</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_normal_row->chn01|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">案主序號</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_normal_row->ct01|default:''}}{{$tv_clients_hlth_normal_row->ct02|default:''}}</span></td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>S.病史及主觀資料</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-hover table-sm" id="health">
+                    <tbody>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>糖尿病</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn11_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>心血管疾病</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn12_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高血壓</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn13_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高膽固醇</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn13_opt_1_str|default:''}}</span>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高三酸甘油酯</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn13_opt_2_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>中風</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn13_opt_3_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='15.1%' class='table-secondary text-right'>高血壓-其他</td>
+                        <td width='85%' class='table-light' colspan="3">
+                          <span class="text-dark">
+                            {{$tv_clients_hlth_normal_row->chn13_opt_99_str|default:''}}
+                            {{if NULL != $tv_clients_hlth_normal_row->chn13_opt_99_memo|default:''}}
+                              ，{{$tv_clients_hlth_normal_row->chn13_opt_99_memo|default:''}}
+                            {{/if}}
+                          </span>
+                        </td>
+                        <td width='15.2%' class='table-secondary text-right'>外傷（褥瘡）</td>
+                        <td width='34.3%' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn15_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>腎臟病</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn14_str|default:''}}</span>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>洗腎治療</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn14_opt_1_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>尿量</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn14_opt_2_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>痛風</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn16_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>肝炎</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn17_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>長期腹瀉、嘔吐</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn19_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>肝硬化</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn18_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>食道靜脈曲張</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn18_opt_1_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>腹水</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn18_opt_2_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>消化性潰瘍</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn20_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>甲狀腺亢進/低下</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn21_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>慢性阻塞性肺疾病</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn22_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>胰臟炎</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn23_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>脂肪瀉</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn23_opt1_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>長期服用類固醇、利尿劑、瀉藥</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn24_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>失智症</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn26_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>巴金森</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn27_str|default:''}}</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>精神疾病</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn28_str|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_3}}' class='table-secondary text-right'>癌症</td>
+                        <td width='{{$swidth_right_3}}' class='table-light'>
+                          <span class="text-dark">
+                            {{$tv_clients_hlth_normal_row->chn25_str|default:''}}
+                            {{if NULL != $tv_clients_hlth_normal_row->chn25_memo|default:''}}
+                              ，{{$tv_clients_hlth_normal_row->chn25_memo|default:''}}
+                            {{/if}}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                        <td width='{{$swidth_right_3}}' class='table-light'>
+                          <span class="text-dark">
+                            {{$tv_clients_hlth_normal_row->chn29_str|default:''}}
+                            {{if NULL != $tv_clients_hlth_normal_row->chn29_memo|default:''}}
+                              ，{{$tv_clients_hlth_normal_row->chn29_memo|default:''}}
+                            {{/if}}
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class="d-flex">
+                        <td width="{{$swidth_left_3}}" class="table-secondary text-right">飲食狀況</td>
+                        <td width="{{$swidth_right_3}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_normal_row->chn31|nl2br|default:''}}</span></td>
+                      </tr>
+                      <tr class="d-flex">
+                        <td width="{{$swidth_left_3}}" class="table-secondary text-right">咀嚼能力</td>
+                        <td width="{{$swidth_right_3}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_normal_row->chn32_str|default:''}}</span></td>
+                      </tr>
+                      <tr class="d-flex">
+                        <td width="{{$swidth_left_3}}" class="table-secondary text-right">食慾狀況</td>
+                        <td width="{{$swidth_right_3}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_normal_row->chn33_str|default:''}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>O.客觀資料</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-hover table-sm">
+                    <tbody>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>身高</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn51|default:''}}公分</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>體重</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn52|default:''}}公斤</span></td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>其他</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn53|nl2br|default:''}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>A.評估</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-hover table-sm">
+                    <tbody>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_3}}' class='table-secondary text-right'>BMI</td>
+                        <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn71|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_3}}' class='table-secondary text-right'>調整體重</td>
+                        <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn72|default:''}}</span></td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_3}}' class='table-secondary text-right'>營養診斷</td>
+                        <td width='{{$swidth_right_3}}' class='table-light'>
+                          <table class="table table-hover table-sm">
+                            <tbody>
+                              <tr class='d-flex'>
+                                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>體位</td>
+                                <td width='{{$swidth_right_3}}' class='table-light'>
+                                  <span class="text-dark">
+                                    {{$tv_clients_hlth_normal_row->chn73_1_str|default:''}}
+                                    {{if NULL != $tv_clients_hlth_normal_row->chn73_1_memo|default:''}}
+                                      ，{{$tv_clients_hlth_normal_row->chn73_1_memo|default:''}}
+                                    {{/if}}
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr class='d-flex'>
+                                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>熱量攝取</td>
+                                <td width='{{$swidth_right_3}}' class='table-light'>
+                                  <span class="text-dark">
+                                    {{$tv_clients_hlth_normal_row->chn73_2_str|default:''}}
+                                    {{if NULL != $tv_clients_hlth_normal_row->chn73_2_memo|default:''}}
+                                      ，{{$tv_clients_hlth_normal_row->chn73_2_memo|default:''}}
+                                    {{/if}}
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr class='d-flex'>
+                                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食不均衡</td>
+                                <td width='{{$swidth_right_3}}' class='table-light'>
+                                  <span class="text-dark">
+                                    {{$tv_clients_hlth_normal_row->chn73_3_str|default:''}}
+                                    {{if NULL != $tv_clients_hlth_normal_row->chn73_3_memo|default:''}}
+                                      ，{{$tv_clients_hlth_normal_row->chn73_3_memo|default:''}}
+                                    {{/if}}
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr class='d-flex'>
+                                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>營養知識認知不足</td>
+                                <td width='{{$swidth_right_3}}' class='table-light'>
+                                  <span class="text-dark">
+                                    {{$tv_clients_hlth_normal_row->chn73_4_str|default:''}}
+                                    {{if NULL != $tv_clients_hlth_normal_row->chn73_4_memo|default:''}}
+                                      ，{{$tv_clients_hlth_normal_row->chn73_4_memo|default:''}}
+                                    {{/if}}
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr class='d-flex'>
+                                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                                <td width='{{$swidth_right_3}}' class='table-light'>
+                                  <span class="text-dark">
+                                    {{$tv_clients_hlth_normal_row->chn73_99_str|default:''}}
+                                    {{if NULL != $tv_clients_hlth_normal_row->chn73_99_memo|default:''}}
+                                      ，{{$tv_clients_hlth_normal_row->chn73_99_memo|default:''}}
+                                    {{/if}}
+                                  </span>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>P.飲食建議</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-hover table-sm">
+                  <tbody>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食建議</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'>
+                        <table class="table table-hover table-sm">
+                          <tbody>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>均衡飲食</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn91_1_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>糖尿病</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn91_2_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低油、低鹽</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn91_3_str|default:''}}</span></td>
+                            </tr>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高蛋白</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn91_4_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低蛋白</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn91_5_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低普林</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn91_6_str|default:''}}</span></td>
+                            </tr>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_3}}' class='table-secondary text-right'>低渣</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn91_7_str|default:''}}</span></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>質地建議</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'>
+                        <table class="table table-hover table-sm">
+                          <tbody>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>普通</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn92_1_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>軟質</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn92_2_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>細軟</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn92_3_str|default:''}}</span></td>
+                            </tr>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>半流質</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn92_4_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>全流質</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn92_5_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>其他</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'>
+                                <span class="text-dark">
+                                  {{$tv_clients_hlth_normal_row->chn92_99_str|default:''}}
+                                  {{if NULL != $tv_clients_hlth_normal_row->chn92_99_memo|default:''}}
+                                    ，{{$tv_clients_hlth_normal_row->chn92_99_memo|default:''}}
+                                  {{/if}}
+                                </span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議熱量</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn93|default:''}}大卡/天</span></td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn94|nl2br|default:''}}</span></td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議追蹤項目</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$tv_clients_hlth_normal_row->chn95|nl2br|default:''}}</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>		  		
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="nav-track" role="tabpanel" aria-labelledby="nav-track-tab">
+      <div class="table-responsive" id="clients_hlth_normal_track_div" style="overflow: visible;">
+        {{assign var="snum" value="1"}}
+        {{foreach from=$tv_clients_hlth_normal_track_row key=k item=v}}
+          <table class="table table-bordered table-hover table-sm" id="chnt_table_{{$snum}}" data-item="{{$snum}}">
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤日期</td>
+              <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$v.chnt02|default:''}}</span></td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>S</td>
+              <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$v.chnt11|default:''}}</span></td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>O</td>
+              <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$v.chnt12|default:''}}</span></td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>A</td>
+              <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$v.chnt13|default:''}}</span></td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>P.飲食建議</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-hover table-sm">
+                  <tbody>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食計畫</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$v.chnt21_str|default:''}}</span></td>
+                    </td>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食建議</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'>
+                        <table class="table table-hover table-sm">
+                          <tbody>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>均衡飲食</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt22_1_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>糖尿病</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt22_2_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低油、低鹽</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt22_3_str|default:''}}</span></td>
+                            </tr>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高蛋白</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt22_4_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低蛋白</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt22_5_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低普林</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt22_6_str|default:''}}</span></td>
+                            </tr>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_3}}' class='table-secondary text-right'>低渣</td>
+                              <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$v.chnt22_7_str|default:''}}</span></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>質地建議</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'>
+                        <table class="table table-hover table-sm">
+                          <tbody>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>普通</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt23_1_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>軟質</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt23_2_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>細軟</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt23_3_str|default:''}}</span></td>
+                            </tr>
+                            <tr class='d-flex'>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>半流質</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt22_4_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>全流質</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'><span class="text-dark">{{$v.chnt22_5_str|default:''}}</span></td>
+                              <td width='{{$swidth_left_2}}' class='table-secondary text-right'>其他</td>
+                              <td width='{{$swidth_right_2}}' class='table-light'>
+                                <span class="text-dark">
+                                  {{$v.chnt23_99_str|default:''}}
+                                  {{if NULL != $v.chnt23_99_memo|default:''}}
+                                    ，{{$v.chnt23_99_memo|default:''}}
+                                  {{/if}}
+                                </span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議熱量</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$v.chnt24|default:''}}大卡/天</span></td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$v.chnt25|default:''}}</span></td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議追蹤項目</td>
+                      <td width='{{$swidth_right_3}}' class='table-light'><span class="text-dark">{{$v.chnt26|default:''}}</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </table>
+          {{assign var="snum" value="{{$snum+1}}"}}
+        {{foreachelse}}
+          查無資料!!
+        {{/foreach}}
+      </div>
+    </div>
+  </div>  
+  <!- container-fluid end-->
+</div>

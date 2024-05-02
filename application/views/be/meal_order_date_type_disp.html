@@ -1,0 +1,56 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>訂單日期類型</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">系統設定檔</a></li>
+        <li class="breadcrumb-item"><a href="#">訂單日期類型</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_meal_order_date_type_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+      {{*<button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>*}}
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_meal_order_date_type_row->b_acc_name|default:''}}({{$tv_meal_order_date_type_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_meal_order_date_type_row->e_acc_name|default:''}}({{$tv_meal_order_date_type_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">日期</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_order_date_type_row->mlo_dt01|default:''}}（{{filter_week({{$tv_meal_order_date_type_row->mlo_dt01|date_format:'%w'}})}}）</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">訂單類型</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_order_date_type_row->mlo_dt02_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">補班日期</td>
+          	<td width="{{$swidth_right}}" class="table-light">
+              <span class="text-dark">
+                {{if $tv_meal_order_date_type_row->mlo_dt03 != "0000-00-00" and $tv_meal_order_date_type_row->mlo_dt03 != ''}}
+                  {{$tv_meal_order_date_type_row->mlo_dt03|default:''}}（{{filter_week({{$tv_meal_order_date_type_row->mlo_dt03|date_format:'%w'}})}}）
+                {{/if}}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

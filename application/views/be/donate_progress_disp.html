@@ -1,0 +1,50 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>捐款進度資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">捐款管理</a></li>
+        <li class="breadcrumb-item"><a href="#">捐款進度資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_donate_progress_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_donate_progress_row->b_acc_name|default:''}}({{$tv_donate_progress_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_donate_progress_row->e_acc_name|default:''}}({{$tv_donate_progress_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">第一階段金額</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_progress_row->dp01|number_format:0|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">第二階段金額</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_progress_row->dp02|number_format:0|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">第三階段金額</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_progress_row->dp03|number_format:0|default:''}}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

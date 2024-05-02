@@ -1,0 +1,1053 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('.download').click(function(){
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('#show_download_info_btn').hide();
+      var strMsg = '';
+      $.ajax({
+        type:'get',
+        url: "{{$tv_download_link}}",
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤['+url+']:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>訂單資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">作業專區</a></li>
+        <li class="breadcrumb-item"><a href="#">訂單資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm download" data-type="meal" data-toggle="modal" data-target=".pop-download">餐數統計表下載 <i class="fas fa-download"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_exit_link}}';">{{$tv_exit_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div id="prn_data" class="table-responsive">
+        <meta charset="utf-8">
+        <nav>
+          <div class="nav nav-tabs no_print" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-1-tab" data-toggle="tab" href="#nav-1" role="tab" aria-controls="nav-1" aria-selected="true">餐數統計表(午餐)</a>
+            <a class="nav-item nav-link" id="nav-2-tab" data-toggle="tab" href="#nav-2" role="tab" aria-controls="nav-2" aria-selected="true">餐數統計表(晚餐)</a>
+          </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+          <!-- 午餐+午晚餐 -->
+          {{* 1 = 午餐補助戶 , 2 = 午餐自費戶 , 3 = 中晚餐補助戶 , 4 = 中晚餐自費戶 *}}
+          <div class="tab-pane fade show active" id="nav-1" role="tabpanel" aria-labelledby="nav-1-tab">
+            <table class="table-sm mt-2 prn_font no_print" border="0" width="100%">
+              <tr>
+                <td width="60%" class="text-left">
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}</h1>
+                </td>
+              </tr>
+              <tr>
+                <td width="60%" class="text-left">                                                              
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 24pt;">{{$tv_dlvry_date}} 餐數統計表(午餐)</h1>  
+                </td>
+                <td width="07%" class="text-right">                                                              
+                  <h1 class="mr-1 text-right" style="font-size: 16pt;">總餐數:{{$tv_prn_meal_num_data['meal_num_1']}}</h1>  
+                </td>                                                                                              
+              </tr>
+            </table>
+            <table class="table table-bordered table-hover table-sm mt-0" style="width:100%; border:none;">
+              <tr class="thead-light">
+                <td class='text-left bg-warning' style="width:32.5%" colspan="2" >主菜：(午+中晚的肉)</td>
+                <td class='text-left bg-warning' style="width:12.5%">數量</td>
+                <td class='text-left'            style="width:10%;border:none;"></td>
+                <td class='text-left bg-warning' style="width:32.5%" colspan="2">量米＆煮飯(含中晚)：(不含素食)</td>
+                <td class='text-left bg-warning' style="width:12.5%">數量</td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left bg-light' style="width:22.5%">午餐忌主菜</td>
+                <td class='text-left bg-light' style="width:10%"></td>
+                <td class='text-left'          style="width:10%;border:none;"></td>
+                <td class='text-left'          style="width:05%">※</td>
+                <td class='text-left'          style="width:22.5%">軟質</td>
+                <td class='text-center'        style="width:10%">
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_2'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_2'][0]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_2'][0]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_2'][0]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">1</td>
+                <td class='text-left'   style="width:22.5%">忌豬</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_3'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_3'][2]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">細軟</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_2'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_2'][1]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_2'][1]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_2'][1]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">2</td>
+                <td class='text-left'   style="width:22.5%">忌雞</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_3'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_3'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left'   style="width:10%;border:none;"></td>
+                <td class='text-left'   style="width:05%">※</td>
+                <td class='text-left'   style="width:22.5%">★★</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][12]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][12]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][12]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][12]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">3</td>
+                <td class='text-left'   style="width:22.5%">忌魚</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_3'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_3'][0]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">一般餐</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][8]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][8]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][8]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][8]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left bg-light' style="width:22.5%">★★忌主菜</td>
+                <td class='text-left bg-light' style="width:10%"></td>
+                <td class='text-left'          style="width:10%;border:none;"></td>
+                <td class='text-left'          style="width:05%">※</td>
+                <td class='text-left'          style="width:22.5%">半流</td>
+                <td class='text-center'        style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][10]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][10]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][10]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][10]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">1</td>
+                <td class='text-left'   style="width:22.5%">忌豬</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['other'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['other'][2]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left'   style="width:10%;border:none;"></td>
+                <td class='text-left'   style="width:05%">※</td>
+                <td class='text-left'   style="width:22.5%">小半流</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][11]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][11]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][11]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][11]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">2</td>
+                <td class='text-left'   style="width:22.5%">忌雞</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['other'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['other'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left'   style="width:10%;border:none;"></td>
+                <td class='text-left'   style="width:05%">※</td>
+                <td class='text-left'   style="width:22.5%">粥</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][3]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][3]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][3]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][3]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">3</td>
+                <td class='text-left'   style="width:22.5%">忌魚</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['other'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['other'][0]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left'   style="width:10%;border:none;"></td>
+                <td class='text-left'   style="width:05%">※</td>
+                <td class='text-left'   style="width:22.5%">★★粥</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][16]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][16]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][16]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][16]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left bg-light' style="width:22.5%">中晚忌主菜</td>
+                <td class='text-left bg-light' style="width:10%"></td>
+                <td class='text-left'          style="width:10%;border:none;"></td>
+                <td class='text-left'          style="width:05%">※</td>
+                <td class='text-left'   style="width:22.5%">大粥</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][2]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][2]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][2]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">1</td>
+                <td class='text-left'   style="width:22.5%">忌豬</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_3'][2]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_3'][2]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left'   style="width:10%;border:none;"></td>
+                <td class='text-left'   style="width:05%">※</td>
+                <td class='text-left'          style="width:22.5%">鐵盒子</td>
+                <td class='text-center'        style="width:10%">
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_1'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_1'][2]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_1'][2]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_1'][2]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">2</td>
+                <td class='text-left'   style="width:22.5%">忌雞</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_3'][1]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_3'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left'          style="width:10%;border:none;"></td>
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left'   style="width:22.5%">大飯碗</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][14]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][14]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][14]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][14]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">3</td>
+                <td class='text-left'   style="width:22.5%">忌魚</td>
+                <td class='text-center' style="width:10%">         
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_3'][0]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_3'][0]|default:'0'}}
+                  }}         
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;"></td>
+                <td class='text-left' style="width:22.5%"></td>
+                <td class='text-left' style="width:10%;"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left bg-light' style="width:22.5%">中晚★★忌主菜</td>
+                <td class='text-left bg-light' style="width:10%"></td>
+                <td class='text-left'          style="width:10%;border:none;"></td>
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left bg-light' style="width:22.5%">忌主食</td>
+                <td class='text-left bg-light' style="width:10%"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">1</td>
+                <td class='text-left'   style="width:22.5%">忌豬</td>
+                <td class='text-center' style="width:10%">   
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['other'][2]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['other'][2]|default:'0'}}
+                  }}                  
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-right'  style="width:05%">1</td>
+                <td class='text-left'   style="width:22.5%">僅白飯</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_4'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_4'][0]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_4'][0]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_4'][0]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">2</td>
+                <td class='text-left'   style="width:22.5%">忌雞</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['other'][1]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['other'][1]|default:'0'}}
+                  }}                       
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-right'         style="width:05%">2</td>
+                <td class='text-left'          style="width:22.5%">忌麵</td>
+                <td class='text-center'        style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_4'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_4'][1]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_4'][1]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_4'][1]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right'  style="width:05%">3</td>
+                <td class='text-left'   style="width:22.5%">忌魚</td>
+                <td class='text-center' style="width:10%">     
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['other'][0]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['other'][0]|default:'0'}}
+                  }}                  
+                </td>
+                <td class='text-left'   style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left bg-warning' colspan="2">硬度份量：</td>
+                <td class='text-left bg-warning'>數量</td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-warning' colspan="2">素食：</td>
+                <td class='text-left bg-warning'>數量</td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left'   style="width:05%">※</td>
+                <td class='text-left'   style="width:22.5%">O</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_2'][3]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_2'][3]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_2'][3]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_2'][3]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">★★素食</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][13]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][13]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">X</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_2'][4]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_2'][4]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_2'][4]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_2'][4]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">素食</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][4]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][4]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">XX</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_2'][5]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_2'][5]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_2'][5]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_2'][5]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">素粥</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[1]['mlo03'][15]|default:'0'}}
+                    y={{$tv_prn_meal_num_data[2]['mlo03'][15]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">XXX</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_2'][6]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_2'][6]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_2'][6]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_2'][6]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">中晚素粥</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][15]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][15]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">飯分</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_2'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_2'][2]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_2'][2]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_2'][2]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">中晚★★素食</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][13]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][13]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">飯糰</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_1'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_1'][0]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_1'][0]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_1'][0]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">中晚</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="z + w" 
+                    z={{$tv_prn_meal_num_data[3]['mlo03'][4]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo03'][4]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">初115素</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_1'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_1'][1]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_1'][1]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_1'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%;border:none;">&nbsp</td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-warning' colspan="2">治療餐：</td>
+                <td class='text-left bg-warning'>數量</td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">低普林</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_5'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_5'][0]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_5'][0]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_5'][0]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">糖餐</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_5'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_5'][1]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_5'][1]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_5'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">低油</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_5'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_5'][2]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_5'][2]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_5'][2]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">低蛋白</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_5'][3]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_5'][3]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_5'][3]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_5'][3]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">低碘</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y + z + w" 
+                    x={{$tv_prn_meal_num_data[1]['mlo04_5'][4]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[2]['mlo04_5'][4]|default:'0'}} 
+                    z={{$tv_prn_meal_num_data[3]['mlo04_5'][4]|default:'0'}}
+                    w={{$tv_prn_meal_num_data[4]['mlo04_5'][4]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;" colspan="2"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%;border:none;">&nbsp</td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-center' style="width:10%;border:none;"></td>
+              </tr>
+            </table>
+          </div>
+          <!-- 晚餐 -->
+          {{* 5 = 晚餐補助戶 , 6 = 晚餐自費戶 *}}
+          <div class="tab-pane fade show" id="nav-2" role="tabpanel" aria-labelledby="nav-2-tab">
+            <table class="table-sm mt-2 prn_font no_print" border="0" width="100%">
+              <tr>
+                <td width="60%" class="text-left">
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}</h1>
+                </td>
+              </tr>
+              <tr>
+                <td width="60%" class="text-left">                                                              
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 24pt;">{{$tv_dlvry_date}} 餐數統計表(晚餐)</h1>  
+                </td>
+                <td width="07%" class="text-right">                                                              
+                  <h1 class="mr-1 text-right" style="font-size: 16pt;">總餐數:{{$tv_prn_meal_num_data['meal_num_2']}}</h1>  
+                </td>                                                                                              
+              </tr>
+            </table>
+            <table class="table table-bordered table-hover table-sm mt-0" style="width:100%; border:none;">
+              <tr class="thead-light">
+                <td class='text-left bg-warning' style="width:32.5%" colspan="2" >主菜：(晚餐的肉)</td>
+                <td class='text-left bg-warning' style="width:12.5%">數量</td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left bg-warning' style="width:32.5%" colspan="2">量米＆煮飯(含中晚)：</td>
+                <td class='text-left bg-warning' style="width:12.5%">數量</td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left bg-light' style="width:22.5%">晚餐忌主菜</td>
+                <td class='text-left bg-light' style="width:10%"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">軟質</td>
+                <td class='text-center' style="width:10%">
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_2'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_2'][0]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right' style="width:05%">1</td>
+                <td class='text-left' style="width:22.5%">忌豬</td>
+                <td class='text-center' style="width:10%">            
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_3'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_3'][2]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">細軟</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_2'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_2'][1]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right' style="width:05%">2</td>
+                <td class='text-left' style="width:22.5%">忌雞</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_3'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_3'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">★★</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][12]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][12]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right' style="width:05%">3</td>
+                <td class='text-left' style="width:22.5%">忌魚</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_3'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_3'][0]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">一般餐</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][8]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][8]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left bg-light' style="width:22.5%">★★忌主菜</td>
+                <td class='text-left bg-light' style="width:10%"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">半流</td>
+                <td class='text-center' style="width:10%">         
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][10]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][10]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right' style="width:05%">1</td>
+                <td class='text-left' style="width:22.5%">忌豬</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['other'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['other'][2]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">小半流</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][11]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][11]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right' style="width:05%">2</td>
+                <td class='text-left' style="width:22.5%">忌雞</td>
+                <td class='text-center' style="width:10%">                
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['other'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['other'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">粥</td>
+                <td class='text-center' style="width:10%">                
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][3]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][3]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-right' style="width:05%">3</td>
+                <td class='text-left' style="width:22.5%">忌魚</td>
+                <td class='text-center' style="width:10%">          
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['other'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['other'][0]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left'   style="width:05%">※</td>
+                <td class='text-left'   style="width:22.5%">★★粥</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][16]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][16]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">大粥</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][2]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-warning' colspan="2">素食：</td>
+                <td class='text-left bg-warning'>數量</td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">鐵盒子</td>
+                <td class='text-center' style="width:10%">
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_1'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_1'][2]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">★★素食</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][13]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][13]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">大飯碗</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][14]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][14]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">素食</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][4]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][4]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left bg-light' style="width:05%">※</td>
+                <td class='text-left bg-light' style="width:22.5%">忌主食</td>
+                <td class='text-left bg-light' style="width:10%"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">素粥</td>
+                <td class='text-center' style="width:10%">          
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo03'][15]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo03'][15]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-right' style="width:05%">1</td>
+                <td class='text-left' style="width:22.5%">僅白飯</td>
+                <td class='text-center' style="width:10%">            
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_4'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_4'][0]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">初115素</td>
+                <td class='text-center' style="width:10%">          
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_1'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_1'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-right' style="width:05%">2</td>
+                <td class='text-left' style="width:22.5%">忌麵</td>
+                <td class='text-center' style="width:10%">               
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_4'][1]|default:'0'}}
+                    y={{$tv_prn_meal_num_data[6]['mlo04_4'][1]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%;border:none;">&nbsp</td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left bg-warning' colspan="2">治療餐：</td>
+                <td class='text-left bg-warning'>數量</td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left bg-warning' colspan="2">硬度份量：</td>
+                <td class='text-left bg-warning'>數量</td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">低普林</td>
+                <td class='text-center' style="width:10%">               
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_5'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_5'][0]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">O</td>
+                <td class='text-center' style="width:10%">      
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_2'][3]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_2'][3]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">糖餐</td>
+                <td class='text-center' style="width:10%">           
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_5'][1]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_5'][1]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">X</td>
+                <td class='text-center' style="width:10%">      
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_2'][4]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_2'][4]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">低油</td>
+                <td class='text-center' style="width:10%">             
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_5'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_5'][2]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">XX</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_2'][5]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_2'][5]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">低蛋白</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_5'][3]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_5'][3]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">XXX</td>
+                <td class='text-center' style="width:10%">               
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_2'][6]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_2'][6]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">低碘</td>
+                <td class='text-center' style="width:10%">           
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_5'][4]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_5'][4]|default:'0'}}
+                  }}
+                </td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">飯分</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_2'][2]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_2'][2]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%;border:none;">&nbsp</td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%">※</td>
+                <td class='text-left' style="width:22.5%">飯糰</td>
+                <td class='text-center' style="width:10%">                  
+                  {{math equation="x + y" 
+                    x={{$tv_prn_meal_num_data[5]['mlo04_1'][0]|default:'0'}} 
+                    y={{$tv_prn_meal_num_data[6]['mlo04_1'][0]|default:'0'}}
+                  }}
+                </td>
+              </tr>
+              <tr class="thead-light">
+                <td class='text-left' style="width:05%;border:none;">&nbsp</td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:10%;border:none;"></td>
+                <td class='text-left' style="width:05%;border:none;"></td>
+                <td class='text-left' style="width:22.5%;border:none;"></td>
+                <td class='text-center' style="width:10%;border:none;"></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+  <!-- 下載資訊視窗彈出 -->
+  <div class="modal fade pop-download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+	   <div class="modal-body">
+		<div class="text-center paT10">
+		  <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> 資料下載</i><br></h1>
+		  <span id="show_download_info"></span>
+          </div>
+	   </div>
+	   <div class="modal-footer text-center">
+	     <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 下載資訊視窗彈出 end-->
+</div>

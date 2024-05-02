@@ -1,0 +1,173 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('#f_search').click(function(){
+      var f_que = $('#f_que').val();
+      location.replace("{{$tv_que_link}}"+f_que);
+    });
+    
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+          }
+        }
+      })
+      return;
+    });
+    $("input[name^='is_available']").click(function(){
+      var s_num = $(this).data('s_num');
+      if($(this).prop("checked")) { // 打勾
+        var is_available = 1;
+        var old_is_flag = false;
+      }
+      else {
+        var is_available = 0;
+        var old_is_flag = true;
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}upd_is_available',
+        data: {f_kind:'upd_is_available',f_s_num:s_num,f_is_available:is_available},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_save_link}}]upd_is_available:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+          }
+          else {
+            alert("{{$tv_upd_ng}}");
+            $('#is_available_'+s_num).prop('checked',old_is_flag);
+            //alert(rs);
+          }
+        }
+      })
+    });
+  });
+</script>
+<div class="right-content">
+	<div class="page-title clearfix">
+		<div class="float-left">
+			<h1>最新消息</h1>
+			<ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">最新消息</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+			</ol>
+		</div>
+		<div class="float-right">
+			<div class="visible-xs"><div class="maT10"></div></div>
+			  <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+	      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+			  {{if $tv_download_execl_flag=='Y'}}
+			    <a href="{{$tv_download_execl_link}}" target="_BLANK"><button type="button" class="btn btn-light btn-sm">{{$tv_download_execl_btn}} <i class="fa fa-download" aria-hidden="true"></i></button></a>
+			  {{/if}}
+		</div>
+	</div>
+	<div class="container-fluid">
+		<!-- 表格區塊 -->
+		<div class="white-wrapper">
+			<!-- 篩選＆搜尋表格 -->
+			<div class="table-filter">
+				<div class="row">
+					<div class="col-xs-12 col-sm-12 col-md-9 maB10">
+						<div class="row">
+							
+						</div>
+					</div>
+					<div class="col-xs-12 col-sm-12 col-md-3 maB10">
+            <div class="input-group">
+              <input type="text" id="f_que" name="f_que" class="form-control form-control-sm" placeholder="請輸入搜尋內容" value="{{$tv_f_que}}">
+              <div class="input-group-prepend">
+                <button id="f_search" name="f_search" class="btn btn-C1 btn-sm" type="button">{{$tv_que_btn}}</button>
+              </div>
+            </div>
+					</div>
+				</div>
+			</div>
+			<!-- 篩選＆搜尋表格 -->
+			<div class="table-responsive">
+				<table class="table xtable-bordered table-striped table-hover table-sm">
+					<thead>
+						<tr class="thead-light">
+							<th>發佈日期</th>
+							<th>標題</th>
+							<th>操作</th>
+							<th>上架</th>
+						</tr>
+					</thead>
+					<tbody>
+					  {{foreach from=$tv_news_row key=k item=v}}
+						  <tr>
+						  	<td onclick="location.href='{{$tv_disp_link}}{{$v.s_num}}';" style="cursor: pointer;">{{$v.news_publication}}</td>
+						  	<td onclick="location.href='{{$tv_disp_link}}{{$v.s_num}}';" style="cursor: pointer;">{{$v.news_title}}</td>
+						  	<td>
+                  <button type="button" class="btn btn-info btn-sm" onclick="location.href='{{$tv_disp_link}}{{$v.s_num}}';">{{$tv_disp_btn}}</button>
+                  <button type="button" class="btn btn-C1 btn-sm" onclick="location.href='{{$tv_upd_link}}{{$v.s_num}}';">{{$tv_upd_btn}}</button>
+                  <button type="button" class="btn btn-C2 btn-sm del" data-s_num="{{$v.s_num}}" data-toggle="modal" data-target=".pop-container">{{$tv_del_btn}}</button>
+                  {{if $tv_pdf_flag=='Y'}}
+                    <a href="{{$tv_pdf_link}}{{$v.s_num}}" target="_BLANK"><button type="button" class="btn btn-C4 btn-sm">{{$tv_pdf_btn}}</button></a>
+                  {{/if}}
+						  	</td>
+						  	<td>
+						      <div class="switch">
+						      	<input class="cmn-toggle cmn-toggle-round" type="checkbox" id="is_available_{{$v.s_num}}" name="is_available" data-s_num="{{$v.s_num}}" {{if $v.is_available==1}} checked {{/if}}>
+						      	<label for="is_available_{{$v.s_num}}"></label>
+						      </div>
+						  	</td>
+						  </tr>
+						{{/foreach}}
+					</tbody>
+				</table>
+			</div>
+			<!-- 頁籤 -->
+			<div class="text-center">
+				<nav aria-label="Page navigation">
+					<ul class="pagination pagination-sm">
+					  {{$tv_pg_link}}
+					</ul>
+					<!--<p class="text-right">Total: {{$tv_total_rows}}</p>-->
+				</nav>
+			</div>
+			<!-- 頁籤 end-->
+		</div>
+		<!-- 表格區塊 end-->
+	</div>
+	
+	<!-- 刪除確認彈出 -->
+	<div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+		<div class="modal-dialog  modal-sm" role="document">
+			<div class="modal-content  modal-C1 ">
+				<div class="text-center paTB20">
+					<h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+					真的要刪除此項目嗎？
+				</div>
+				<div class="modal-footer text-center">
+				  <input type="hidden" id='f_del_s_num' value="">
+					<button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+					<button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 刪除確認彈出 end-->
+</div>

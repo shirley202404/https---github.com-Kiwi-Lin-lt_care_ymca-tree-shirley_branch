@@ -1,0 +1,121 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script>
+  $(function(){
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#pwd_edit_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err_msg}}');
+        return;
+      }
+      var acc_pwd_old = $('#acc_pwd_old').val();
+      var acc_pwd = $('#acc_pwd').val();
+      var acc_pwd_cf = $('#acc_pwd_cf').val();
+      if(acc_pwd != acc_pwd_cf) {
+        err_msg += "{{$tv_validate_pwd_err_msg}}";
+        alert(err_msg);
+        return;
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: {f_acc_pwd_old:acc_pwd_old,
+               f_acc_pwd:acc_pwd,
+               f_acc_pwd_cf:acc_pwd_cf
+              },
+        error: function(xhr) {
+          err_msg += 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok_msg}}");
+            location.replace("{{$tv_now_link}}");
+          }
+          else {
+            alert(rs);
+          }
+        }
+      })
+    });
+  });
+</script>
+
+<div class="right-content">
+	<div class="page-title clearfix">
+    <div class="float-left">
+      <h1>修改密碼</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active">修改密碼</li>
+      </ol>
+    </div>
+		<div class="float-right">
+					<button class="btn btn-default" type="button" onclick="location.href='{{$tv_leave_link}}';">離開</button>
+					<button class="btn btn-C1" id="save" type="button">儲存</button>
+				</div>
+	</div>
+	<!-- container-fluid -->
+	<div class="container-fluid">
+		<form class="maT20" id="pwd_edit_input" data-toggle="validator">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>帳號</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span class="text-primary">{{$tv_acc_row->acc_user}}</span>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>原登入密碼</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group">
+						        <input type="password" id="acc_pwd_old" name="acc_pwd_old" class="form-control form-control-sm" placeholder="請輸入原登入密碼" required>
+							      <div class="input-group-text pwd_icon" data-icon="no_see" data-pwd_fd="acc_pwd_old" style="cursor: pointer"><i class="far fa-eye-slash"></i></div>
+                  </div>
+                  <span id='helpBlock' class='help-block'>請輸入原登入密碼。</span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>新密碼</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group">
+						        <input type="password" id="acc_pwd" name="acc_pwd" class="form-control form-control-sm" placeholder="請輸入新密碼" pattern="^(?=.*\d)(?=.*[a-zA-Z]).{6,}$" data-minlength="6" data-error="請輸入包含英文字母及數字，至少6個字元。" required>
+							      <div class="input-group-text pwd_icon" data-icon="no_see" data-pwd_fd="acc_pwd" style="cursor: pointer"><i class="far fa-eye-slash"></i></div>
+                  </div>
+                  <span id='helpBlock' class='help-block'>請輸入新密碼。</span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>再次輸入新密碼</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group">
+						        <input type="password" id="acc_pwd_cf" name="acc_pwd_cf" class="form-control form-control-sm" placeholder="再次輸入新密碼" data-match="#acc_pwd" data-error="密碼未吻合!!" required>
+							      <div class="input-group-text pwd_icon" data-icon="no_see" data-pwd_fd="acc_pwd_cf" style="cursor: pointer"><i class="far fa-eye-slash"></i></div>
+                  </div>
+                  <span id='helpBlock' class='help-block'>再次輸入新密碼。</span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+		</form>
+	</div>
+	<!-- container-fluid end-->
+</div>

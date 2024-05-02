@@ -1,0 +1,779 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/Chart.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/Chart.min.css">
+<script src="{{$tv_pub_url}}/js/html2canvas.min.js"></script>
+<script src="{{$tv_pub_url}}/js/jquery.qrcode.min.js"></script>
+<script>
+  $(function(){
+    $('#prn').click(function() {
+      html2canvas(document.querySelector('#main')).then(function(canvas) {
+        //console.log(canvas);
+        saveAs(canvas.toDataURL(), 'file-name.png');
+      });
+      //html2canvas(document.querySelector("#main")).then(canvas => {
+      //  document.body.appendChild(canvas)
+      //});
+    })
+
+    $('#myqrcode').qrcode({
+      width: 100,
+      height: 100,
+      text: '{{$tv_be_url}}main'
+    });
+    
+  });
+  
+  function saveAs(uri, filename) {
+    var link = document.createElement('a');
+    if (typeof link.download === 'string') {
+        link.href = uri;
+        link.download = filename;
+        //Firefox requires the link to be in the body
+        document.body.appendChild(link);
+        //simulate click
+        link.click();
+        //remove the link when done
+        document.body.removeChild(link);
+    } 
+    else {
+        window.open(uri);
+    }
+  }
+</script>
+
+<style type="text/css">
+#canvas{  }
+#canvasDiv{
+	/* background-image:url(https://farm1.staticflickr.com/695/22428557369_d084e8e56b_h.jpg); */
+	  background-size:     cover;                     
+    background-repeat:   no-repeat;
+    background-position: center center;
+    border-width:3px;border-style:dashed;border-color:#FFAC55;padding:5px;
+}
+</style>
+<div class="right-content">
+	<div class="page-title">
+		<h1>後台管理系統-首頁</h1>
+	</div>
+	<div class="container-fluid">
+    <span id="main">
+      <div  id="myqrcode"></div>
+	    <div style="width: 60%;">
+	      <canvas id="chart"></canvas>
+	      <canvas id="chart2"></canvas>
+	      <canvas id="chart3"></canvas>
+	      <canvas id="chart4"></canvas>
+	    </div>
+	    <br>
+      <div id="main2" class="card card-default">
+        <div class="card-header">Change log</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table xtable-bordered xtable-striped table-hover table-sm">
+              <thead>
+                <tr class="thead-light">
+                  <th>版本</th>
+                  <th>日期</th>
+                  <th>說明</th>
+                  <th>發佈者</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2.0.4</td>
+                  <td>2020-03-03</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.smarty 更新至 3.1.34 release。
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>2.0.3</td>
+                  <td>2020-02-28</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.產生器增加CkEdit欄位設定。
+                      </li>
+                      <li>
+                        2.產生器增加select下拉選項預設值設定。
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>2.0.2</td>
+                  <td>2019-09-20</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.更新 CodeIgniter 3.1.11。
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>2.0.1</td>
+                  <td>2019-09-09</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.更新 CodeIgniter 3.1.10。
+                      </li>
+                      <li>
+                        2.database.php/web_set.php 增加 hostname 設定。
+                      </li>
+                      <li>
+                        3.更新 jQuery-File-Upload-9.32.0
+                      </li>
+                      <li>
+                        4.MVC產生器調整。<br>
+                        &nbsp;a.增加 Boostrap-v4 版本下載。<br>
+                      </li>
+                      <li>
+                        5.更新 Chosen Version 1.8.7
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>2.0.0</td>
+                  <td>2019-04-26</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.Boostrap 升級 v4.3.1。
+                      </li>
+                      <li>
+                        2.jquery 升級 3.4.0。
+                      </li>
+                      <li>
+                        3.增加系統log，瀏覽、新增、修改、刪除紀錄。
+                      </li>
+                      <li>
+                        4.MVC產生器調整。<br>
+                        &nbsp;a.新增/修改增加多筆欄位設定產生內容。<br>
+                        &nbsp;b.產生檔案可選擇 Bootstrap 版本。<br>
+                        &nbsp;c.產生檔案多一個明細 View。
+                      </li>
+                      <li>
+                        5.版面調整配色，調整按鈕顏色，最新消息增加明細畫面。
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.5.6</td>
+                  <td>2019-04-17</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.登入密碼改用password_hash()，支援 PHP 7.3。
+                      </li>
+                      <li>
+                        2.Font Awesome 更新至 Version 5.8.1。
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.5.5</td>
+                  <td>2019-03-07</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.CKEditor檔案上傳改使用RESPONSIVE filemanager 9.14.0。<br>
+                        &nbsp;a.程式放在：pub/be/filemanager<br>
+                        &nbsp;b.存放上傳檔案位置 pub/uploads/rs_files、pub/uploads/rs_thumbs
+                      </li>
+                      <li>
+                        2.header.html 改抓 RESPONSIVE filemanager 程式位置。
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.5.4</td>
+                  <td>2018-10-02</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.權限控管改使用Zi_auth.php處理。
+                      </li>
+                      <li>
+                        2.增加更新sys_menu_ct欄位加密key。<br>
+                        &nbsp;a.使用方式：be/login/reset_db_crypt_key，<br>
+                        &nbsp;b.執行完畢要修正：config/web_set.php，define('DB_CRYPT_KEY', 'xxxxxxxxxxx');
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.5.3</td>
+                  <td>2018-09-20</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.登入資訊改到menu上方
+                      </li>
+                      <li>
+                        2.robots 網路蜘蛛不要產生網頁的索引及庫存
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.5.2</td>
+                  <td>2018-08-23</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.密碼欄位增加顯示與不顯示密碼
+                      </li>
+                      <li>
+                        2.Font Awesome 更新至 Version 5.2.0 
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.5.1</td>
+                  <td>2018-08-17</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.權限管理
+                      </li>
+                      <li>
+                        2.選單管理
+                      </li>
+                      <li>
+                        3.各項設定檔改至config/web_set.php
+                      </li>
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.5.0</td>
+                  <td>2018-08-14</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.相本管理(jQuery-File-Upload，https://github.com/blueimp/jQuery-File-Upload)。
+                      </li>
+                      <li>
+                        2.使用檔案：
+                      </li>
+                      &nbsp;A.pub/be/js/up_file/*<br>
+                      &nbsp;B.application/controllers/be/Fileupload.php<br>
+                      &nbsp;C.application/controllers/be/Album.php<br>
+                      &nbsp;D.application/models/Album_model.php<br>
+                      &nbsp;E.application/views/be/album.html、album_edit.html、album_upload.html
+                    </ol>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.4.0</td>
+                  <td>2018-07-25</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.更新CodeIgniter 3.1.9。
+                      </li>
+                    </ol>
+                  </td>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.3.0</td>
+                  <td>2018-06-04</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.最新消息-新增檔案上傳，刪除功能，檔案上傳位置pub/uploads
+                      </li>
+                    </ol>
+                  </td>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.2.0</td>
+                  <td>2018-05-22</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.登入帳戶修改密碼增加validator檢查。
+                      </li>
+                      <li>
+                        2.最新消息-瀏覽增加上下架快速切換
+                      </li>
+                      <li>
+                        3.Font Awesome icon 改使用站內檔案
+                      </li>
+                    </ol>
+                  </td>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+            
+                <tr>
+                  <td>1.1.0</td>
+                  <td>2018-05-09</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.調整Table，帳號、群組、權限，都sys_開頭。
+                      </li>
+                      <li>
+                        2.each()修正，支援php7.x以上。
+                      </li>
+                      <li>
+                        3.增加art資料夾。
+                      </li>
+                    </ol>
+                  </td>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+                <tr>
+                  <td>1.0.0</td>
+                  <td>2018-05-08</td>
+                  <td>
+                    <ol>
+                      <li>
+                        1.初版，使用CodeIgniter 3.1.8。
+                      </li>
+                    </ol>
+                  </td>
+                  <td>社區型蜘蛛人</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="text-center">簽名：</div>
+      <div id="canvasDiv" ></div>
+      <img id="qmimg" />
+    </span>
+    <button id='prn'>截圖</button>
+    <button id="btn_clear">清除簽名</button>
+    <button id="btn_submit">確認簽名</button>
+    現在時刻：{{$tv_now_date}}
+	</div>
+</div>
+
+
+
+
+
+
+
+
+<script language="javascript">
+
+
+var canvasDiv = document.getElementById('canvasDiv');
+var canvas = document.createElement('canvas');
+var screenwidth = (window.innerWidth > 0) ? window.innerWidth : screen.width;
+var canvasWidth = screenwidth;
+var canvasHeight = 320;
+document.addEventListener('touchmove', onDocumentTouchMove, false);
+var point = {};
+point.notFirst = false;
+canvas.setAttribute('width', canvasWidth);
+canvas.setAttribute('height', canvasHeight);
+canvas.setAttribute('id', 'canvas');
+canvasDiv.appendChild(canvas);
+if (typeof G_vmlCanvasManager != 'undefined') {
+    canvas = G_vmlCanvasManager.initElement(canvas);
+}
+var context = canvas.getContext("2d");
+/*var ptrn = context.createPattern(img, 'no-repeat');
+context.fillStyle = ptrn;
+context.fillRect(0, 0, canvas.width, canvas.height);
+*/
+var img = new Image();
+img.src = "Transparent.png";
+
+img.onload = function() {
+    var ptrn = context.createPattern(img, 'repeat');
+    context.fillStyle = ptrn;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+}
+canvas.addEventListener("touchstart", function(e) {
+	//console.log(e);
+    var mouseX = e.touches[0].pageX - this.offsetLeft;
+    var mouseY = e.touches[0].pageY - this.offsetTop;
+    paint = true;
+    addClick(e.touches[0].pageX - this.offsetLeft, e.touches[0].pageY - this.offsetTop);
+	//console.log(e.touches[0].pageX - this.offsetLeft, e.touches[0].pageY - this.offsetTop);
+    redraw();
+});
+
+
+
+canvas.addEventListener("touchend", function(e) {
+	//console.log("touch end");
+    paint = false;
+});
+
+canvas.addEventListener("touchmove", function(e) {
+    if (paint) {
+		//console.log("touchmove");
+        addClick(e.touches[0].pageX - this.offsetLeft, e.touches[0].pageY - this.offsetTop, true);
+		//console.log(e.touches[0].pageX - this.offsetLeft, e.touches[0].pageY - this.offsetTop);
+        redraw();
+    }
+
+});
+
+canvas.addEventListener("mousedown", function(e) {
+    var mouseX = e.pageX - this.offsetLeft;
+    var mouseY = e.pageY - this.offsetTop;
+    paint = true;
+    addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop);
+    redraw();
+});
+canvas.addEventListener("mousemove", function(e) {
+    if (paint) {
+        addClick(e.pageX - this.offsetLeft, e.pageY - this.offsetTop, true);
+        redraw();
+    }
+});
+canvas.addEventListener("mouseup", function(e) {
+    paint = false;
+});
+canvas.addEventListener("mouseleave", function(e) {
+    paint = false;
+});
+document.getElementById("btn_clear").addEventListener("click", function() {
+    canvas.width = canvas.width;
+    $('#canvasDiv').show();
+});
+document.getElementById("btn_submit").addEventListener("click", function() {
+    $("#qmimg").attr("src", canvas.toDataURL("image/png"));
+    $('#canvasDiv').hide();
+});
+
+
+function onDocumentTouchStart(event) {
+    if (event.touches.length == 1) {
+        event.preventDefault();
+        // Faking double click for touch devices
+        var now = new Date().getTime();
+        if (now - timeOfLastTouch < 250) {
+            reset();
+            return;
+        }
+        timeOfLastTouch = now;
+        mouseX = event.touches[0].pageX;
+        mouseY = event.touches[0].pageY;
+        isMouseDown = true;
+
+    }
+
+}
+
+
+
+function onDocumentTouchMove(event) {
+
+    if (event.touches.length == 1) {
+        event.preventDefault();
+        mouseX = event.touches[0].pageX;
+        mouseY = event.touches[0].pageY;
+    }
+}
+
+
+
+function onDocumentTouchEnd(event) {
+    if (event.touches.length == 0) {
+        event.preventDefault();
+        isMouseDown = false;
+    }
+}
+
+
+var clickX = new Array();
+var clickY = new Array();
+var clickDrag = new Array();
+var paint;
+
+function addClick(x, y, dragging)
+{
+    clickX.push(x);
+    clickY.push(y);
+    clickDrag.push(dragging);
+}
+
+
+
+function redraw() {
+
+    //canvas.width = canvas.width; // Clears the canvas
+    context.strokeStyle = "#df4b26";
+    context.lineJoin = "round";
+    context.lineWidth = 2;
+    while (clickX.length > 0) {
+        point.bx = point.x;
+        point.by = point.y;
+        point.x = clickX.pop();
+        point.y = clickY.pop();
+        point.drag = clickDrag.pop();
+        context.beginPath();
+        if (point.drag && point.notFirst) {
+            context.moveTo(point.bx, point.by);
+        } else {
+            point.notFirst = true;
+            context.moveTo(point.x - 1, point.y);
+        }
+        context.lineTo(point.x, point.y);
+        context.closePath();
+        context.stroke();
+    }
+
+    /*
+
+      for(var i=0; i < clickX.length; i++)
+
+      {		
+
+        context.beginPath();
+
+        if(clickDrag[i] && i){
+
+          context.moveTo(clickX[i-1], clickY[i-1]);
+
+         }else{
+
+           context.moveTo(clickX[i]-1, clickY[i]);
+
+         }
+
+         context.lineTo(clickX[i], clickY[i]);
+
+         context.closePath();
+
+         context.stroke();
+
+      }
+
+      */
+
+}
+</script>
+
+
+
+
+
+<script>
+  // https://www.chartjs.org/
+  // https://www.chartjs.org/samples/latest/charts/combo-bar-line.html
+  var ctx = document.getElementById('chart').getContext('2d');
+  //var chart = new Chart(ctx, {
+  //    type: 'bar',
+  //    data: {
+  //        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+  //        datasets: [{
+  //            label: '# of Votes',
+  //            data: [12, 19, 3, 5, 2, 3]
+  //        }]
+  //    }
+  //});
+  data = {
+      datasets: [{
+          data: [100, 10, 20 ,30 ,39,0,1]
+      }],
+  
+      // These labels appear in the legend and in the tooltips when hovering different arcs
+      labels: [
+          '工作具有成就感',
+          '和不同世代相處融洽',
+          '和同齡層相處融洽',
+          '休假天數多、請假容易',
+          '工作時數剛好',
+          '薪資待遇制度良好',
+          '升遷與獎金制度良好'
+      ]
+  };
+  var myPieChart = new Chart(ctx, {
+      type: 'pie',
+      data: data
+  });
+
+  var ctx2 = document.getElementById('chart2').getContext('2d');
+  //var chart = new Chart(ctx, {
+  //    type: 'bar',
+  //    data: {
+  //        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+  //        datasets: [{
+  //            label: '# of Votes',
+  //            data: [12, 19, 3, 5, 2, 3]
+  //        }]
+  //    }
+  //});
+  data = {
+      datasets: [{
+          data: [0, 21, 28 ,80 ,50]
+      }],
+  
+      // These labels appear in the legend and in the tooltips when hovering different arcs
+      labels: [
+          '45~49歲',
+          '50~54歲',
+          '55~59歲',
+          '60~64歲',
+          '65歲以上'
+      ]
+  };
+  var myPieChart = new Chart(ctx2, {
+      type: 'bar',
+      data: data,
+      options: {
+        title: {
+            display: true,
+            text: 'Q2.請問您的年齡'
+        }
+      }
+  });
+  
+  var ctx3 = document.getElementById('chart3').getContext('2d');
+  //var chart = new Chart(ctx, {
+  //    type: 'bar',
+  //    data: {
+  //        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+  //        datasets: [{
+  //            label: '# of Votes',
+  //            data: [12, 19, 3, 5, 2, 3]
+  //        }]
+  //    }
+  //});
+  data = {
+       datasets: [{
+            label: '該課程學生數',
+            data: [1,0,0,10,0,0,5,0,20,10,2,3],
+            backgroundColor: 'rgb(255, 99, 132,0.2)',
+            borderColor: 'rgb(255, 99, 132,1)',
+            order: 1,
+       }, 
+       {
+            label: '該校學生數',
+            fill: false,
+            backgroundColor: 'rgba(54, 162, 235)',
+            borderColor: 'rgba(54, 162, 235)',
+            data: [,,,1,,,3,,3,,,1],
+            type: 'line',
+            //showLine: false, // no line shown
+            order: 2,
+        }
+       ],
+       labels: [['S', '停修'],['X', '0'],['F', '50'],['C-', '60'],['C', '65'],['C+', '68'],['B-', '70'],['B', '75'], ['B+', '78'], ['A-', '82'], ['A', '87'], ['A+', '95']]
+  };
+  var myPieChart = new Chart(ctx3, {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        title: {
+            display: true,
+            text: ['課程：9S1001-金融陷阱']
+            //text: ['學生學期分數','xxxx','ssssss']
+        },
+        scales: {
+          xAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: '等第制成績'
+						}
+					}],
+					yAxes: [{
+						ticks: {
+						//	min: 0,
+						//	max: 50
+						stepSize: 5
+						},
+						scaleLabel: {
+							display: true,
+							labelString: '人數'
+						}
+					}]
+				}
+      }
+  });
+
+  var ctx4 = document.getElementById('chart4').getContext('2d');
+  data = {
+       datasets: [{
+            label: '2019/12/24',
+            fill: false,
+            data: [83.8,94.5,104,99.5,58],
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            showLine: false, // no line shown
+            order: 1,
+       }, 
+       {
+            label: '2020/2/3',
+            fill: false,
+            backgroundColor: 'rgba(54, 162, 235)',
+            borderColor: 'rgba(54, 162, 235)',
+            data: [83,87,97.5,97,57],
+            //type: 'line',
+            showLine: false, // no line shown
+            order: 2,
+        },
+       {
+            label: '2020/4/3',
+            fill: false,
+            backgroundColor: 'rgba(154, 162, 235)',
+            borderColor: 'rgba(154, 162, 235)',
+            data: [80,85,96.5,95,55],
+            //type: 'line',
+            showLine: false, // no line shown
+            order: 3,
+        }
+
+       ],
+       labels: [['胸下'],['腰'],['腹'],['臀'],['大腿']]
+  };
+  var myPieChart = new Chart(ctx4, {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        title: {
+            display: true,
+            text: ['王小美：修改記錄']
+            //text: ['學生學期分數','xxxx','ssssss']
+        },
+        scales: {
+          xAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							//labelString: ''
+						}
+					}],
+					yAxes: [{
+						ticks: {
+						min: 40,
+						max: 120,
+						stepSize: 5
+						},
+						scaleLabel: {
+							display: true,
+							//labelString: '人數'
+						}
+					}]
+				}
+      }
+  });
+
+
+</script>

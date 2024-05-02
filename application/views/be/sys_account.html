@@ -1,0 +1,244 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('#f_search').click(function(){
+      $('#que_str').val($("#f_que").val());
+      $('#fd_que_input').submit();
+    });
+    $("#f_que").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#que_str').val($(this).val());
+        $('#f_search').click();
+      }
+    });
+    $(".que_enter").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#fd_que_input').submit();
+      }
+    });
+    $("#btn_que").click(function(){
+      $('#fd_que_input').submit();
+      return;
+    });
+    
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+            //alert(rs);
+          }
+        }
+      })
+      return;
+    });
+    $(".fd_order").click(function(){
+      var fd_name = $(this).data('fd_name');
+      var order_kind = $(this).data('order_kind');
+      if('asc'==order_kind) {
+        $(this).data('order_kind','desc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-down"></i>');
+        order_kind = 'desc';
+      }
+      else {
+        $(this).data('order_kind','asc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-up"></i>');
+        order_kind = 'asc';
+      }
+      //order_kind = $(this).data('order_kind');
+      $('#que_order_fd_name').val(fd_name);
+      $('#que_order_kind').val(order_kind);
+      //console.log(fd_name);
+      //console.log(order_kind);
+      $('#fd_que_input').submit();
+    });
+    //console.log('{{$tv_que_order_fd_name}}');
+    {{if '' != $tv_que_order_fd_name}}
+      if('asc'=='{{$tv_que_order_kind}}') {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-up"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','asc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','asc');
+      }
+      else {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-down"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','desc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','desc');
+      }
+      $('#que_order_fd_name').val('{{$tv_que_order_fd_name}}');
+      $('#que_order_kind').val('{{$tv_que_order_kind}}');
+      //console.log($('#que_order_fd_name').val());
+      //console.log($('#que_order_kind').val());
+    {{/if}}
+    $('#que_str').val('{{$tv_que_str}}');
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>帳戶管理</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">系統管理</a></li>
+        <li class="breadcrumb-item active">帳戶管理</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter">
+        <div class="row">
+          <div class="col-6 col-sm-4 col-md-4 col-lg-4 col-xl-3 ml-3">
+            <div class="row">
+              <div class="input-group">
+                <input type="text" id="f_que" name="f_que" class="form-control form-control-sm" placeholder="請輸入搜尋內容" value="{{$tv_f_que}}">
+                <div class="input-group-prepend">
+                  <button id="f_search" name="f_search" class="btn btn-C1 btn-sm ml-1" type="button">{{$tv_que_btn}}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <p class="text-right">Total: {{$tv_total_rows|number_format}}</p>
+          </div>
+        </div>
+      </div>
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover table-sm">
+          <thead>
+            <tr class="thead-light">
+              <th><span id="fd_acc_user" class="fd_order cursorpointer" data-fd_name="acc_user" data-order_kind="">帳號</span><span id="icon_acc_user"><i class="fas fa-sort"></i></span></th><!--2-->
+              <th><span id="fd_acc_name" class="fd_order cursorpointer" data-fd_name="acc_name" data-order_kind="">使用者</span><span id="icon_acc_name"><i class="fas fa-sort"></i></span></th><!--4-->
+              <th><span id="fd_acc_email" class="fd_order cursorpointer" data-fd_name="acc_email" data-order_kind="">Email</span><span id="icon_acc_email"><i class="fas fa-sort"></i></span></th><!--6-->
+              <th><span id="fd_is_super" class="fd_order cursorpointer" data-fd_name="is_super" data-order_kind="">超級使用者</span><span id="icon_is_super"><i class="fas fa-sort"></i></span></th><!--9-->
+              <th><span id="fd_group_s_num" class="fd_order cursorpointer" data-fd_name="group_s_num" data-order_kind="">群組名稱</span><span id="icon_group_s_num"><i class="fas fa-sort"></i></span></th>
+              <th><span id="fd_acc_login_cnt" class="fd_order cursorpointer" data-fd_name="acc_login_cnt" data-order_kind="">登入次數</span><span id="icon_acc_login_cnt"><i class="fas fa-sort"></i></span></th>
+              <th><span id="fd_acc_login_last_date" class="fd_order cursorpointer" data-fd_name="acc_login_last_date" data-order_kind="">最後登入日期</span><span id="icon_acc_login_last_date"><i class="fas fa-sort"></i></span></th>
+              <th><span id="fd_acc_login_last_ip" class="fd_order cursorpointer" data-fd_name="acc_login_last_ip" data-order_kind="">最後登入IP</span><span id="icon_acc_login_last_ip"><i class="fas fa-sort"></i></span></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{foreach from=$tv_sys_account_row key=k item=v}}
+              {{if $tv_acc_user !='root' and $v.acc_user=='root'}}
+                {{continue}}
+              {{/if}}
+              <tr>
+                
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.acc_user}}</a></td><!--2-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.acc_name}}</a></td><!--4-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.acc_email}}</a></td><!--6-->
+                <td class="text-left">
+                  <a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">
+                    {{if '1'==$v.is_super}}
+                      <span class="bg-danger text-white col-3">Y</span>
+                    {{else}}
+                      N
+                    {{/if}}
+                  </a>
+                </td><!--9-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.acg_name}}</a></td><!--1-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.acc_login_cnt}}</a></td>
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.acc_login_last_date}}</a></td>
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.acc_login_last_ip}}</a></td>
+                <td align='right'>
+                  <button type="button" class="btn btn-C1 btn-sm" onclick="location.href='{{$tv_upd_link}}{{$v.s_num}}';">{{$tv_upd_btn}}</button>
+                  {{if $v.acc_user<>'root' }}
+                    <button type="button" class="btn btn-C2 btn-sm del" data-s_num="{{$v.s_num}}" data-toggle="modal" data-target=".pop-container">{{$tv_del_btn}}</button>
+                  {{/if}}
+                </td>
+              </tr>
+            {{/foreach}}
+          </tbody>
+        </table>
+      </div>
+      <!-- 頁籤 -->
+      <ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+        {{$tv_pg_link}}
+      </ul>
+      <!-- 頁籤 end-->
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此帳號資料嗎？
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- 查詢2彈出 -->
+  <div class="modal fade pop-que" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-md" role="document">
+      <div class="modal-content  modal-C1 ">
+        <form class="maT20" action="{{$tv_que_link}}" id="fd_que_input" name="fd_que_input" method="POST" enctype="multipart/form-data">
+          <input type='hidden' id='que_order_fd_name' name='que_order_fd_name' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <input type='hidden' id='que_order_kind' name='que_order_kind' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <div class="text-center paTB20">
+            {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+            <h2>請輸入查詢條件</h2>
+          </div>
+          <div class="modal-body text-left">
+            <div class="table-responsive">
+              <table class="table xtable-bordered table-hover table-sm">
+                {{assign var="swidth_left" value="col-3"}}
+                {{assign var="swidth_right" value="col-9"}}
+                <tbody>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>全文檢索</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <input type='text' id='que_str' name='que_str' class='form-control form-control-sm que_enter' placeholder='' value=''>
+                        <span id='helpBlock' class='help-block'>(所有欄位搜尋)</span>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer text-center">
+            <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+            <button type="button" id="btn_que" class="btn btn-C1" data-dismiss="modal">確定</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- 查詢2彈出 end-->
+</div>

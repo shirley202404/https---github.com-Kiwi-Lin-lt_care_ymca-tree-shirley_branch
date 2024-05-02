@@ -1,0 +1,278 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<!-- BT TABLE -->
+<link rel="stylesheet" href="{{$tv_pub_url}}/bootstrap-table/bootstrap-table.min.css">
+<script src="{{$tv_pub_url}}/bootstrap-table/bootstrap-table.min.js"></script>
+<script src="{{$tv_pub_url}}/sheet/xlsx.core.min.js"></script>
+
+<style>
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .table::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .table {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    display: none;
+  }
+
+  .table-responsive {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+</style>
+<script>
+  $(function(){
+    $("#btn_que_pause").click(function(){
+      $('#fd_que_puase_input').submit();
+      return;
+    });
+    $('#btn_que_pause_close').click(function(){
+      $("#btn_que_pause_reset").click(); // 清除查詢資料
+      $('.pop-que_pause').modal("hide");
+    })
+
+    $("#que_ct_name").val("{{$tv_que_ct_name|default:''}}");
+    $("#que_ct14").val("{{$tv_que_ct14|default:''}}");
+    $("#que_sec01").val("{{$tv_que_sec01|default:''}}");
+    $("#que_day").val("{{$tv_que_day|default:''}}");
+
+    $(".download").click(function() {
+      var strMsg = '';
+      var que_ct_name = $("#que_ct_name").val();
+      var que_ct14 = $("#que_ct14").val();
+      var que_sec01= $("#que_sec01").val();
+      var que_day = $("#que_day").val();
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('#show_download_info_btn').hide();
+      //console.log(s_num);
+      $.ajax({
+        type:'get',
+        url: '{{$tv_download_link}}',
+        data: {que_ct_name:que_ct_name, que_ct14:que_ct14, que_sec01:que_sec01, que_day:que_day},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_download_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>開結案服務</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">個案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">開結案服務</a></li>
+        <li class="breadcrumb-item active">固定暫停列表</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm download" data-toggle="modal" data-target=".pop-download">固定暫停表下載 <i class="fas fa-download"></i></button>
+      <button type="button" class="btn btn-light btn-sm fd_que_pause" data-toggle="modal" data-target=".pop-que_pause">{{$tv_que_btn}} <i class="fas fa-search"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="table-responsive">
+      <table id="pause_table" class="table table-bordered table-hover table-sm" data-toggle='table' data-height="485" data-show-export="true" data-search="true" data-pagination="true" data-page-size="25" data-page-list="[25]" data-search-highlight="true" data-resizable="true">
+        <thead>
+          <tr class="thead-light">
+            <th data-width="9.5" data-width-unit="%" data-field='ct14' class="text-nowrap">區域</th>
+            <th data-width="9.5" data-width-unit="%" data-field='ct_name' class="text-nowrap">案主名稱</th>
+            <th data-width="9.5" data-width-unit="%" data-field='sec01' class="text-nowrap">服務現況</th>
+            <th data-width="12" data-width-unit="%" data-field='week1' class="text-nowrap">星期一</th>
+            <th data-width="12" data-width-unit="%" data-field='week2' class="text-nowrap">星期二</th>
+            <th data-width="12" data-width-unit="%" data-field='week3' class="text-nowrap">星期三</th>
+            <th data-width="12" data-width-unit="%" data-field='week4' class="text-nowrap">星期四</th>
+            <th data-width="12" data-width-unit="%" data-field='week5' class="text-nowrap">星期五</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{foreach from=$tv_service_case_row key=k item=v name=classify}}
+            <tr>
+              <td class="text-left"><span class="">{{$v.ct14|default:''}}</span></td>
+              <td class="text-left"><span class="">{{$v.ct_name|default:''}}</span></td>
+              <td class="text-left"><span class="">{{$v.sec01_str|default:''}}-{{$v.sec04_str|default:''}}</span></td>
+              <td class="text-center">
+                <span class="">
+                  <input type="checkbox" id="week1" {{if $v.week1|default:'N' == "Y"}} checked {{/if}} onclick="return false">
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="">
+                  <input type="checkbox" id="week2" {{if $v.week2|default:'N' == "Y"}} checked {{/if}} onclick="return false">
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="">
+                  <input type="checkbox" id="week3" {{if $v.week3|default:'N' == "Y"}} checked {{/if}} onclick="return false">
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="">
+                  <input type="checkbox" id="week4" {{if $v.week4|default:'N' == "Y"}} checked {{/if}} onclick="return false">
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="">
+                  <input type="checkbox" id="week5" {{if $v.week5|default:'N' == "Y"}} checked {{/if}} onclick="return false">
+                </span>
+              </td>
+            </tr>
+          {{foreachelse}}
+            <tr>
+              <td colspan="99" class="alert alert-warning">
+                查無資料!!!
+              </td>
+            </tr>
+          {{/foreach}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 查詢固定停餐 END-->
+  <div class="modal fade pop-que_pause" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false" >
+    <div class="modal-dialog  modal-dialog-scrollable modal-lg" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paT20">
+          {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+          <h2>請輸入查詢條件</h2>
+        </div>
+        <div class="modal-body text-left">
+          <form class="maT20" action="{{$tv_index2_link}}" id="fd_que_puase_input" name="fd_que_puase_input" method="GET" enctype="multipart/form-data">
+            <div class="table-responsive" style="height:100%">
+              <table class="table xtable-bordered table-hover table-sm">
+                {{assign var="swidth_left" value="col-3"}}
+                {{assign var="swidth_right" value="col-9"}}
+                <tbody>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>案主姓名</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class='input-group input-group-sm'>
+                          <input type='text' id='que_ct_name' name='que_ct_name' class='col-7 form-control form-control-sm que_enter ' placeholder='請輸入案主姓名' value=''>
+                          <div class='input-group-append'>
+                            <span id='helpBlock_que_ct_name' class='help-block ml-2'></span>
+                          </div>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>區域</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class='input-group input-group-sm'>
+                          <input type='text' id='que_ct14' name='que_ct14' class='col-7 form-control form-control-sm que_enter' placeholder='請輸入區域' value=''>
+                          <div class='input-group-append'>
+                            <span id='helpBlock_que_ct14' class='help-block ml-2'></span>
+                          </div>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>服務現況</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class='input-group input-group-sm'>
+                          <select id='que_sec01' name='que_sec01' class='col-7 form-control form-control-sm que_enter'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>長照案</option>
+                            <option value='2'>特殊-老案</option>
+                            <option value='3'>自費戶</option>
+                            <option value='4'>邊緣戶</option>
+                            <option value='5'>身障案</option>
+                            <option value='6'>特殊-身案</option>
+                            <option value='7'>志工</option>
+                            <option value='8'>獨老案</option>
+                          </select>                        
+                          <div class='input-group-append'>
+                            <span id='helpBlock_que_sec01' class='help-block ml-2'></span>
+                          </div>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>固定暫停日</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class='input-group input-group-sm'>
+                          <select id='que_day' name='que_day' class='col-7 form-control form-control-sm que_enter'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>星期一</option>
+                            <option value='2'>星期二</option>
+                            <option value='3'>星期三</option>
+                            <option value='4'>星期四</option>
+                            <option value='5'>星期五</option>
+                          </select>                        
+                          <div class='input-group-append'>
+                            <span id='helpBlock_que_day' class='help-block ml-2'></span>
+                          </div>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}}'></td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <button type="button" id="btn_que_pause" class="btn btn-C1 col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                      <button id="btn_que_pause_reset" type="reset" class="btn btn-C1-line col-3">清除 <i class="fas fa-eraser"></i></button>
+                      <button type="button" id="btn_que_pause_close" class="btn btn-C1-line col-3">關閉 <i class="far fa-times-circle"></i></button>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 查詢固定停餐 END-->
+  <!-- 下載資訊視窗彈出 -->
+  <div class="modal fade pop-download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+	    <div class="modal-body">
+        <div class="text-center paT10">
+          <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> 固定暫停表下載</i><br></h1>
+          <span id="show_download_info"></span>
+        </div>
+	    </div>
+	   <div class="modal-footer text-center">
+	     <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 下載資訊視窗彈出 end-->
+</div>

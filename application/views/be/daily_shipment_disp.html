@@ -1,0 +1,103 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+	<div class="page-title clearfix">
+		<div class="float-left">
+			<h1>配送調整</h1>
+			<ol class="breadcrumb">
+			  <li class="breadcrumb-item"><a href="#">作業專區</a></li>
+        <li class="breadcrumb-item"><a href="#">配送調整</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+			</ol>
+		</div>
+		<div class="float-right">
+			<div class="visible-xs"><div class="maT10"></div></div>
+			<button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_daily_shipment_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+	    <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+	    <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+		</div>
+	</div>
+	<!-- container-fluid -->
+	<div class="container-fluid">
+	  <br>
+	  <div class="float-right">建檔:<span class="mainC1">{{$tv_daily_shipment_row->b_acc_name|default:''}}({{$tv_daily_shipment_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_daily_shipment_row->e_acc_name|default:''}}({{$tv_daily_shipment_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+    	<table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+    	  <tbody>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">tw_clients.s_num</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->clnt_s_num|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">tw_meal_order.s_num</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->mealo_s_num|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">tw_service_case.s_num</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->srvc_s_num|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">sus_account.acc_num</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->acc_s_num|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">類型</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys01|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">送餐日期</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys02|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">餐點名稱</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys03|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">送餐內容</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys04|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">是否異動</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys05|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">送餐路線</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys06|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">送餐順序</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys07|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">配送狀況</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys08|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">送達時間</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_daily_shipment_row->dys09|default:''}}</span></td>
+          </tr>
+				    		
+    			<tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+            <td width="{{$swidth_right}}" class="table-light">
+    				  <span class="text-dark">
+      		    {{if '1'==$tv_daily_shipment_row->is_available}}
+      		      是
+      		    {{else}}
+      		      否
+      		    {{/if}}
+      		    </span>
+    				</td>
+    			</tr>
+    	  </tbody>
+      </table>
+    </div>
+	</div>
+	<!-- container-fluid end-->
+</div>

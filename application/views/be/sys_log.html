@@ -1,0 +1,413 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('.fd_que').click(function(){
+      $('#que_kind').val('que');
+    });
+    $('#f_search').click(function(){
+      $('#que_str').val($("#f_que").val());
+      $('#fd_que_input').submit();
+    });
+    $("#f_que").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#que_str').val($(this).val());
+        $('#f_search').click();
+      }
+    });
+    $(".que_enter").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#fd_que_input').submit();
+      }
+    });
+    $("#btn_que").click(function(){
+      $('#fd_que_input').submit();
+      return;
+    });
+    $('#btn_que_close').click(function(){
+      $("#btn_que_reset").click(); // 清除查詢資料
+      $('.pop-que').modal("hide");
+    })
+    
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+            //alert(rs);
+          }
+        }
+      })
+      return;
+    });
+    $("input[name^='is_available']").click(function(){
+      var s_num = $(this).data('s_num');
+      if($(this).prop("checked")) { // 打勾
+        var is_available = 1;
+        var old_is_flag = false;
+      }
+      else {
+        var is_available = 0;
+        var old_is_flag = true;
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}upd_is_available',
+        data: {f_kind:'upd_is_available',f_s_num:s_num,f_is_available:is_available},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_save_link}}]upd_is_available:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+          }
+          else {
+            alert("{{$tv_upd_ng}}");
+            $('#is_available_'+s_num).prop('checked',old_is_flag);
+            //alert(rs);
+          }
+        }
+      })
+    });
+    $(".fd_order").click(function(){
+      $('#que_kind').val('order');
+      var fd_name = $(this).data('fd_name');
+      var order_kind = $(this).data('order_kind');
+      if('asc'==order_kind) {
+        $(this).data('order_kind','desc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-down"></i>');
+        order_kind = 'desc';
+      }
+      else {
+        $(this).data('order_kind','asc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-up"></i>');
+        order_kind = 'asc';
+      }
+      //order_kind = $(this).data('order_kind');
+      $('#que_order_fd_name').val(fd_name);
+      $('#que_order_kind').val(order_kind);
+      //console.log(fd_name);
+      //console.log(order_kind);
+      $('#fd_que_input').submit();
+    });
+    //console.log('{{$tv_que_order_fd_name}}');
+    {{if '' != $tv_que_order_fd_name}}
+      if('asc'=='{{$tv_que_order_kind}}') {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-up"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','asc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','asc');
+      }
+      else {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-down"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','desc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','desc');
+      }
+      $('#que_order_fd_name').val('{{$tv_que_order_fd_name}}');
+      $('#que_order_kind').val('{{$tv_que_order_kind}}');
+      //console.log($('#que_order_fd_name').val());
+      //console.log($('#que_order_kind').val());
+    {{/if}}
+    $('#que_str').val('{{$tv_que_str}}');
+  });
+</script>
+<div class="right-content">
+	<div class="page-title clearfix">
+		<div class="float-left">
+			<h1>Log管理</h1>
+			<ol class="breadcrumb">
+			  <li class="breadcrumb-item"><a href="#">系統管理</a></li>
+        <li class="breadcrumb-item"><a href="#">Log管理</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+			</ol>
+		</div>
+		<div class="float-right">
+			<div class="visible-xs"><div class="maT10"></div></div>
+			<button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+	    <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+	    <button class="btn btn-light btn-sm fd_que" type="button" data-toggle="modal" data-target=".pop-que">{{$tv_que_btn}} <i class="fas fa-search"></i></button>
+		</div>
+	</div>
+	<div class="container-fluid">
+		<!-- 表格區塊 -->
+		<div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter">
+        <div class="row">
+          <div class="col-6 col-sm-4 col-md-4 col-lg-4 col-xl-3 ml-3">
+            <div class="row">
+              <div class="input-group">
+                <input type="text" id="f_que" name="f_que" class="form-control form-control-sm" placeholder="請輸入搜尋內容" value="{{$tv_f_que}}">
+                <div class="input-group-prepend">
+                  <button id="f_search" name="f_search" class="btn btn-C1 btn-sm ml-1" type="button">{{$tv_que_btn}}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <p class="text-right">Total: {{$tv_total_rows|number_format}}</p>
+          </div>
+        </div>
+      </div>
+      <!-- 篩選＆搜尋表格 -->
+			<div class="table-responsive">
+				<table class="table table-bordered table-striped table-hover table-sm">
+					<thead>
+						<tr class="thead-light">
+              <th class="text-nowrap"><span id="fd_log_proc_s_num" class="fd_order cursorpointer" data-fd_name="log_proc_s_num" data-order_kind="">程式的s_num</span><span id="icon_log_proc_s_num"><i class="fas fa-sort"></i></span></th><!--1-->
+              <th class="text-nowrap"><span id="fd_log_name" class="fd_order cursorpointer" data-fd_name="log_name" data-order_kind="">sys_account.acc_name</span><span id="icon_log_name"><i class="fas fa-sort"></i></span></th><!--2-->
+              <th class="text-nowrap"><span id="fd_log_fromip" class="fd_order cursorpointer" data-fd_name="log_fromip" data-order_kind="">來源IP</span><span id="icon_log_fromip"><i class="fas fa-sort"></i></span></th><!--3-->
+              <th class="text-nowrap"><span id="fd_log_date" class="fd_order cursorpointer" data-fd_name="log_date" data-order_kind="">建立時間</span><span id="icon_log_date"><i class="fas fa-sort"></i></span></th><!--4-->
+              <th class="text-nowrap"><span id="fd_log_type" class="fd_order cursorpointer" data-fd_name="log_type" data-order_kind="">類別</span><span id="icon_log_type"><i class="fas fa-sort"></i></span></th><!--5-->
+              <th class="text-nowrap"><span id="fd_log_platform" class="fd_order cursorpointer" data-fd_name="log_platform" data-order_kind="">作業系統</span><span id="icon_log_platform"><i class="fas fa-sort"></i></span></th><!--6-->
+              <th class="text-nowrap"><span id="fd_log_browser" class="fd_order cursorpointer" data-fd_name="log_browser" data-order_kind="">瀏覽器名稱</span><span id="icon_log_browser"><i class="fas fa-sort"></i></span></th><!--7-->
+              <th class="text-nowrap"><span id="fd_log_browser_ver" class="fd_order cursorpointer" data-fd_name="log_browser_ver" data-order_kind="">瀏覽器版本</span><span id="icon_log_browser_ver"><i class="fas fa-sort"></i></span></th><!--8-->
+              <th class="text-nowrap"><span id="fd_log_agent" class="fd_order cursorpointer" data-fd_name="log_agent" data-order_kind="">agent完整資訊</span><span id="icon_log_agent"><i class="fas fa-sort"></i></span></th><!--9-->
+              <th class="text-nowrap"><span id="fd_log_current_url" class="fd_order cursorpointer" data-fd_name="log_current_url" data-order_kind="">目前網址</span><span id="icon_log_current_url"><i class="fas fa-sort"></i></span></th><!--10-->
+              <th class="text-nowrap"><span id="fd_log_referrer_url" class="fd_order cursorpointer" data-fd_name="log_referrer_url" data-order_kind="">從哪的網址來的</span><span id="icon_log_referrer_url"><i class="fas fa-sort"></i></span></th><!--11-->
+              <th class="text-nowrap"><span id="fd_log_controller" class="fd_order cursorpointer" data-fd_name="log_controller" data-order_kind="">controller</span><span id="icon_log_controller"><i class="fas fa-sort"></i></span></th><!--12-->
+              <th class="text-nowrap"><span id="fd_log_method" class="fd_order cursorpointer" data-fd_name="log_method" data-order_kind="">method</span><span id="icon_log_method"><i class="fas fa-sort"></i></span></th><!--13-->
+              <th class="text-nowrap"><span id="fd_log_uri_string" class="fd_order cursorpointer" data-fd_name="log_uri_string" data-order_kind="">uri_string</span><span id="icon_log_uri_string"><i class="fas fa-sort"></i></span></th><!--14-->
+              <th class="text-nowrap"><span id="fd_log_segment_1" class="fd_order cursorpointer" data-fd_name="log_segment_1" data-order_kind="">segment_1</span><span id="icon_log_segment_1"><i class="fas fa-sort"></i></span></th><!--15-->
+              <th class="text-nowrap"><span id="fd_log_segment_2" class="fd_order cursorpointer" data-fd_name="log_segment_2" data-order_kind="">segment_2</span><span id="icon_log_segment_2"><i class="fas fa-sort"></i></span></th><!--16-->
+              <th class="text-nowrap"><span id="fd_log_segment_3" class="fd_order cursorpointer" data-fd_name="log_segment_3" data-order_kind="">segment_3</span><span id="icon_log_segment_3"><i class="fas fa-sort"></i></span></th><!--17-->
+              <th class="text-nowrap"><span id="fd_log_segment_4" class="fd_order cursorpointer" data-fd_name="log_segment_4" data-order_kind="">segment_4</span><span id="icon_log_segment_4"><i class="fas fa-sort"></i></span></th><!--18-->
+              <th class="text-nowrap"><span id="fd_log_segment_5" class="fd_order cursorpointer" data-fd_name="log_segment_5" data-order_kind="">segment_5</span><span id="icon_log_segment_5"><i class="fas fa-sort"></i></span></th><!--19-->
+              <th class="text-nowrap"><span id="fd_log_segment_6" class="fd_order cursorpointer" data-fd_name="log_segment_6" data-order_kind="">segment_6</span><span id="icon_log_segment_6"><i class="fas fa-sort"></i></span></th><!--20-->
+              <th class="text-nowrap"><span id="fd_log_last_query" class="fd_order cursorpointer" data-fd_name="log_last_query" data-order_kind="">SQL</span><span id="icon_log_last_query"><i class="fas fa-sort"></i></span></th><!--21-->
+              <th class="text-nowrap"><span id="fd_log_othe_msg" class="fd_order cursorpointer" data-fd_name="log_othe_msg" data-order_kind="">額外紀錄</span><span id="icon_log_othe_msg"><i class="fas fa-sort"></i></span></th><!--22-->
+							<th>是否啟用</th>
+							<th class="text-left"></th>
+						</tr>
+					</thead>
+					<tbody>
+					  {{foreach from=$tv_sys_log_row key=k item=v}}
+						  <tr>
+						    <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_proc_s_num|default:''}}</a></td><!--1.程式的s_num-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_name|default:''}}</a></td><!--2.sys_account.acc_name-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_fromip|default:''}}</a></td><!--3.來源IP-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_date|default:''}}</a></td><!--4.建立時間-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_type|default:''}}</a></td><!--5.類別-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_platform|default:''}}</a></td><!--6.作業系統-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_browser|default:''}}</a></td><!--7.瀏覽器名稱-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_browser_ver|default:''}}</a></td><!--8.瀏覽器版本-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_agent|default:''}}</a></td><!--9.agent完整資訊-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_current_url|default:''}}</a></td><!--10.目前網址-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_referrer_url|default:''}}</a></td><!--11.從哪的網址來的-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_controller|default:''}}</a></td><!--12.controller-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_method|default:''}}</a></td><!--13.method-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_uri_string|default:''}}</a></td><!--14.uri_string-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_segment_1|default:''}}</a></td><!--15.segment_1-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_segment_2|default:''}}</a></td><!--16.segment_2-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_segment_3|default:''}}</a></td><!--17.segment_3-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_segment_4|default:''}}</a></td><!--18.segment_4-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_segment_5|default:''}}</a></td><!--19.segment_5-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_segment_6|default:''}}</a></td><!--20.segment_6-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_last_query|default:''}}</a></td><!--21.SQL-->
+                <td class="text-left"><a href="{{$tv_disp_link}}{{$v.s_num}}" class="text-dark">{{$v.log_othe_msg|default:''}}</a></td><!--22.額外紀錄-->
+						  	<td>
+						      <div class="switch">
+						      	<input class="cmn-toggle cmn-toggle-round" type="checkbox" id="is_available_{{$v.s_num}}" name="is_available" data-s_num="{{$v.s_num}}" {{if $v.is_available==1}} checked {{/if}}>
+						      	<label for="is_available_{{$v.s_num}}"></label>
+						      </div>
+						  	</td>
+						  	<td align='right'>
+                  {{*<button type="button" class="btn btn-info btn-sm" onclick="location.href='{{$tv_disp_link}}{{$v.s_num}}';">{{$tv_disp_btn}}</button>*}}
+                  <button type="button" class="btn btn-C4 btn-sm" onclick="location.href='{{$tv_upd_link}}{{$v.s_num}}';">{{$tv_upd_btn}}</button>
+                  <button type="button" class="btn btn-C1 btn-sm" onclick="location.href='{{$tv_cpy_link}}{{$v.s_num}}';">{{$tv_cpy_btn}}</button>
+                  <button type="button" class="btn btn-C2 btn-sm del" data-s_num="{{$v.s_num}}" data-toggle="modal" data-target=".pop-container">{{$tv_del_btn}}</button>
+						  	</td>
+						  </tr>
+            {{foreachelse}}
+            <tr>
+              <td colspan="99" class="alert alert-warning">
+                  查無資料!!!
+              </td>
+            </tr>
+						{{/foreach}}
+					</tbody>
+				</table>
+			</div>
+			<!-- 頁籤 -->
+      <ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+        {{$tv_pg_link}}
+      </ul>
+			<!-- 頁籤 end-->
+		</div>
+		<!-- 表格區塊 end-->
+	</div>
+	<!-- 刪除確認彈出 -->
+	<div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+		<div class="modal-dialog  modal-sm" role="document">
+			<div class="modal-content  modal-C1 ">
+				<div class="text-center paTB20">
+					<h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+					真的要刪除此Log管理資料嗎？
+				</div>
+				<div class="modal-footer text-center">
+				  <input type="hidden" id='f_del_s_num' value="">
+					<button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+					<button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 刪除確認彈出 end-->
+  <!-- 查詢2彈出 -->
+  <div class="modal fade pop-que" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+      <div class="modal-content modal-C1 ">
+        <form class="maT20" action="{{$tv_que_link}}" id="fd_que_input" name="fd_que_input" method="GET" enctype="multipart/form-data">
+          <input type='hidden' id='que_kind' name='que_kind' class='form-control form-control-sm que_enter' value='que'>
+          <input type='hidden' id='que_order_fd_name' name='que_order_fd_name' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <input type='hidden' id='que_order_kind' name='que_order_kind' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <div class="text-center paTB20">
+            {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+            <h2>請輸入查詢條件</h2>
+          </div>
+          <div class="modal-body text-left">
+            <table class="table xtable-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="col-3"}}
+              {{assign var="swidth_right" value="col-9"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>sys_account.acc_name</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_log_name' name='que_log_name' class='col-7 form-control form-control-sm ' placeholder='請輸入sys_account.acc_name' value=''>
+                      </div>
+                      <span id='helpBlock_que_log_name' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>來源IP</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_log_fromip' name='que_log_fromip' class='col-7 form-control form-control-sm ' placeholder='請輸入來源IP' value=''>
+                      </div>
+                      <span id='helpBlock_que_log_fromip' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>建立時間</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_log_date' name='que_log_date' class='col-7 form-control form-control-sm form_date' placeholder='請輸入建立時間' value=''>
+                      </div>
+                      <span id='helpBlock_que_log_date' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>類別</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_log_type' name='que_log_type' class='col-7 form-control form-control-sm ' placeholder='請輸入類別' value=''>
+                      </div>
+                      <span id='helpBlock_que_log_type' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>作業系統</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_log_platform' name='que_log_platform' class='col-7 form-control form-control-sm ' placeholder='請輸入作業系統' value=''>
+                      </div>
+                      <span id='helpBlock_que_log_platform' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>瀏覽器名稱</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_log_browser' name='que_log_browser' class='col-7 form-control form-control-sm ' placeholder='請輸入瀏覽器名稱' value=''>
+                      </div>
+                      <span id='helpBlock_que_log_browser' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>目前網址</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_log_current_url' name='que_log_current_url' class='col-7 form-control form-control-sm ' placeholder='請輸入目前網址' value=''>
+                      </div>
+                      <span id='helpBlock_que_log_current_url' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>從哪的網址來的</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_log_referrer_url' name='que_log_referrer_url' class='col-7 form-control form-control-sm ' placeholder='請輸入從哪的網址來的' value=''>
+                      </div>
+                      <span id='helpBlock_que_log_referrer_url' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>全文檢索</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='que_str' name='que_str' class='col-7 form-control form-control-sm que_enter' placeholder='' value=''>
+                      <span id='helpBlock' class='help-block'>(所有欄位搜尋)</span>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}}'></td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <button type="button" id="btn_que" class="btn btn-C1 col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                    <button id="btn_que_reset" type="reset" class="btn btn-C1-line col-3">清除 <i class="fas fa-eraser"></i></button>
+                    <button type="button" id="btn_que_close" class="btn btn-C1-line col-3">關閉 <i class="far fa-times-circle"></i></button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- 查詢2彈出 end-->
+</div>

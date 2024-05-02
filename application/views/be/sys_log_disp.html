@@ -1,0 +1,139 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+	<div class="page-title clearfix">
+		<div class="float-left">
+			<h1>Log管理</h1>
+			<ol class="breadcrumb">
+			  <li class="breadcrumb-item"><a href="#">系統管理</a></li>
+        <li class="breadcrumb-item"><a href="#">Log管理</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+			</ol>
+		</div>
+		<div class="float-right">
+			<div class="visible-xs"><div class="maT10"></div></div>
+			<button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_sys_log_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+	    <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+	    <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+		</div>
+	</div>
+	<!-- container-fluid -->
+	<div class="container-fluid">
+	  <br>
+	  <div class="float-right">建檔:<span class="mainC1">{{$tv_sys_log_row->b_acc_name|default:''}}({{$tv_sys_log_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_sys_log_row->e_acc_name|default:''}}({{$tv_sys_log_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+    	<table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+    	  <tbody>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">程式的s_num</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_proc_s_num|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">sys_account.acc_name</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_name|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">來源IP</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_fromip|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">建立時間</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_date|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">類別</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_type|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">作業系統</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_platform|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">瀏覽器名稱</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_browser|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">瀏覽器版本</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_browser_ver|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">agent完整資訊</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_agent|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">目前網址</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_current_url|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">從哪的網址來的</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_referrer_url|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">controller</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_controller|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">method</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_method|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">uri_string</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_uri_string|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">segment_1</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_segment_1|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">segment_2</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_segment_2|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">segment_3</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_segment_3|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">segment_4</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_segment_4|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">segment_5</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_segment_5|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">segment_6</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_segment_6|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">SQL</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_last_query|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">額外紀錄</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_sys_log_row->log_othe_msg|default:''}}</span></td>
+          </tr>
+				    		
+    			<tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+            <td width="{{$swidth_right}}" class="table-light">
+    				  <span class="text-dark">
+      		    {{if '1'==$tv_sys_log_row->is_available}}
+      		      是
+      		    {{else}}
+      		      否
+      		    {{/if}}
+      		    </span>
+    				</td>
+    			</tr>
+    	  </tbody>
+      </table>
+    </div>
+	</div>
+	<!-- container-fluid end-->
+</div>

@@ -1,0 +1,200 @@
+    <footer class="page-footer ">
+      <div class="page-footer__top">
+        <div class="uk-container">
+          <div class="uk-grid uk-grid-small uk-child-width-1-3@l uk-child-width-1-1@s" data-uk-grid>
+            <div>
+              <div class="uk-margin-small">
+                <div class="logo">
+                  <a class="logo__link" href="{{$tv_main_link}}">
+                    <div class="logo__icon"><img src="{{$tv_pub_url}}/img/logo1.png" alt="弗傳慈心"></div>
+                  </a>
+                </div>
+              </div>
+              <div class="uk-margin-small">
+                <p>傳心之路，願成為你我之間的橋樑，共同前往美好路程。</p>
+              </div>
+              <div class="uk-margin-small">
+                <div class="support">
+                  <a class="support__link" href="tel:0425282989">
+                    <div class="support__icon"><i class="fas fa-headset"></i></div>
+                    <div class="support__desc">
+                      <div class="support__label">聯絡我們</div>
+                      <div class="support__phone">(04)2528-2989</div>
+                    </div>
+                  </a></div>
+              </div>
+              <!--
+              <div class="uk-margin-medium">
+                <div class="social">
+                  <ul class="social-list">
+                    <li class="social-list__item"><a class="social-list__link" href="#!"><i class="fab fa-twitter"></i></a></li>
+                    <li class="social-list__item"><a class="social-list__link" href="#!"><i class="fab fa-facebook-f"></i></a></li>
+                    <li class="social-list__item"><a class="social-list__link" href="#!"><i class="fab fa-google-plus-g"></i></a></li>
+                    <li class="social-list__item"><a class="social-list__link" href="#!"><i class="fab fa-youtube"></i></a></li>
+                    <li class="social-list__item"><a class="social-list__link" href="#!"><i class="fab fa-pinterest-p"></i></a></li>
+                  </ul>
+                </div>
+              </div> -->
+            </div>
+            <div>
+              <div class="page-footer__column page-footer__info">
+                <div class="uk-h4">聯絡資訊</div>
+                <ul class="info-list">
+                  <li>
+                    <div class="info-list-item">
+                      <div class="info-list-item__title">聯絡地址：</div>
+                      <div class="info-list-item__value">臺中市神岡區五權路85號</div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+             <div>
+              <div class="page-footer__column page-footer__info">
+                <div class="uk-h4">Supported by</div>
+                <ul class="info-list">
+                  <li>
+                    <div class="info-list-item">
+                      <img class="supportid" src="{{$tv_pub_url}}/img/ncnu_logo.svg" alt="國立暨南國際大學">
+                      <div class="info-list-item__value"></div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-footer__bottom">
+        <div class="uk-container">
+          <div class="uk-text-center text-white mb-3">基金會登記：87府社合字第194902號 | {{$tv_fc01_40_1->fc04|strip|strip_tags:true|default:''}}</div>
+          <div class="uk-text-center text-white mb-19 mb-sm-5">(c) 2021 財團法人臺中市私立弗傳慈心社會福利慈善事業基金會 All rights reserved.</div>
+        </div>
+      </div>
+
+      <div id="offcanvas" data-uk-offcanvas="flip: true; overlay: true">
+        <div class="uk-offcanvas-bar"><button class="uk-offcanvas-close text-dark" type="button" data-uk-close=""></button>
+          <div class="uk-margin">
+            <div class="logo">
+              <a class="logo__link" href="{{$tv_main_link}}">
+                <div class="logo__icon"><img src="{{$tv_pub_url}}/img/logo.png" alt="弗傳慈心"></div>
+              </a>
+            </div>
+          </div>
+          <div class="uk-margin">            
+            <ul class="uk-nav uk-nav-default uk-nav-parent-icon" data-uk-nav>
+              <li><a href="#">首頁</a></li>
+              <li><a href="typography.html">募款活動</a></li>
+              <li><a uk-icon="facebook" href="page-contacts.html" class="" ></a></li>
+              <li><a uk-icon="instagram" href="page-contacts.html" class="" ></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!--
+      <div class="uk-modal-full uk-modal" id="modal-search" data-uk-modal>
+        <div class="uk-modal-dialog uk-flex uk-flex-center uk-flex-middle" data-uk-height-viewport><button class="uk-modal-close-full" type="button" data-uk-close></button>
+          <form class="uk-search uk-search-large"><input class="uk-search-input uk-text-center" type="search" placeholder="Search..." autofocus></form>
+        </div>
+      </div> -->
+    </footer>
+    
+  </div>
+  
+</body>
+{{if $tv_source == "Main"}}
+   <div class="top-logo d-none d-sm-block">
+     <a class="" href="{{$tv_main_link}}">
+       <img src="{{$tv_pub_url}}/img/pic-16-light.png" alt="弗傳慈心">
+     </a>
+   </div>
+   <div id="top_button" class="uk-inline-clip uk-transition-toggle d-none d-sm-block" tabindex="0">
+     <a href="{{$tv_donate_link}}">
+       <img src="{{$tv_pub_url}}/img/pic-15-light.png" alt="立即贊助">
+     </a>
+   </div>
+   <!--手機下方立即贊助-->
+   <div class="footer-nav-area d-block d-sm-none" >
+      <div class="row h-100">
+        <div class="col-6 suha-footer-nav h-100 bg-79c7">
+          <a href="{{$tv_main_link}}" class="mt-4 text-white">
+            <i class="fas fa-home"></i>
+            <span>傳心之路</span>
+          </a>
+        </div>
+        <div class="col-6 bg-eb95 suha-footer-nav h-100">
+          <a href="{{$tv_donate_link}}" class="mt-4 text-white">
+             <span>立即贊助</span>
+          </a>
+        </div>
+      </div>
+   </div>
+   <!--大圖募款進度-->
+    <div class="row" id="process_card" data-aos="fade-right" data-aos-duration="2000">
+      <div class="col-12 col-sm-3" >
+      <!--begin::Mixed Widget 19-->
+        <div class="card card-custom wave wave-animate-slower " style="height: 180px;width:295px;">
+        <!--begin::Body-->
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex align-items-center justify-content-between flex-grow-1">
+              <div class="mr-2">
+                <h3 class="font-weight-bolder"><a href="#process_1" class="">善心捐款<i class="far fa-hand-point-left"></i></a></h3>
+                <div class="text-muted font-size-lg mt-2">
+                  {{if $tv_donate_total < $tv_donate_progress_row->dp01}}
+                    <span id="donate_target">第一階段 NTD {{$tv_donate_progress_row->dp01|number_format:0|default:''}}</span>
+                  {{else if $tv_donate_progress_row->dp01 <= $tv_donate_total  and $tv_donate_total < $tv_donate_progress_row->dp02}}  
+                    <span id="donate_target">第二階段 NTD {{$tv_donate_progress_row->dp02|number_format:0|default:''}}</span>
+                  {{else}}  
+                    <span id="donate_target">第三階段 NTD {{$tv_donate_progress_row->dp03|number_format:0|default:''}}</span>
+                  {{/if}}
+                </div>
+              </div>
+              <div class="font-weight-boldest font-size-h2 text-warning">${{$tv_donate_total|number_format:0|default:''}}</div>
+            </div>
+            <div class="pt-4">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="text-muted font-weight-bold mr-2">募款進度</div>
+                <div class="text-muted font-weight-bold"><span id="progress_text">{{$tv_progress|default:0}}%</span></div>
+              </div>
+              <div class="progress bg-light-success progress-xs">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: {{$tv_progress|default:0}}%;" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div>
+          </div>
+        <!--end::Body-->
+        </div>
+      <!--end::Mixed Widget 19-->
+      </div>
+   </div>
+   <script>
+      var panel = $('#process_card');
+      
+      $(window).scroll(function() {
+        if ($(window).scrollTop() > 320) {
+          panel.addClass('hide');
+        } else {
+          panel.removeClass('hide');
+        }
+      });
+    </script>
+  <!-- Back to top button -->
+    <a id="button" class="d-none d-sm-block"><span uk-icon="arrow-up"></span></a>
+    
+    <script>
+      var btn = $('#button');
+  
+      $(window).scroll(function() {
+        if ($(window).scrollTop() > 300) {
+          btn.addClass('show');
+        } else {
+          btn.removeClass('show');
+        }
+      });
+      
+      btn.on('click', function(e) {
+        e.preventDefault();
+        $('html, body').animate({scrollTop:0}, '300');
+      });
+    </script>
+{{/if}}
+</html>

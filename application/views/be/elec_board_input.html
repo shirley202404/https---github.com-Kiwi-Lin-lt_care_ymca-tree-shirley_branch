@@ -1,0 +1,113 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script>
+  $(function(){ 
+    $("#type").change(function() {
+      $("#reh_s_num").val('');
+      var type_val = $(this).val();
+      $("#reh_s_num option").each(function() {
+        var reh05 = $(this).data('reh05');
+        console.log(reh05);
+        if(type_val == 1) {
+          if(reh05 == 1) {
+            $(this).show();
+          }
+          if(reh05 == 2) {
+            $(this).hide();
+          }
+        }
+        else {
+          if(reh05 == 1) {
+            $(this).hide();
+          }
+          if(reh05 == 2) {
+            $(this).show();
+          }
+        }
+      });
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>電子看板</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">電子看板</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      {{*
+      <div class="alert alert-danger" role="alert">
+        程式尚未完成，請勿使用!!!
+      </div>
+      *}}
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter no_print">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content  modal-C1 ">
+            <form class="maT20" action="{{$tv_prn_link}}" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+              <div class="text-center paTB20">
+                <h2>請輸入查詢條件</h2>
+              </div>
+              <div class="modal-body text-left">
+                <table class="table xtable-bordered table-hover table-sm">
+                  {{assign var="swidth_left" value="col-3"}}
+                  {{assign var="swidth_right" value="col-9"}}
+                  <tbody>
+                    <input type='hidden' id='dlvry_date' name='dlvry_date' class='col-12 form-control form-control-sm prn_enter' placeholder='請輸入日期' value='{{$tv_today|default:''}}'>
+                    <tr class='d-flex'>
+                      <td class='{{$swidth_left}} table-secondary text-right'>時段</td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <span class='form-group'>
+                          <select id='type' name='type' class='col-12 form-control form-control-sm prn_enter'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>早上</option>
+                            <option value='2'>下午</option><!--晚上-->
+                          </select>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td class='{{$swidth_left}} table-secondary text-right'>送餐路線</td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <span class='form-group'>
+                          <select id='reh_s_num' name='reh_s_num' class='col-12 form-control form-control-sm prn_enter'>
+                            <option value='' selected>-請選擇-</option>
+                            {{foreach from=$tv_route_row key=k item=v}}
+                              <option value='{{$v.s_num|default:''}}' data-reh05='{{$v.reh05|default:''}}'>{{$v.reh01|default:''}}</option>
+                            {{/foreach}}
+                          </select>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class='d-flex'>
+                      <td class='{{$swidth_left}}'></td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <button type="submit" id="btn_cal" class="btn btn-C1 col-3 btn-sm" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                        <button id="btn_cal_reset" type="reset" class="btn btn-C1-line col-3 btn-sm">清除 <i class="fas fa-eraser"></i></button>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- 篩選＆搜尋表格 -->
+    </div>
+  </div>
+</div>
+

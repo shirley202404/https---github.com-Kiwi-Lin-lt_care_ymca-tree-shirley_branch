@@ -1,0 +1,1719 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<style>
+  .pagination {
+    z-index:99999;
+    position:fixed;
+    bottom: 10px;
+    opacity:1;
+    box-shadow:5px 5px 5px 0px #7777778e;
+    margin: 0px; 
+  }
+  .pagination li a {
+    color: #676a6c; 
+  }
+  .pagination li.active a {
+    background-color: #1ABC9C;
+    border: 1px solid #1ABC9C; 
+  }
+  .pagination li.active a:hover {
+    background-color: #17a689;
+    border: 1px solid #17a689; 
+  }
+  .fixed-dialog{
+    position: fixed;
+  }
+</style>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $('#ct_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此案主"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              console.log(rs);
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#chn02_ct_s_num').val(item[2]);
+        $('#ct_name').val(item[0]);
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+
+    // 計算BMI
+    $(".bmi").blur(function() {
+      var chn51 = $("#chn51").val(); // 身高
+      var chn52 = $("#chn52").val(); // 體重
+      if(chn51 != '' && chn52 != '') {
+        var bmi = chn52 / ((chn51*chn51) / 10000);
+        bmi = Math.round(bmi * 10) / 10
+        $("#chn71").val(bmi);
+      }
+    });
+
+    // chnt刪除 Begin //
+    $(document).on("click", ".chnt_del", function () {
+      var chnt_s_num = $(this).data('chnt_s_num');
+      $(".pop-chnt_del #f_del_s_num").val(chnt_s_num);
+    });
+        
+    $(document).on('click',"#chnt_del",function() {
+      var chnt_s_num = $(".pop-chnt_del #f_del_s_num").val();
+      $('#chnt_table_'+chnt_s_num).remove();
+      $(this).chnt_item_reset();
+      return;
+    });
+    // chnt刪除 End //
+    
+    $('.add_chnt_row').click(function(){
+      $(this).chnt_add_row(1);
+      return;
+    });
+    
+    // 重新顯示欄位的序1,2,3... Begin //
+    $.fn.chnt_item_reset = function() {
+      var item_num = 1;
+      $('.chnt_item').each(function() {
+        $(this).text(item_num);
+        item_num++;
+      })
+    }
+    // 重新顯示欄位的序1,2,3... End //
+
+    // 新增x筆明細 Begin //
+    $.fn.chnt_add_row = function(add_qty) {
+      var wfn_cnt = eval($('#std_chnt_cnt').val()); // 目前的筆數，刪除資料這裡不會減少數量，避免id重複
+      for (i = 1; i <= add_qty; i++) {
+        var snum = wfn_cnt+i; // 目前的筆數，刪除資料這裡不會減少數量，避免id重複        
+        var new_add_chnt_row = $('#chnt_table_STD_SNUM')[0].outerHTML;
+        var add_chnt_row = replaceAll(new_add_chnt_row,'STD_SNUM',snum);
+        var add_chnt_row = replaceAll(add_chnt_row,'STD_ITEM','chnt_item');
+        $('#std_chnt_cnt').val(snum);
+        std_chnt_cnt = eval($('#std_chnt_cnt').val());
+        $('#clients_hlth_normal_track_div').append(add_chnt_row);
+      }
+      $(this).chnt_item_reset();
+      $(".form_date").datetimepicker({
+        locale: 'tw',
+        format: 'YYYY-MM-DD',
+        showTodayButton: true,
+        showClear: true,
+        showClose: true,
+        allowInputToggle: true,
+        tooltips: {
+            today: '今天',
+            clear: '清除',
+            close: '關閉',
+            selectMonth: '選取月',
+            prevMonth: '上個月',
+            nextMonth: '下個月',
+            selectYear: '選擇年',
+            prevYear: '上一年',
+            nextYear: '下一年',
+            selectDecade: '選取十年',
+            prevDecade: '上十年',
+            nextDecade: '下十年',
+            prevCentury: '上世紀',
+            nextCentury: '下世紀'
+        },
+        icons: {
+          time: 'far fa-clock',
+          date: 'far fa-calendar',
+          up: 'fas fa-arrow-up',
+          down: 'fas fa-arrow-down',
+          previous: 'fas fa-chevron-left',
+          next: 'fas fa-chevron-right',
+          today: 'fas fa-calendar-check',
+          clear: 'far fa-trash-alt',
+          close: 'far fa-times-circle'
+        }
+      });
+    }
+    // 新增x筆明細 End //
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>營養評估表</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">營養評估表</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm one_click" type="button">{{$tv_save_btn}} <i class="far fsave"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas flist"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" dattoggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id='s_num' name='s_num' value='{{$tv_clients_hlth_normal_row->s_num|default:'0'}}'>
+      {{/if}}
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-note-tab" data-toggle="tab" href="#nav-note" role="tab" aria-controls="nav-note" aria-selected="true">照會營養師</a>
+          <a class="nav-item nav-link" id="nav-track-tab" data-toggle="tab" href="#nav-track" role="tab" aria-controls="nav-track" aria-selected="false">追蹤紀錄表</a>
+          {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+            <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+              <div class="float-right">建檔:<span class="mainC1">{{$tv_clients_hlth_normal_row->b_acc_name|default:''}}({{$tv_clients_hlth_normal_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_clients_hlth_normal_row->e_acc_name|default:''}}({{$tv_clients_hlth_normal_row->e_date|default:""}})</span></div>
+            </span>
+          {{/if}}
+        </div>
+      </nav>
+      {{assign var="swidth_left" value="20%"}}
+      {{assign var="swidth_right" value="80%"}}
+      {{assign var="swidth_left_2" value="30%"}}
+      {{assign var="swidth_right_2" value="70%"}}
+      {{assign var="swidth_left_3" value="10.2%%"}}
+      {{assign var="swidth_right_3" value="89.8%"}}
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-note" role="tabpanel" aria-labelledby="nav-note-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+              <tbody>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>填表日期</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='chn01' name='chn01' class='form-control form-control-sm' placeholder='請輸入填表日期' value='{{$tv_clients_hlth_normal_row->chn01|default:''}}' >
+                      </div>
+                      <span id='helpBlock_chn01' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='hidden' id='chn02_ct_s_num' name='chn02_ct_s_num' class='form-control form-control-sm' placeholder='請輸入案主序號' value='{{$tv_clients_hlth_normal_row->chn02_ct_s_num|default:''}}' required>
+                      <input type='text' id='ct_name' class='col-12 form-control form-control-sm' placeholder='請輸入案主姓名' autocomplete="off" value='{{$tv_clients_hlth_normal_row->ct01|default:''}}{{$tv_clients_hlth_normal_row->ct02|default:''}}' {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                      <span id='helpBlock_ct_name' class='help-block'></span>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>S.病史及主觀資料</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <table class="table table-hover table-sm" id="health">
+                      <tbody>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>糖尿病</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn11' value='Y' {{if $tv_clients_hlth_normal_row->chn11|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn11' value='N' {{if $tv_clients_hlth_normal_row->chn11|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn11' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>心血管疾病</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn12' value='Y' {{if $tv_clients_hlth_normal_row->chn12|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn12' value='N' {{if $tv_clients_hlth_normal_row->chn12|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn12' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高血壓</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn13' value='Y' {{if $tv_clients_hlth_normal_row->chn13|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn13' value='N' {{if $tv_clients_hlth_normal_row->chn13|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn13' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高膽固醇</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn13_opt_1' value='Y' {{if $tv_clients_hlth_normal_row->chn13_opt_1|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn13_opt_1' value='N' {{if $tv_clients_hlth_normal_row->chn13_opt_1|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn13_opt_1' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高三酸甘油酯</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn13_opt_2' value='Y' {{if $tv_clients_hlth_normal_row->chn13_opt_2|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn13_opt_2' value='N' {{if $tv_clients_hlth_normal_row->chn13_opt_2|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn13_opt_2' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>中風</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn13_opt_3' value='Y' {{if $tv_clients_hlth_normal_row->chn13_opt_3|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn13_opt_3' value='N' {{if $tv_clients_hlth_normal_row->chn13_opt_3|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn13_opt_3' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='15.1%' class='table-secondary text-right'>高血壓-其他</td>
+                          <td width='85%' class='table-light' colspan="3">
+                            <div class="input-group input-group-sm">
+                              <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                  <input type='radio' name='chn13_opt_99' value='Y' {{if $tv_clients_hlth_normal_row->chn13_opt_99|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                  &nbsp;
+                                  <input type='radio' name='chn13_opt_99' value='N' {{if $tv_clients_hlth_normal_row->chn13_opt_99|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                </div>
+                              </div>
+                              <textarea id='chn13_opt_99_memo' class='form-control form-control-sm' name='chn13_opt_99_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn13_opt_99|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn13_opt_99_memo|default:''}}</textarea>
+                            </div>
+                          </td>
+                          <td width='15.2%' class='table-secondary text-right'>外傷（褥瘡）</td>
+                          <td width='34.3%' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn15' value='Y' {{if $tv_clients_hlth_normal_row->chn15|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn15' value='N' {{if $tv_clients_hlth_normal_row->chn15|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn15' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>腎臟病</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn14' value='Y' {{if $tv_clients_hlth_normal_row->chn14|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn14' value='N' {{if $tv_clients_hlth_normal_row->chn14|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn14' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>洗腎治療</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn14_opt_1' value='Y' {{if $tv_clients_hlth_normal_row->chn14_opt_1|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn14_opt_1' value='N' {{if $tv_clients_hlth_normal_row->chn14_opt_1|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn14_opt_1' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>尿量</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn14_opt_2' value='1' {{if $tv_clients_hlth_normal_row->chn14_opt_2|default:0==1}} checked {{/if}}> 正常
+                                <input type='radio' name='chn14_opt_2' value='2' {{if $tv_clients_hlth_normal_row->chn14_opt_2|default:0==2}} checked {{/if}}> 少尿
+                              </span>
+                              <span id='helpBlock_chn14_opt_2' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>痛風</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn16' value='Y' {{if $tv_clients_hlth_normal_row->chn16|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn16' value='N' {{if $tv_clients_hlth_normal_row->chn16|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn16' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>肝炎</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn17' value='Y' {{if $tv_clients_hlth_normal_row->chn17|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn17' value='N' {{if $tv_clients_hlth_normal_row->chn17|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn17' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>長期腹瀉、嘔吐</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn19' value='Y' {{if $tv_clients_hlth_normal_row->chn19|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn19' value='N' {{if $tv_clients_hlth_normal_row->chn19|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn19' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>肝硬化</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn18' value='Y' {{if $tv_clients_hlth_normal_row->chn18|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn18' value='N' {{if $tv_clients_hlth_normal_row->chn18|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn18' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>食道靜脈曲張</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn18_opt_1' value='Y' {{if $tv_clients_hlth_normal_row->chn18_opt_1|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn18_opt_1' value='N' {{if $tv_clients_hlth_normal_row->chn18_opt_1|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn18_opt_1' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>腹水</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn18_opt_2' value='Y' {{if $tv_clients_hlth_normal_row->chn18_opt_2|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn18_opt_2' value='N' {{if $tv_clients_hlth_normal_row->chn18_opt_2|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn18_opt_2' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>消化性潰瘍</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn20' value='Y' {{if $tv_clients_hlth_normal_row->chn20|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn20' value='N' {{if $tv_clients_hlth_normal_row->chn20|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn20' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>甲狀腺亢進/低下</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn21' value='Y' {{if $tv_clients_hlth_normal_row->chn21|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn21' value='N' {{if $tv_clients_hlth_normal_row->chn21|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn21' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>慢性阻塞性肺疾病</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn22' value='Y' {{if $tv_clients_hlth_normal_row->chn22|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn22' value='N' {{if $tv_clients_hlth_normal_row->chn22|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn22' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>胰臟炎</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn23' value='Y' {{if $tv_clients_hlth_normal_row->chn23|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn23' value='N' {{if $tv_clients_hlth_normal_row->chn23|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn23' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>脂肪瀉</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn23_opt1' value='Y' {{if $tv_clients_hlth_normal_row->chn23_opt1|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn23_opt1' value='N' {{if $tv_clients_hlth_normal_row->chn23_opt1|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn23_opt1' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>長期服用類固醇、利尿劑、瀉藥</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn24' value='Y' {{if $tv_clients_hlth_normal_row->chn24|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn24' value='N' {{if $tv_clients_hlth_normal_row->chn24|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn24' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>失智症</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn26' value='Y' {{if $tv_clients_hlth_normal_row->chn26|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn26' value='N' {{if $tv_clients_hlth_normal_row->chn26|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn26' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>巴金森</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn27' value='Y' {{if $tv_clients_hlth_normal_row->chn27|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn27' value='N' {{if $tv_clients_hlth_normal_row->chn27|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn27' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>精神疾病</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn28' value='Y' {{if $tv_clients_hlth_normal_row->chn28|default:0==Y}} checked {{/if}}> 有
+                                <input type='radio' name='chn28' value='N' {{if $tv_clients_hlth_normal_row->chn28|default:0==N}} checked {{/if}}> 無
+                              </span>
+                              <span id='helpBlock_chn28' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>癌症</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <div class="input-group input-group-sm">
+                              <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                  <input type='radio' name='chn25' value='Y' {{if $tv_clients_hlth_normal_row->chn25|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                  &nbsp;
+                                  <input type='radio' name='chn25' value='N' {{if $tv_clients_hlth_normal_row->chn25|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                </div>
+                              </div>
+                              <textarea id='chn25_memo' class='form-control form-control-sm' name='chn25_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn25|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn25_memo|default:''}}</textarea>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <div class="input-group input-group-sm">
+                              <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                  <input type='radio' name='chn29' value='Y' {{if $tv_clients_hlth_normal_row->chn29|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                  &nbsp;
+                                  <input type='radio' name='chn29' value='N' {{if $tv_clients_hlth_normal_row->chn29|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                </div>
+                              </div>
+                              <textarea id='chn29_memo' class='form-control form-control-sm' name='chn29_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn29|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn29_memo|default:''}}</textarea>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>食慾狀況</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn33' value='1' {{if $tv_clients_hlth_normal_row->chn33|default:0==1}} checked {{/if}}> 普通（可吃完）
+                                <input type='radio' name='chn33' value='2' {{if $tv_clients_hlth_normal_row->chn33|default:0==2}} checked {{/if}}> 良好（吃不夠）
+                                <input type='radio' name='chn33' value='3' {{if $tv_clients_hlth_normal_row->chn33|default:0==3}} checked {{/if}}> 不良（1/2餐盤量）
+                              </span>
+                              <span id='helpBlock_chn33' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>咀嚼能力</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='chn32' value='1' {{if $tv_clients_hlth_normal_row->chn32|default:0==1}} checked {{/if}}> 正常
+                                <input type='radio' name='chn32' value='2' {{if $tv_clients_hlth_normal_row->chn32|default:0==2}} checked {{/if}}> 可咀嚼軟質食物
+                                <input type='radio' name='chn32' value='3' {{if $tv_clients_hlth_normal_row->chn32|default:0==3}} checked {{/if}}> 咀嚼能力較差
+                                <input type='radio' name='chn32' value='4' {{if $tv_clients_hlth_normal_row->chn32|default:0==4}} checked {{/if}}> 咀嚼不良
+                              </span>
+                              <span id='helpBlock_chn32' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食狀況</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <textarea id='chn31' class='form-control form-control-sm' name='chn31' rows='5' >{{$tv_clients_hlth_normal_row->chn31|default:''}}</textarea>
+                              <span id='helpBlock_chn31' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>O.客觀資料</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <table class="table table-hover table-sm">
+                      <tbody>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>身高</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <input type='number' min='0' step='any' id='chn51' name='chn51' class='form-control form-control-sm bmi' placeholder='請輸入身高' value='{{$tv_clients_hlth_normal_row->chn51|default:''}}' >
+                              <span id='helpBlock_chn51' class='help-block'>*公分</span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>體重</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <input type='number' min='0' step='any' id='chn52' name='chn52' class='form-control form-control-sm bmi' placeholder='請輸入體重' value='{{$tv_clients_hlth_normal_row->chn52|default:''}}' >
+                              <span id='helpBlock_chn52' class='help-block'>*公斤</span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                          <td width='{{$swidth_left_2}}' class='table-secondary text-right'>其他</td>
+                          <td width='{{$swidth_right_2}}' class='table-light'>
+                            <span class='form-group'>
+                              <textarea id='chn53' class='form-control form-control-sm' name='chn53' rows='2' >{{$tv_clients_hlth_normal_row->chn53|default:''}}</textarea>
+                              <span id='helpBlock_chn53' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>A.評估</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <table class="table table-hover table-sm">
+                      <tbody>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>BMI</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <input type='number' min='0' step='any' id='chn71' name='chn71' class='form-control form-control-sm' placeholder='請輸入BMI' value='{{$tv_clients_hlth_normal_row->chn71|default:''}}' readonly>
+                              <span id='helpBlock_chn71' class='help-block'>* 不開放輸入，由系統計算(體重/身高^2)</span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>調整體重</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <input type='number' min='0' step='any' id='chn72' name='chn72' class='form-control form-control-sm' placeholder='請輸入調整體重' value='{{$tv_clients_hlth_normal_row->chn72|default:''}}' >
+                              <span id='helpBlock_chn72' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>營養診斷</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <table class="table table-hover table-sm">
+                              <tbody>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>體位</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <div class="input-group input-group-sm">
+                                      <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                          <input type='radio' name='chn73_1' value='Y' {{if $tv_clients_hlth_normal_row->chn73_1|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                          &nbsp;
+                                          <input type='radio' name='chn73_1' value='N' {{if $tv_clients_hlth_normal_row->chn73_1|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                        </div>
+                                      </div>
+                                      <textarea id='chn73_1_memo' class='form-control form-control-sm' name='chn73_1_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn73_1|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn73_1_memo|default:''}}</textarea>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>熱量攝取</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <div class="input-group input-group-sm">
+                                      <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                          <input type='radio' name='chn73_2' value='Y' {{if $tv_clients_hlth_normal_row->chn73_2|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                          &nbsp;
+                                          <input type='radio' name='chn73_2' value='N' {{if $tv_clients_hlth_normal_row->chn73_2|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                        </div>
+                                      </div>
+                                      <textarea id='chn73_2_memo' class='form-control form-control-sm' name='chn73_2_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn73_2|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn73_2_memo|default:''}}</textarea>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食不均衡</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <div class="input-group input-group-sm">
+                                      <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                          <input type='radio' name='chn73_3' value='Y' {{if $tv_clients_hlth_normal_row->chn73_3|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                          &nbsp;
+                                          <input type='radio' name='chn73_3' value='N' {{if $tv_clients_hlth_normal_row->chn73_3|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                        </div>
+                                      </div>
+                                      <textarea id='chn73_3_memo' class='form-control form-control-sm' name='chn73_3_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn73_3|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn73_3_memo|default:''}}</textarea>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>營養知識認知不足</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <div class="input-group input-group-sm">
+                                      <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                          <input type='radio' name='chn73_4' value='Y' {{if $tv_clients_hlth_normal_row->chn73_4|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                          &nbsp;
+                                          <input type='radio' name='chn73_4' value='N' {{if $tv_clients_hlth_normal_row->chn73_4|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                        </div>
+                                      </div>
+                                      <textarea id='chn73_4_memo' class='form-control form-control-sm' name='chn73_4_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn73_4|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn73_4_memo|default:''}}</textarea>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <div class="input-group input-group-sm">
+                                      <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                          <input type='radio' name='chn73_99' value='Y' {{if $tv_clients_hlth_normal_row->chn73_99|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                          &nbsp;
+                                          <input type='radio' name='chn73_99' value='N' {{if $tv_clients_hlth_normal_row->chn73_99|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                        </div>
+                                      </div>
+                                      <textarea id='chn73_99_memo' class='form-control form-control-sm' name='chn73_99_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn73_99|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn73_99_memo|default:''}}</textarea>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>P.飲食建議</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <table class="table table-hover table-sm">
+                      <tbody>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食建議</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <table class="table table-hover table-sm">
+                              <tbody>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>均衡飲食</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn91_1' value='Y' {{if $tv_clients_hlth_normal_row->chn91_1|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn91_1' value='N' {{if $tv_clients_hlth_normal_row->chn91_1|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_1' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>糖尿病</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn91_2' value='Y' {{if $tv_clients_hlth_normal_row->chn91_2|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn91_2' value='N' {{if $tv_clients_hlth_normal_row->chn91_2|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_2' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低油、低鹽</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn91_3' value='Y' {{if $tv_clients_hlth_normal_row->chn91_3|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn91_3' value='N' {{if $tv_clients_hlth_normal_row->chn91_3|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_3' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高蛋白</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn91_4' value='Y' {{if $tv_clients_hlth_normal_row->chn91_4|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn91_4' value='N' {{if $tv_clients_hlth_normal_row->chn91_4|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_4' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低蛋白</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn91_5' value='Y' {{if $tv_clients_hlth_normal_row->chn91_5|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn91_5' value='N' {{if $tv_clients_hlth_normal_row->chn91_5|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_5' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低普林</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn91_6' value='Y' {{if $tv_clients_hlth_normal_row->chn91_6|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn91_6' value='N' {{if $tv_clients_hlth_normal_row->chn91_6|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_6' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>低渣</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn91_7' value='Y' {{if $tv_clients_hlth_normal_row->chn91_7|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn91_7' value='N' {{if $tv_clients_hlth_normal_row->chn91_7|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_7' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>質地建議</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <table class="table table-hover table-sm">
+                              <tbody>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>普通</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn92_1' value='Y' {{if $tv_clients_hlth_normal_row->chn92_1|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn92_1' value='N' {{if $tv_clients_hlth_normal_row->chn92_1|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_1' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>軟質</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn92_2' value='Y' {{if $tv_clients_hlth_normal_row->chn92_2|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn92_2' value='N' {{if $tv_clients_hlth_normal_row->chn92_2|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_2' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>細軟</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn92_3' value='Y' {{if $tv_clients_hlth_normal_row->chn92_3|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn92_3' value='N' {{if $tv_clients_hlth_normal_row->chn92_3|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_3' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>半流質</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn92_4' value='Y' {{if $tv_clients_hlth_normal_row->chn92_4|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn92_4' value='N' {{if $tv_clients_hlth_normal_row->chn92_4|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_4' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>全流質</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn92_5' value='Y' {{if $tv_clients_hlth_normal_row->chn92_5|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='chn92_5' value='N' {{if $tv_clients_hlth_normal_row->chn92_5|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_5' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>其他</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='chn92_99' value='Y' {{if $tv_clients_hlth_normal_row->chn92_99|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                        <input type='radio' name='chn92_99' value='N' {{if $tv_clients_hlth_normal_row->chn92_99|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_99' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他內容</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <textarea id='chn92_99_memo' class='form-control form-control-sm' name='chn92_99_memo' rows='2' {{if $tv_clients_hlth_normal_row->chn92_99|default:"N"=="N"}} readonly {{/if}}>{{$tv_clients_hlth_normal_row->chn92_99_memo|default:''}}</textarea>
+                                      <span id='helpBlock_chn92_99_memo' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議熱量</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <input type='number' min='0' step='any' id='chn93' name='chn93' class='form-control form-control-sm' placeholder='請輸入建議熱量' value='{{$tv_clients_hlth_normal_row->chn93|default:''}}' >
+                              <span id='helpBlock_chn93' class='help-block'>*大卡/天</span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <textarea id='chn94' class='form-control form-control-sm' name='chn94' rows='2' >{{$tv_clients_hlth_normal_row->chn94|default:''}}</textarea>
+                              <span id='helpBlock_chn94' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議追蹤項目</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <textarea id='chn95' class='form-control form-control-sm' name='chn95' rows='2' >{{$tv_clients_hlth_normal_row->chn95|default:''}}</textarea>
+                              <span id='helpBlock_chn95' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="nav-track" role="tabpanel" aria-labelledby="nav-track-tab">
+          <div class="table-responsive" id="clients_hlth_normal_track_div" style="overflow: visible;">
+            {{assign var="snum" value="1"}}
+            <input type="hidden" id='std_chnt_cnt' value="{{$tv_clients_hlth_normal_track_row|default:'1'|count}}">
+            {{foreach from=$tv_clients_hlth_normal_track_row key=k item=v}}
+              <table class="table table-bordered table-hover table-sm" id="chnt_table_{{$snum}}" data-item="{{$snum}}">
+                <input type='hidden' id='s_num_{{$snum}}' name='track[{{$snum}}][s_num]' value='{{$v.s_num}}'>
+                <span class="chnt_item" style="display:none;">{{$snum}}</span>
+                <tr class='d-flex'>
+                  <td class="text-right" style="border: 1px solid Transparent!important;">
+                    <button type='button' class='btn btn-C2 btn-sm chnt_del' data-chnt_s_num='{{$snum}}' data-toggle='modal' data-target='.pop-chnt_del'>{{$tv_del_btn}}</button>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤日期</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='chnt02_{{$snum}}' name='track[{{$snum}}][chnt02]' class='form-control form-control-sm' placeholder='請輸入追蹤日期' value='{{$v.chnt02|default:''}}' >
+                      </div>
+                      <span id='helpBlock_chnt02_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>S</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='chnt11_{{$snum}}' name='track[{{$snum}}][chnt11]' class='form-control form-control-sm' placeholder='請輸入S' rows='3' >{{$v.chnt11|default:''}}</textarea>
+                      <span id='helpBlock_chnt11_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>O</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='chnt12_{{$snum}}' name='track[{{$snum}}][chnt12]' class='form-control form-control-sm' placeholder='請輸入O' rows='3' >{{$v.chnt12|default:''}}</textarea>
+                      <span id='helpBlock_chnt12_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>A</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='chnt13_{{$snum}}' name='track[{{$snum}}][chnt13]' class='form-control form-control-sm' placeholder='請輸入A' rows='3' >{{$v.chnt13|default:''}}</textarea>
+                      <span id='helpBlock_chnt13_{{$snum}}' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>                  
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>P.飲食建議</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <table class="table table-hover table-sm">
+                      <tbody>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食計畫</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <span class='form-control form-control-sm'>
+                                <input type='radio' name='track[{{$snum}}][chnt21]' value='1' {{if $v.chnt21|default:0==1}} checked {{/if}}> 維持原計畫
+                                <input type='radio' name='track[{{$snum}}][chnt21]' value='2' {{if $v.chnt21|default:0==2}} checked {{/if}}> 改變飲食計畫
+                              </span>
+                              <span id='helpBlock_chnt21_{{$snum}}' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食建議</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <table class="table table-hover table-sm">
+                              <tbody>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>均衡飲食</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt22_1]' value='Y' {{if $v.chnt22_1|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt22_1]' value='N' {{if $v.chnt22_1|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_1_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>糖尿病</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt22_2]' value='Y' {{if $v.chnt22_2|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt22_2]' value='N' {{if $v.chnt22_2|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_2_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低油、低鹽</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt22_3]' value='Y' {{if $v.chnt22_3|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt22_3]' value='N' {{if $v.chnt22_3|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_3_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高蛋白</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt22_4]' value='Y' {{if $v.chnt22_4|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt22_4]' value='N' {{if $v.chnt22_4|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_4_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低蛋白</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt22_5]' value='Y' {{if $v.chnt22_5|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt22_5]' value='N' {{if $v.chnt22_5|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_5_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低普林</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt22_6]' value='Y' {{if $v.chnt22_6|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt22_6]' value='N' {{if $v.chnt22_6|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_6_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>低渣</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt22_7]' value='Y' {{if $v.chnt22_7|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt22_7]' value='N' {{if $v.chnt22_7|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn91_7_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>質地建議</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <table class="table table-hover table-sm">
+                              <tbody>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>普通</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt23_1]' value='Y' {{if $v.chnt23_1|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt23_1]' value='N' {{if $v.chnt23_1|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_1_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>軟質</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt23_2]' value='Y' {{if $v.chnt23_2|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt23_2]' value='N' {{if $v.chnt23_2|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_2_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>細軟</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt23_3]' value='Y' {{if $v.chnt23_3|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt23_3]' value='N' {{if $v.chnt23_3|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_3_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>半流質</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt23_4]' value='Y' {{if $v.chnt23_4|default:0==Y}} checked {{/if}}> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt23_4]' value='N' {{if $v.chnt23_4|default:0==N}} checked {{/if}}> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_4_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>全流質</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt23_5]' value='N' {{if $v.chnt23_5|default:0==N}} checked {{/if}}> 無
+                                        <input type='radio' name='track[{{$snum}}][chnt23_5]' value='Y' {{if $v.chnt23_5|default:0==Y}} checked {{/if}}> 有
+                                      </span>
+                                      <span id='helpBlock_chn92_5_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                  <td width='{{$swidth_left_2}}' class='table-secondary text-right'>其他</td>
+                                  <td width='{{$swidth_right_2}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <span class='form-control form-control-sm'>
+                                        <input type='radio' name='track[{{$snum}}][chnt23_99]' data-snum='{{$snum}}' data-name='chnt23_99' value='Y' {{if $v.chnt23_99|default:0==Y}} checked {{/if}} onclick="memo_input(this)"> 有
+                                        <input type='radio' name='track[{{$snum}}][chnt23_99]' data-snum='{{$snum}}' data-name='chnt23_99' value='N' {{if $v.chnt23_99|default:0==N}} checked {{/if}} onclick="memo_input(this)"> 無
+                                      </span>
+                                      <span id='helpBlock_chn92_99_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                                <tr class='d-flex'>
+                                  <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他內容</td>
+                                  <td width='{{$swidth_right_3}}' class='table-light'>
+                                    <span class='form-group'>
+                                      <textarea id='chnt23_99_memo_{{$snum}}' class='form-control form-control-sm' name='track[{{$snum}}][chnt23_99_memo]' rows='2' {{if $v.chnt23_99|default:"N"=="N"}} readonly {{/if}}>{{$v.chnt23_99_memo|default:''}}</textarea>
+                                      <span id='helpBlock_chnt23_99_memo_{{$snum}}' class='help-block'></span>
+                                      <div class='help-block with-errors'></div>
+                                    </span>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議熱量</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <input type='number' min='0' step='any' id='chnt24_{{$snum}}' name='track[{{$snum}}][chnt24]' class='form-control form-control-sm' placeholder='請輸入建議熱量' value='{{$v.chnt24|default:''}}' >
+                              <span id='helpBlock_chnt24_{{$snum}}' class='help-block'>*大卡/天</span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <textarea id='chnt25_{{$snum}}' class='form-control form-control-sm' name='track[{{$snum}}][chnt25]' rows='2' >{{$v.chnt25|default:''}}</textarea>
+                              <span id='helpBlock_chnt25_{{$snum}}' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr class='d-flex'>
+                          <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議追蹤項目</td>
+                          <td width='{{$swidth_right_3}}' class='table-light'>
+                            <span class='form-group'>
+                              <textarea id='chnt26_{{$snum}}' class='form-control form-control-sm' name='track[{{$snum}}][chnt26]' rows='2' >{{$v.chnt26|default:''}}</textarea>
+                              <span id='helpBlock_chnt26_{{$snum}}' class='help-block'></span>
+                              <div class='help-block with-errors'></div>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              {{assign var="snum" value="{{$snum+1}}"}}
+            {{/foreach}}
+            <script>
+              $(function(){
+                $(this).chnt_add_row(1); // 預設再多1筆空白
+              });
+            </script>
+          </div>
+          <ul class="pagination justify-content-center pagination-sm">
+            <button class="btn btn-warning btn-sm add_chnt_row" type="button">新增追蹤紀錄 <i class="fa fa-plus" aria-hidden="true"></i></button>
+          </ul>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" arilabelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa finfo-circle mainC2 maB10" arihidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" datdismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" datdismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- chnt 明細刪除確認彈出 -->
+  <div class="modal fade pop-chnt_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="sw_ra_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="chnt_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- chnt 明細刪除確認彈出 end-->
+  <!-- chnt 明細刪除確認彈出 end-->
+  {{*預先增加一筆空白資料，主要用來複製用。 Begin*}}
+  <div style="display:none;">
+    <table class="table table-bordered table-hover table-sm chnt_table" id="chnt_table_STD_SNUM" data-item="STD_SNUM">
+      <span class="STD_ITEM" style="display:none;"></span>
+      <input type='hidden' id='s_num_STD_SNUM' name='track[STD_SNUM][s_num]' value='0'>
+      <tr class='d-flex'>
+        <td class="text-right" style="border: 1px solid Transparent!important;">
+          <button type='button' class='btn btn-C2 btn-sm chnt_del' data-chnt_s_num='STD_SNUM' data-toggle='modal' data-target='.pop-chnt_del'>{{$tv_del_btn}}</button>
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤日期</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <div class='input-group form_date'>
+              <div class='input-group-prepend'>
+                <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+              </div>
+              <input type='text' id='chnt02_STD_SNUM' name='track[STD_SNUM][chnt02]' class='form-control form-control-sm' placeholder='請輸入追蹤日期' value='' >
+            </div>
+            <span id='helpBlock_chnt02_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>S</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <textarea id='chnt11_STD_SNUM' name='track[STD_SNUM][chnt11]' class='form-control form-control-sm' placeholder='請輸入S' rows='3' ></textarea>
+            <span id='helpBlock_chnt11_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>O</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <textarea id='chnt12_STD_SNUM' name='track[STD_SNUM][chnt12]' class='form-control form-control-sm' placeholder='請輸入O' rows='3' ></textarea>
+            <span id='helpBlock_chnt12_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>A</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <span class='form-group'>
+            <textarea id='chnt13_STD_SNUM' name='track[STD_SNUM][chnt13]' class='form-control form-control-sm' placeholder='請輸入A' rows='3' ></textarea>
+            <span id='helpBlock_chnt13_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </span>                  
+        </td>
+      </tr>
+      <tr class='d-flex'>
+        <td width='{{$swidth_left}}' class='table-secondary text-right'>P.飲食建議</td>
+        <td width='{{$swidth_right}}' class='table-light'>
+          <table class="table table-hover table-sm">
+            <tbody>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食計畫</td>
+                <td width='{{$swidth_right_3}}' class='table-light'>
+                  <span class='form-group'>
+                    <span class='form-control form-control-sm'>
+                      <input type='radio' name='track[STD_SNUM][chnt21]' value='1' checked> 維持原計畫
+                      <input type='radio' name='track[STD_SNUM][chnt21]' value='2'> 改變飲食計畫
+                    </span>
+                    <span id='helpBlock_chnt21_STD_SNUM' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>飲食建議</td>
+                <td width='{{$swidth_right_3}}' class='table-light'>
+                  <table class="table table-hover table-sm">
+                    <tbody>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>均衡飲食</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt22_1]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt22_1]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn91_1_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>糖尿病</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt22_2]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt22_2]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn91_2_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低油、低鹽</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt22_3]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt22_3]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn91_3_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>高蛋白</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt22_4]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt22_4]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn91_4_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低蛋白</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt22_5]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt22_5]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn91_5_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>低普林</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt22_6]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt22_6]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn91_6_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_3}}' class='table-secondary text-right'>低渣</td>
+                        <td width='{{$swidth_right_3}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt22_7]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt22_7]' value='N' checked > 無
+                            </span>
+                            <span id='helpBlock_chn91_7_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>質地建議</td>
+                <td width='{{$swidth_right_3}}' class='table-light'>
+                  <table class="table table-hover table-sm">
+                    <tbody>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>普通</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt23_1]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt23_1]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn92_1_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>軟質</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt23_2]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt23_2]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn92_2_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>細軟</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt23_3]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt23_3]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn92_3_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>半流質</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt23_4]' value='Y'> 有
+                              <input type='radio' name='track[STD_SNUM][chnt23_4]' value='N' checked> 無
+                            </span>
+                            <span id='helpBlock_chn92_4_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>全流質</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt23_5]' value='N'> 無
+                              <input type='radio' name='track[STD_SNUM][chnt23_5]' value='Y' checked> 有
+                            </span>
+                            <span id='helpBlock_chn92_5_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                        <td width='{{$swidth_left_2}}' class='table-secondary text-right'>其他</td>
+                        <td width='{{$swidth_right_2}}' class='table-light'>
+                          <span class='form-group'>
+                            <span class='form-control form-control-sm'>
+                              <input type='radio' name='track[STD_SNUM][chnt23_99]' value='Y' data-snum='STD_SNUM' data-name='chnt23_99' onclick="memo_input(this)"> 有
+                              <input type='radio' name='track[STD_SNUM][chnt23_99]' value='N' data-snum='STD_SNUM' data-name='chnt23_99' checked onclick="memo_input(this)"> 無
+                            </span>
+                            <span id='helpBlock_chn92_99_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class='d-flex'>
+                        <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他內容</td>
+                        <td width='{{$swidth_right_3}}' class='table-light'>
+                          <span class='form-group'>
+                            <textarea id='chnt23_99_memo_STD_SNUM' class='form-control form-control-sm' name='track[STD_SNUM][chnt23_99_memo]' rows='2' readonly></textarea>
+                            <span id='helpBlock_chnt23_99_memo_STD_SNUM' class='help-block'></span>
+                            <div class='help-block with-errors'></div>
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議熱量</td>
+                <td width='{{$swidth_right_3}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='number' min='0' step='any' id='chnt24_STD_SNUM' name='track[STD_SNUM][chnt24]' class='form-control form-control-sm' placeholder='請輸入建議熱量' value='' >
+                    <span id='helpBlock_chnt24_STD_SNUM' class='help-block'>*大卡/天</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>其他</td>
+                <td width='{{$swidth_right_3}}' class='table-light'>
+                  <span class='form-group'>
+                    <textarea id='chnt25_STD_SNUM' class='form-control form-control-sm' name='track[STD_SNUM][chnt25]' rows='2' ></textarea>
+                    <span id='helpBlock_chnt25_STD_SNUM' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left_3}}' class='table-secondary text-right'>建議追蹤項目</td>
+                <td width='{{$swidth_right_3}}' class='table-light'>
+                  <span class='form-group'>
+                    <textarea id='chnt26_STD_SNUM' class='form-control form-control-sm' name='track[STD_SNUM][chnt26]' rows='2' ></textarea>
+                    <span id='helpBlock_chnt26_STD_SNUM' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+  {{*預先增加一筆空白資料，主要用來複製用。 End*}}
+</div>
+<script>
+  
+  function memo_input(fd) {
+    var obj_name = '#'+fd.name+'_memo';
+    var snum = fd.getAttribute('data-snum');
+    var name = fd.getAttribute('data-name');
+    if(snum != null && name != null) {
+      obj_name = '#'+name+'_memo_'+snum;
+    }
+    if(fd.value=='N') { // 啟用
+      $(obj_name).val('');
+      $(obj_name).prop("readonly",true);  // readonly
+    }
+    else {
+      $(obj_name).prop("readonly",false);  // 取消 readonly
+    }
+  }
+  
+</script>

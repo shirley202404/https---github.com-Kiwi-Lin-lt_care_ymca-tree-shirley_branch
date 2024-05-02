@@ -1,0 +1,100 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>捐款資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">捐款管理</a></li>
+        <li class="breadcrumb-item"><a href="#">捐款資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      {{*
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_donate_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      *}}
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_donate_row->b_acc_name|default:''}}({{$tv_donate_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_donate_row->e_acc_name|default:''}}({{$tv_donate_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="15%"}}
+        {{assign var="swidth_right" value="35%"}}
+        <tbody>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">姓名</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de01|default:''}}{{$tv_donate_row->de02|default:''}}</span></td>
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">電話</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de03_phone|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">Email</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de03_email|default:''}}</span></td>
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">聯絡地址</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de04_zipcode|default:''}}{{$tv_donate_row->de04_county|default:''}}{{$tv_donate_row->de04_district|default:''}}{{$tv_donate_row->de04_addr|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">是否需要紙本收據</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de05_str|default:''}}</span></td>
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">捐款金額</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de06|number_format:0|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">每月定期定額期數</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de07|default:''}}</span></td>
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">每月定期定額扣款日</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de08|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">捐款方式</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de09_str|default:''}}</span></td>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>捐款項目</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->di01|default:''}}</td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">是否願意將全名顯示於愛心芳名錄</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de21_str|default:''}}</span></td>
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">收據抬頭</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de10|default:''}}</span></td>
+          </tr>
+          <tr class='d-flex'>
+            <td width="{{$swidth_left}}" class="table-secondary text-right">收據身份證號碼/統一編號</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de12|default:''}}</span></td>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>回傳付款狀態</td>
+            <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$tv_donate_row->de15|default:''}}</span></td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>回傳付款訊息</td>
+            <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$tv_donate_row->de16|default:''}}</span></td>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>捐款時間</td>
+            <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$tv_donate_row->de17|default:''}}</span></td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>藍新交易序號</td>
+            <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$tv_donate_row->de18|default:''}}</span></td>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>是否願意年度捐款明細上傳國稅局</td>
+            <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$tv_donate_row->de22_str|default:''}}</span></td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>備註</td>
+            <td width='{{$swidth_right}}' class='table-light'><span class="text-dark">{{$tv_donate_row->de30|default:''}}</span></td>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>藍星交易查詢回傳狀態</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_donate_row->de20_status|default:''}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

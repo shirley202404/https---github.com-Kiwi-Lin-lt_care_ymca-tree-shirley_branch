@@ -1,0 +1,356 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('.download').click(function(){
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('#show_download_info_btn').hide();
+      //console.log(s_num);
+      var strMsg = '';
+      {{if $tv_rpt_type == 2}}
+        var url = "{{$tv_download_link}}";
+      {{/if}}
+      {{if $tv_rpt_type == 3}}
+        var url = "{{$tv_download_stats_link}}";
+      {{/if}}
+      $.ajax({
+        type:'post',
+        url: url,
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤['+url+']:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          //console.log(rs);
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+          //if(rs=='ok') {
+          //}
+          //else {
+          //  alert(rs);
+          //}
+        }
+      })
+    });
+  });
+</script>
+<style type="text/css">
+  body {
+   counter-reset: page_num;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .page_num {
+    /* position: absolute; */
+    position: relative;
+    page-break-before: always;
+    page-break-after: always;
+    /* bottom: 0; */
+    /* right: -50; */
+  }
+  .page_num::before {
+    /* position: relative; */
+    /* bottom: -20px; */
+    counter-increment: page_num;
+    content: '頁次: ' counter(page_num);
+  }
+  @page {
+    size: A4;
+    margin-top: 1.2cm;
+    margin-bottom: 0.7cm;
+    margin-left: 0.5cm;
+    margin-right: 0.5cm;
+  }
+  
+  @media print { 
+    .prn_table td.bgwarning { 
+      background-color: #ffc107 !important;
+    }
+  }
+</style>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>訂單資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">作業專區</a></li>
+        <li class="breadcrumb-item"><a href="#">訂單資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      {{if $tv_rpt_type == 2 }}
+        <button type="button" class="btn btn-light btn-sm download" data-type="meal" data-toggle="modal" data-target=".pop-download">餐條EXCEL下載 <i class="fas fa-download"></i></button>
+      {{/if}}
+      {{if $tv_rpt_type == 3 }}
+        <button type="button" class="btn btn-light btn-sm download" data-type="stats" data-toggle="modal" data-target=".pop-download">餐點統計表下載 <i class="fas fa-download"></i></button>
+      {{/if}}
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_exit_link}}';">{{$tv_exit_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div id="prn_data" class="table-responsive">
+        <meta charset="utf-8">
+          {{if null != $tv_prn_send_data}}
+            <table class="table-sm mt-2 prn_font no_print" border="0" width="100%">
+              <tr>
+                <td width="60%" class="text-left">
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}</h1>
+                </td>
+              </tr>
+              <tr>
+                <td width="60%" class="text-left">                                                              
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 26pt;">{{$tv_menu_title}}</h1>  
+                </td>                                                                                           
+              </tr>
+            </table>
+            <table class="table-hover table-sm mt-0 prn_table" width="100%" border="1">
+              <thead>
+                <tr class="thead-light">
+                  <th class="text-nowrap" width="5%"><span id="fd_reh_s_num" class="fd_order cursorpointer" data-fd_name="reh_s_num" data-order_kind="">送餐路線</span></th>
+                  <th class="text-nowrap" width="5%"><span id="fd_dyp06" class="fd_order cursorpointer" data-fd_name="dyp06" data-order_kind="">送餐順序</span></th>
+                  <th class="text-nowrap"><span id="fd_dys02" class="fd_order cursorpointer" data-fd_name="dys02" data-order_kind="">送餐日期</span></th>
+                  <th class="text-nowrap"><span id="fd_dys01" class="fd_order cursorpointer" data-fd_name="dys01" data-order_kind="">送餐時段</span></th>
+                  <th class="text-nowrap"><span id="fd_acc_s_num" class="fd_order cursorpointer" data-fd_name="acc_s_num" data-order_kind="">送餐員名稱</span></th>
+                  <th class="text-nowrap"><span id="fd_ct_s_num" class="fd_order cursorpointer" data-fd_name="ClientName" data-order_kind="">案主名稱</span></th>
+                  <th class="text-nowrap"><span id="fd_dys02" class="fd_order cursorpointer" data-fd_name="dys03" data-order_kind="">餐別</span></th>
+                  <th class="text-nowrap"><span id="fd_dys03" class="fd_order cursorpointer" data-fd_name="dys03" data-order_kind="">餐種</span></th>
+                  <th class="text-nowrap"><span id="fd_dys04" class="fd_order cursorpointer" data-fd_name="dyp04" data-order_kind="">代餐狀況</span></th>
+                  <th class="text-nowrap"><span id="fd_dys05" class="fd_order cursorpointer" data-fd_name="dyp05" data-order_kind="">代餐種類</span></th>
+                  <th class="text-nowrap"><span id="fd_dys06" class="fd_order cursorpointer" data-fd_name="dyp06" data-order_kind="">異動狀況</span></th>
+                  <th class="text-nowrap"><span id="fd_dys10" class="fd_order cursorpointer" data-fd_name="dyp10" data-order_kind="">出餐狀況</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {{foreach from=$tv_prn_send_data key=k item=v name=prn_data}}
+                  <tr>
+                    <td class="text-left">{{$v.reh02|default:''}}</td><!--路線代碼-->
+                    <td class="text-right">{{$v.dys08|default:''}}</td><!--送餐順序-->
+                     <td class="text-left">{{$v.dys01|default:''|date_format:"%Y-%m-%d"}}</td><!--送餐日期-->
+                     <td class="text-left">{{$v.dys09_str|default:''}}</td><!--送餐時段-->
+                     <td class="text-left">{{$v.dp01|default:''}}{{$v.dp02|default:''}}</td><!--外送員名稱-->
+                     <td class="text-left">{{$v.ct_name|default:''}}</td><!--案主名稱-->
+                     <td class="text-left">{{$v.dys02|default:''}}</td><!--餐點名稱-->
+                     <td class="text-left">{{$v.dys03|default:''}}</td><!--餐點名稱-->
+                     <td class="text-left">{{$v.dys05_str|default:''}}</td><!-- 是否代餐-->
+                     <td class="text-left">{{$v.dys05_type|default:''}}</td><!--代餐種類-->
+                     <td class="text-left">{{$v.dys06_str|default:''}}</td><!--代餐種類-->
+                     <td class="text-left">{{$v.dys10_str|default:''}}</td><!--是否出餐-->
+                  </tr>
+                {{foreachelse}}
+                  <tr>
+                    <td colspan="99" class="alert alert-warning">
+                      查無資料!!!
+                    </td>
+                  </tr>
+                {{/foreach}}
+              </table>
+            {{/if}}
+            
+            {{if null != $tv_prn_meal_data}} 
+            <nav>
+              <div class="nav nav-tabs no_print" id="nav-tab" role="tablist">
+                {{foreach from=$tv_reh07 key=k item=v name=prn_data}}
+                  {{assign var="total_str" value="{{$v.en}}_total"}}
+                  <a class="nav-item nav-link {{if $v.en == "yellow"}} active {{/if}}" id="nav-{{$v.en}}-tab" data-toggle="tab" href="#nav-{{$v.en}}" role="tab" aria-controls="nav-{{$v.en}}" aria-selected="true">{{$v.tw}}({{$tv_prn_meal_data[$v.en]['total']}})</a>
+                {{/foreach}}
+              </div>
+            </nav>
+            <div class="tab-content" id="nav-tabContent">
+              {{foreach from=$tv_prn_meal_data key=k item=v}}
+                <div class="tab-pane fade show {{if $k == "yellow"}} active {{/if}}" id="nav-{{$k}}" role="tabpanel" aria-labelledby="nav-{{$k}}-tab">
+                  <table class="table-sm mt-2 prn_font no_print" border="0" width="100%">
+                    <tr>
+                      <td width="60%" class="text-left">
+                        <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}</h1>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td width="60%" class="text-left">                                                              
+                        <h1 class="mr-1 text-left font-weight-bold" style="font-size: 26pt;">{{$tv_menu_title}}</h1>  
+                      </td>                                                                                           
+                    </tr>
+                  </table>
+                  <table class="table-hover table-sm mt-0 prn_table" width="100%">
+                    <thead>
+                      <tr class="thead-light">
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">代碼</span></th><!--12-->
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">個案姓名</span></th>
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">送餐順序</span></th><!--13-->
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="">自費</span></th><!--13-->
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">治療餐</span></th>
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">餐別</span></th>
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">餐種</span></th>
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">硬度份量</span></th>
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;font-weight:bold;">餐食禁忌</span></th>
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">特殊內容</span></th>
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">日期</span></th>
+                          <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="" style="font-size: 13pt;">主食禁忌</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{foreach from=$v key=k2 item=v2}}
+                        {{if $v2 != NULL}}
+                          {{foreach from=$v2 key=k3 item=v3}}
+                            {{if $v3 != NULL}}
+                              <tr>
+                                <td class="text-left">{{$v3.reh02|default:''}}</td><!--路線代碼-->
+                                <td class="text-left {{if $v3.taboo_dyp04_4 == 'Y'}} bg-warning bgwarning {{/if}}">{{$v3.ct_name|replace:' ':''|default:''}}</td><!--案主名稱-->
+                                <td class="text-right">{{$v3.dyp08|default:''}}</td><!--送餐順序-->
+                                <td class="text-center {{if $v3.dyp11 != ''}} bg-warning {{/if}}" style="font-size: 13pt;">{{$v3.dyp11|default:''}}</td><!--自費-->
+                                <td class="text-left">{{$v3.dyp04_5|default:''}}</td><!--代餐種類-->
+                                <td class="text-left">{{if $v3.dyp02 != "午餐"}} {{$v3.dyp02|default:''}} {{/if}}</td><!--送餐日期-->
+                                <td class="text-left">{{if $v3.dyp03 != "一般餐"}} {{$v3.dyp03|default:''}} {{/if}}</td><!--送餐日期-->
+                                <td class="text-left">{{$v3.dyp04_2|default:''}}</td><!-- 是否代餐-->
+                                <td class="text-left {{if $v3.taboo_dyp04_3 == 'Y'}} bg-warning bgwarning {{/if}}" style="font-size: 13pt;font-weight:bold;">{{$v3.dyp04_3|default:''}}</td><!--代餐種類-->
+                                <td class="text-left">{{$v3.dyp04_1|default:''}}</td><!--餐點名稱-->
+                                <td class="text-left">{{$v3.dyp01|default:''|date_format:"%m/%d"}}</td><!--送餐日期-->
+                                <td class="text-left">{{$v3.dyp04_4|default:''}}</td><!--主食禁忌-->
+                                {{*<td class="text-left">{{$v3.dyp06_str|default:''}}</td><!--代餐種類-->*}}
+                              </tr>
+                            {{/if}}
+                          {{/foreach}}
+                        {{/if}}
+                      {{/foreach}}
+                      </tbody>
+                    </table>
+                  </div>
+                {{/foreach}}
+              </div>
+            {{/if}}
+            {{if null != $tv_prn_stats_data}} 
+            <nav>
+              <div class="nav nav-tabs no_print" id="nav-tab" role="tablist">
+                {{foreach from=$tv_prn_stats_data key=k item=v name=prn_data}}
+                  <a class="nav-item nav-link {{if $k == "1"}} active {{/if}}" id="nav-{{$k}}-tab" data-toggle="tab" href="#nav-{{$k}}" role="tab" aria-controls="nav-{{$k}}" aria-selected="true">餐點統計表({{$v.reh05_str}})</a>
+                {{/foreach}}
+              </div>
+            </nav>
+            <div class="tab-content" id="nav-tabContent">
+              {{foreach from=$tv_prn_stats_data key=k item=v}}
+                <div class="tab-pane fade show {{if $k == "1"}} active {{/if}}" id="nav-{{$k}}" role="tabpanel" aria-labelledby="nav-{{$k}}-tab">
+                  <table class="table-sm mt-2 prn_font no_print" border="0" width="100%">
+                    <tr>
+                      <td width="60%" class="text-left">
+                        <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}</h1>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td width="60%" class="text-left">                                                              
+                        <h1 class="mr-1 text-left font-weight-bold" style="font-size: 26pt;">{{$tv_menu_title}}({{$v.reh05_str}})</h1>  
+                      </td>                                                                                           
+                    </tr>
+                  </table>
+                  <table class="table-hover table-sm mt-0 prn_table" width="100%">
+                    <thead>
+                      <tr class="thead-light">
+                        <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="">路線</span></th><!--12-->
+                        {{foreach from=$tv_route_row key=k_re item=v_re}}
+                          {{if !in_array($v_re.s_num,$tv_test_route)}}
+                            {{if $v_re.reh05 == $k}}
+                              <th class="text-nowrap" width="3%"><span id="" class="fd_order cursorpointer" data-fd_name="" data-order_kind="">{{$v_re.reh01}}</span></th><!--12-->
+                            {{/if}}
+                          {{/if}}
+                        {{/foreach}}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="text-left">★半流</td>
+                        {{foreach from=$v.meal_10 key=k2 item=v2}}
+                          <td>{{$v2}}</td>
+                        {{/foreach}}
+                      </tr>
+                      <tr>
+                        <td class="text-left">★小半流</td>
+                        {{foreach from=$v.meal_11 key=k2 item=v2}}
+                          <td>{{$v2}}</td>
+                        {{/foreach}}
+                      </tr>
+                      {{if $k != 2}}
+                        <tr>
+                          <td class="text-left">★彩虹餐</td>
+                          {{foreach from=$v.meal_9 key=k2 item=v2}}
+                            <td>{{$v2}}</td>
+                          {{/foreach}}
+                        </tr>
+                        <tr>
+                          <td class="text-left">★善耕數量</td>
+                          {{foreach from=$v.harvest key=k2 item=v2}}
+                            <td>{{$v2}}</td>
+                          {{/foreach}}
+                        </tr>
+                        <tr>
+                          <td class="text-left">統計數</td>
+                          {{foreach from=$v.total key=k2 item=v2}}
+                            <td>{{$v2}}</td>
+                          {{/foreach}}
+                        </tr>
+                      {{/if}}
+                      <tr>
+                        <td class="text-left">★大粥(附)</td>
+                        {{foreach from=$v.meal_2 key=k2 item=v2}}
+                          <td>{{$v2}}</td>
+                        {{/foreach}}
+                      </tr>
+                      <tr>
+                        <td class="text-left">★粥(附)</td>
+                        {{foreach from=$v.meal_3 key=k2 item=v2}}
+                          <td>{{$v2}}</td>
+                        {{/foreach}}
+                      </tr>
+                      <tr>
+                        <td class="text-left">★飯糰(附)</td>
+                        {{foreach from=$v.other key=k2 item=v2}}
+                          <td>{{$v2}}</td>
+                        {{/foreach}}
+                      </tr>
+                    </tbody>
+                    </table>
+                  </div>
+                {{/foreach}}
+              </div>
+            {{/if}}
+            {{if $smarty.foreach.prn_data.last}}
+              <div class="row prn_font maT15">
+                <div class="col-4 text-left">
+                  &nbsp;列印日期：{{$tv_prn_date}}
+                </div>
+                <div class="col-8 text-right">
+                  製表人員：{{$tv_prn_emp}}&nbsp;
+                </div>
+              </div>
+            {{else}}
+            <p class="pagebreak"></p>
+          {{/if}}
+      </div>
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+  <!-- 下載資訊視窗彈出 -->
+  <div class="modal fade pop-download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+	   <div class="modal-body">
+		<div class="text-center paT10">
+		  <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> 資料下載</i><br></h1>
+		  <span id="show_download_info"></span>
+          </div>
+	   </div>
+	   <div class="modal-footer text-center">
+	     <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 下載資訊視窗彈出 end-->
+</div>

@@ -1,0 +1,64 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<!-- file upload -->
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+	<div class="page-title clearfix">
+		<div class="float-left">
+			<h1>訊息公佈</h1>
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item"><a href="#">訊息公佈</a></li>
+				<li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+			</ol>
+		</div>
+		<div class="float-right">
+			<div class="visible-xs"><div class="maT10"></div></div>
+			<button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_news_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+	    <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+	    <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+		</div>
+	</div>
+	<!-- container-fluid -->
+	<div class="container-fluid">
+	  <br>
+	  <div class="float-right">建檔:<span class="text-primary">{{$tv_news_row->b_acc_name|default:''}}({{$tv_news_row->b_date|default:''}})</span>-修改:<span class="text-primary">{{$tv_news_row->e_acc_name|default:''}}({{$tv_news_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+    	<table class="table table-bordered table-hover table-sm">
+    	  <tbody>
+    			<tr class="d-flex">
+    				<th class="col-2 table-secondary text-right">發佈日期</th>
+    				<td class="col-10 table-light"><span class="text-primary">{{$tv_news_row->news_publication|default:""}}</span></td>
+    			</tr>
+    			<tr class="d-flex">
+    				<td class="col-2 table-secondary text-right">檔案上傳</td>
+    				<td class="col-10 table-light"><span class="text-primary">{{$tv_news_row->news_file|default:''}}</span></td>
+    			</tr>
+    			<tr class="d-flex">
+    				<td class="col-2 table-secondary text-right">標題</td>
+    				<td class="col-10 table-light"><span class="text-primary">{{$tv_news_row->news_title|default:""}}</span></td>
+    			</tr>
+    			<tr class="d-flex">
+    				<td class="col-2 table-secondary text-right">內容</td>
+    				<td class="col-10 table-light"><pre><span class="text-primary">{{$tv_news_row->news_content|default:""}}</span></pre></td>
+    			</tr>
+    			<tr class="d-flex">
+    				<td class="col-2 table-secondary text-right">上架</td>
+    				<td class="col-10 table-light">
+    				  <span class="text-primary">
+      		    {{if '1'==$tv_news_row->is_available}}
+      		      是
+      		    {{else}}
+      		      否
+      		    {{/if}}
+      		    </span>
+    				</td>
+    			</tr>
+    	  </tbody>
+      </table>
+    </div>
+	</div>
+	<!-- container-fluid end-->
+</div>

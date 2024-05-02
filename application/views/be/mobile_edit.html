@@ -1,0 +1,514 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+    $('#me06_sim').val('{{$tv_mobile_row->me06_sim|default:''}}');
+    $('#me06_program').val('{{$tv_mobile_row->me06_program|default:''}}');
+    $('#me07').val('{{$tv_mobile_row->me07|default:''}}');
+    $('#me08_dp_s_num').val('{{$tv_mobile_row->me08_dp_s_num|default:''}}');
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+
+    // mobile_credit刪除 Begin //
+    $(document).on("click", ".mobile_credit_del", function () {
+      var mobile_credit_s_num = $(this).data('mobile_credit_s_num');
+      console.log(mobile_credit_s_num);
+      $(".mobile_credit_del #f_del_s_num").val(mobile_credit_s_num);
+    });
+        
+    $(document).on('click',"#mobile_credit_del",function() {
+      var mobile_credit_s_num = $(".mobile_credit_del #f_del_s_num").val();
+      $('#mobile_credit_tr_'+mobile_credit_s_num).remove();
+      $(this).mec_item_reset();
+      return;
+    });
+    // mobile_credit刪除 End //
+
+    $('.add_mobile_credit_row').click(function(){
+      var add_qty = $('#add_qty').val(); // 新增筆數
+      $(this).ptp_add_row(add_qty);
+      return;
+    });
+    
+    // 重新顯示欄位的序1,2,3... Begin //
+    $.fn.mec_item_reset = function() {
+      var item_num = 1;
+      $('.mobile_credit_item').each(function() {
+        $(this).text(item_num);
+        item_num++;
+      })
+      var item_last = eval($('.mobile_credit_item').last().text()); // 目前 table 的 tbody 總共有幾個 tr
+      var item_last_str = item_last;
+      if(typeof(item_last) === 'undefined') {
+        item_last_str = 0;
+      }
+      $('#add_num').attr('max',item_last);
+      $('#add_num').val(item_last_str);
+      $('#add_qty').val('1');
+    }
+    // 重新顯示欄位的序1,2,3... End //
+
+    // 新增x筆明細 Begin //
+    $.fn.ptp_add_row = function(add_qty) {
+      for (i = 1; i <= add_qty; i++) {
+        var snum = eval($('#std_mec_cnt').val())+1; // 目前的筆數，刪除資料這裡不會減少數量，避免id重複
+        var new_mobile_credit = $('#mobile_credit_tr_STD_SNUM')[0].outerHTML;
+        var add_mobile_credit_row = new_mobile_credit.replaceAll('STD_SNUM', snum);
+        var add_mobile_credit_row = add_mobile_credit_row.replaceAll('STD_ITEM', 'mobile_credit_item');
+        $('#std_mec_cnt').val(snum);
+        $('#period_table_tbody').append(add_mobile_credit_row);
+        $("#ptp01_"+snum).addClass("ptp01_sel");
+      }
+      $(this).mec_item_reset();
+      $(".form_date").datetimepicker({
+        locale: 'tw',
+        format: 'YYYY-MM-DD',
+        showTodayButton: true,
+        showClear: true,
+        showClose: true,
+        allowInputToggle: true,
+        tooltips: {
+            today: '今天',
+            clear: '清除',
+            close: '關閉',
+            selectMonth: '選取月',
+            prevMonth: '上個月',
+            nextMonth: '下個月',
+            selectYear: '選擇年',
+            prevYear: '上一年',
+            nextYear: '下一年',
+            selectDecade: '選取十年',
+            prevDecade: '上十年',
+            nextDecade: '下十年',
+            prevCentury: '上世紀',
+            nextCentury: '下世紀'
+        },
+        icons: {
+          time: 'far fa-clock',
+          date: 'far fa-calendar',
+          up: 'fas fa-arrow-up',
+          down: 'fas fa-arrow-down',
+          previous: 'fas fa-chevron-left',
+          next: 'fas fa-chevron-right',
+          today: 'fas fa-calendar-check',
+          clear: 'far fa-trash-alt',
+          close: 'far fa-times-circle'
+        }
+      });
+    }
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>手機資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">手機管理</a></li>
+        <li class="breadcrumb-item"><a href="#">手機資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="mobile[s_num]" value="{{$tv_mobile_row->s_num|default:'0'}}">
+      {{/if}}
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-basic-tab" data-toggle="tab" href="#nav-basic" role="tab" aria-controls="nav-basic" aria-selected="true">手機資料</a>
+          <a class="nav-item nav-link" id="nav-credit-tab" data-toggle="tab" href="#nav-credit" role="tab" aria-controls="nav-credit" aria-selected="false">充值紀錄</a>
+          {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+            <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+              <div class="float-right">建檔:<span class="mainC1">{{$tv_mobile_row->b_acc_name|default:''}}({{$tv_mobile_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_mobile_row->e_acc_name|default:''}}({{$tv_mobile_row->e_date|default:""}})</span></div>
+            </span>
+          {{/if}}
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-basic" role="tabpanel" aria-labelledby="nav-basic-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm" style="height: 80%;">
+              {{assign var="swidth_left" value="20%"}}
+              {{assign var="swidth_right" value="80%"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>手機編號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='me01' name='mobile[me01]' class='form-control form-control-sm' placeholder='請輸入手機編號' value='{{$tv_mobile_row->me01|default:''}}' required>
+                      <span id='helpBlock_me01' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>手機廠牌</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='me02' name='mobile[me02]' class='form-control form-control-sm' placeholder='請輸入手機廠牌' value='{{$tv_mobile_row->me02|default:''}}' required>
+                      <span id='helpBlock_me02' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>手機型號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='me03' name='mobile[me03]' class='form-control form-control-sm' placeholder='請輸入手機型號' value='{{$tv_mobile_row->me03|default:''}}' required>
+                      <span id='helpBlock_me03' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>手機序號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='me04' name='mobile[me04]' class='form-control form-control-sm' placeholder='請輸入手機序號' value='{{$tv_mobile_row->me04|default:''}}' required>
+                      <span id='helpBlock_me04' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>手機號碼</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='me05' name='mobile[me05]' class='form-control form-control-sm' placeholder='請輸入手機號碼' value='{{$tv_mobile_row->me05|default:''}}' required>
+                      <span id='helpBlock_me05' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>SIM卡</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <select id='me06_sim' name='mobile[me06_sim]' class='form-control form-control-sm' required>
+                        <option value='' selected>-請選擇-</option>
+                        <option value='1'>暨大SIM卡</option>
+                        <option value='2'>慈心SIM卡</option>
+                        <option value='3'>其他</option>
+                      </select>
+                      <span id='helpBlock_me06_sim' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>手機方案</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <select id='me06_program' name='mobile[me06_program]' class='form-control form-control-sm' required>
+                        <option value='' selected>-請選擇-</option>
+                        <option value='1'>月租</option>
+                        <option value='2'>預付卡</option>
+                        <option value='3'>其他</option>
+                      </select>
+                      <span id='helpBlock_me06_program' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>手機持有者</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='me07' name='mobile[me07]' class='form-control form-control-sm' placeholder='請輸入手機持有者' value='{{$tv_mobile_row->me07|default:''}}' >
+                      <span id='helpBlock_me07' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>手機保管者</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <select id='me08_dp_s_num' name='mobile[me08_dp_s_num]' data-placeholder='-請選擇或輸入手機保管者-' class='form-control form-control-sm chosen-select-deselect' >
+                        {{foreach from=$tv_delivery_person_row key=k item=v}}
+                          <option value='{{$v.s_num}}'>{{$v.dp01}}{{$v.dp02}}</option>
+                        {{/foreach}}
+                      </select>
+                      <span id='helpBlock_me08_dp_s_num' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>購入日期</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='me09' name='mobile[me09]' class='form-control form-control-sm' placeholder='請輸入購入日期' value='{{$tv_mobile_row->me09|default:''|date_format:'%Y-%m-%d'}}' >
+                      </div>
+                      <span id='helpBlock_me09' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>備註</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='me99' class='form-control form-control-sm' name='mobile[me99]' rows='5' >{{$tv_mobile_row->me99|default:''}}</textarea>
+                      <span id='helpBlock_me99' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+                  <td width="{{$swidth_right}}" class="table-light">
+                    <span class='form-group'>
+                      <span class="form-control form-control-sm">
+                        <input type="radio" name="mobile[is_available]" value="1" {{if $tv_mobile_row->is_available|default:0==1}} checked {{/if}}> 是
+                        <input type="radio" name="mobile[is_available]" value="0" {{if $tv_mobile_row->is_available|default:0==0}} checked {{/if}}> 否
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="nav-credit" role="tabpanel" aria-labelledby="nav-credit-tab">
+          <div>
+            <table class="table table-bordered table-striped table-hover table-sm" style="width:35%; overflow-y: visible;">
+              {{assign var="snum" value="1"}}
+              <input type="hidden" id='std_mec_cnt' value="{{count($tv_mobile_credit_row)|default:'1'}}">
+              <thead>
+                <tr class="thead-light">
+                  <th class="text-nowrap" style="width:15%">充值日期</th>
+                  <th class="text-nowrap" style="width:15%">充值金額</th>
+                  <th class="text-nowrap" style="width:15%">備註</th>
+                  <th class="text-nowrap" style="width:04%"></th>
+                </tr>
+              </thead>
+              <tbody id="period_table_tbody">
+                {{foreach from=$tv_mobile_credit_row key=k item=v}}
+                  <tr id="mobile_credit_tr_{{$snum}}" class="mobile_credit_tr" data-item="{{$snum}}">
+                    <input type='hidden' id='s_num_{{$snum}}' name='mobile_credit[{{$snum}}][s_num]' value='{{$snum}}'>
+                    <span class="mobile_credit_item" style="display: none;">{{$snum}}</span>
+                    <td class="text-left">
+                      <span class='form-group'>
+                        <div class='input-group form_date'>
+                          <div class='input-group-prepend'>
+                            <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                          </div>
+                          <input type='text' min="1" id="mec01_{{$snum}}" name='mobile_credit[{{$snum}}][mec01]' class='col-12 form-control form-control-sm' placeholder='' value="{{$v.mec01|default:''}}">
+                        </div>
+                      </span>
+                    </td>
+                    <td class="text-left">
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <input type='number' min="1" id="mec02_{{$snum}}" name='mobile_credit[{{$snum}}][mec02]' class='col-12 form-control form-control-sm' placeholder='' value="{{$v.mec02|default:''}}">
+                          <span id='helpBlock_mec02_{{$snum}}' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </div>
+                      </span>
+                    </td>
+                    <td class="text-left">
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <textarea id='mec99_{{$snum}}' class='form-control form-control-sm' name='mobile_credit[{{$snum}}][mec99]' rows='2' >{{$v.mec99|default:''}}</textarea>
+                          <span id='helpBlock_mec99_{{$snum}}' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </div>
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <button type='button' class='btn btn-C2 btn-xs mobile_credit_del' data-mobile_credit_s_num='{{$snum}}' data-tr_s_num='{{$snum}}' data-toggle='modal' data-target='.pop-mobile_credit_del'>{{$tv_del_btn}}</button>
+                    </td>
+                  </tr>
+                  {{assign var="snum" value="{{$snum+1}}"}}
+                {{/foreach}}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="5" class="text-left">
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">新增</span>
+                      </div>
+                      <input type="number" id="add_qty" min="1" step="1" size="2" style="text-align:right;width: 3em;" value="1">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">筆</span>
+                      </div>
+                      <button class="btn btn-warning btn-sm add_mobile_credit_row" type="button">確定 <i class="fa fa-plus" aria-hidden="true"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- mobile_credit 明細刪除確認彈出 -->
+  <div class="modal fade pop-mobile_credit_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="mobile_credit_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="mobile_credit_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- mobile_credit 明細刪除確認彈出 end-->
+  <!-- 刪除確認彈出 end-->
+  {{*預先增加一筆空白資料，主要用來複製用。 Begin*}}
+  <table style="display:none;">
+    <tr id="mobile_credit_tr_STD_SNUM" class="mobile_credit_tr" data-item="STD_SNUM">
+      <input type="hidden" id="s_num_STD_SNUM" name="mobile_credit[STD_SNUM][s_num]" value="0">
+      <span class="STD_ITEM" style="display: none;">{{$snum}}</span>
+      <td class="text-left">
+        <span class='form-group'>
+          <div class='input-group form_date'>
+            <div class='input-group-prepend'>
+              <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+            </div>
+            <input type='text' min="1" id="mec01_STD_SNUM" name='mobile_credit[STD_SNUM][mec01]' class='col-12 form-control form-control-sm' placeholder=''>
+          </div>
+        </span>
+      </td>
+      <td class="text-left">
+        <span class='form-group'>
+          <div class="input-group input-group-sm">
+            <input type='number' min="1" id="mec02_STD_SNUM" name='mobile_credit[STD_SNUM][mec02]' class='col-12 form-control form-control-sm' placeholder=''>
+            <span id='helpBlock_mec02_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </div>
+        </span>
+      </td>
+      <td class="text-left">
+        <span class='form-group'>
+          <div class="input-group input-group-sm">
+            <textarea id='mec99_STD_SNUM' class='form-control form-control-sm' name='mobile_credit[STD_SNUM][mec99]' rows='2'></textarea>
+            <span id='helpBlock_mec99_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </div>
+        </span>
+      </td>
+      <td class="text-center">
+        <button type='button' class='btn btn-C2 btn-xs mobile_credit_del' data-mobile_credit_s_num='STD_SNUM' data-toggle='modal' data-target='.pop-mobile_credit_del'>{{$tv_del_btn}}</button>
+      </td>
+    </tr>
+  </table>
+  {{*預先增加一筆空白資料，主要用來複製用。 End*}}
+</div>

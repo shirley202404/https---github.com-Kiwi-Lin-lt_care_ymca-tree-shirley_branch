@@ -1,0 +1,1044 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<script src="{{$tv_pub_url}}/js/bootstrap-colorpicker.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/bootstrap-colorpicker.min.css">
+<script src="{{$tv_pub_url}}/js/jquery-ui/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/js/jquery-ui/jquery-ui.min.css">
+<style>
+  .pagination {
+    z-index:99999;
+    position:fixed;
+    bottom:20px;
+    opacity:1;
+    box-shadow:5px 5px 5px 0px #777777;
+    margin: 0px; 
+  }
+  .pagination li a {
+    color: #676a6c; 
+    background-color: transparent;
+  }
+  .pagination li.active a {
+    background-color: #1ABC9C;
+    border: 1px solid #1ABC9C; 
+  }
+  .pagination li.active a:hover {
+    background-color: #17a689;
+    border: 1px solid #17a689; 
+  }
+  .fixed-dialog{
+    position: fixed;
+  }
+</style>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+    CKEDITOR.replace('reh99', { height: '300px', width: '100%'});
+    $('#se_color').colorpicker({
+      customClass: 'custom-size',
+      sliders: {
+        saturation: {
+          maxLeft: 200,
+          maxTop: 200
+        },
+        hue: {
+          maxTop: 200
+        }
+      },
+      ormat: 'hex'
+    })
+
+    $("#save").click(function(){
+      var err_msg = '';
+      var ct_name = [];
+      if($("#dp_s_num").val() == '') {
+        alert("請重新選擇外送員!!");
+        return;
+      }
+      
+      // 檢查是否都有點擊到案主資料
+      $(".ct_s_num").each(function( index ) {
+        var snum = $(this).data("snum");
+        if(snum != "STD_SNUM") {
+          // console.log($("#ct_s_num_"+snum).val());
+          if($("#ct_name_"+snum).val() != '') {
+            if($("#ct_s_num_"+snum).val() == '') {
+              ct_name.push($("#ct_name_"+snum).val());
+            }
+          }
+        }
+      });
+      
+      if(ct_name.length != 0) {
+        alert('資料未正確建立，請重新搜尋以下個案：' + ct_name.join('、')); 
+        return;
+      }
+      
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      
+      for(instance in CKEDITOR.instances) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    $("#reh03").val("{{$tv_route_h_row->reh03|default:''}}");
+    $("#reh05").val("{{$tv_route_h_row->reh05|default:''}}");
+    $("#reh07").val("{{$tv_route_h_row->reh07|default:''}}");
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    // route_b刪除 Begin //
+    $(document).on("click", ".route_b_del", function () {
+      var route_b_s_num = $(this).data('route_b_s_num');
+      $(".route_b_del #f_del_s_num").val(route_b_s_num);
+    });
+        
+    $(document).on('click',"#route_b_del",function() {
+      var route_b_s_num = $(".route_b_del #f_del_s_num").val();
+      $('#route_b_tr_'+route_b_s_num).remove();
+      reorder();
+      return;
+    });
+    // route_b刪除 End //
+   
+   
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $('#dp_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此外送員"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        // console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_dp_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_dp_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              // console.log(rs);  
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#dp_s_num').val(item[1]);
+        $('#dp_name').val(item[0]);
+        $(".weekday-dp").each(function(){
+          var weekday = $(this).data('weekday');
+          $('#reh06_'+weekday+'_dp_s_num').val(item[1]);
+          $('#reh06_'+weekday+'_dp_name').val(item[0]);
+        });
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+    
+    $('.weekday-dp').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此外送員"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        // console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_dp_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_dp_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              // console.log(rs);  
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        var weekday = this.$element.data('weekday');
+        var item = item.split(';;');
+        $('#reh06_'+weekday+'_dp_s_num').val(item[1]);
+        $('#reh06_'+weekday+'_dp_name').val(item[0]);
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+  
+    $(".reb_item").sortable({
+        //containment: ".t_item", //限制範圍，避免拖拉出界外
+        //handle: "#tabs",
+        //axis: "y", //只能上下垂直拖拉
+        //connectWith: ".t_item",
+        // handle: ".reb_item",
+        delay: 150,
+        opacity: 0.8,
+        revert: 100,
+        cursor: "ns-resize",
+        update : function (e) {
+          reorder();
+        }
+    }).disableSelection();
+
+    function reorder() {
+      var cnt = 1; 
+      var ct_order_arr = [];
+      $(".route_b_tr").each(function(){
+        ct_order_arr.push($(this));
+      });
+      $.each(ct_order_arr , function(k, v) {
+        var item = $(this).data('item');
+        var reb02 = $("#reb02_"+item).val();
+        var ct_name = $("#ct_name_str_"+item).text();
+        if(ct_name.includes('志工')) {
+          $("#reb01_"+item).val(0);
+          $("#reb01_str_"+item).text(0);
+        }
+        else {
+        //   console.log(is_new);
+          if(reb02 == "N") { // 是否為新案主的概念
+            $("#reb01_"+item).val(cnt);
+            $("#reb01_str_"+item).text(cnt);
+            cnt++;
+          }
+          else {
+            $("#reb01_"+item).val(0);
+            $("#reb01_str_"+item).text(0);
+          }
+        }
+      });
+    }
+
+    $("#que_ct").click(function(){
+      $("#que_ct_div").dialog({
+        bgiframe: true,
+        width: 550,
+        height: 550,
+        modal: false,
+        resizable: true,
+        closeOnEscape: false,
+        dialogClass: 'fixed-dialog',
+        title: "案主查詢",
+        position: {
+           my: "right bottom",
+           at: "right bottom",
+           of: window
+        },
+        buttons: [
+          {
+            text: '關閉',
+            click: function() {
+              //$('#sel_lock_ctn').prop("checked",false);
+              $(this).dialog('close');
+            },
+          }
+        ],
+        close: function(event, ui) {
+          $('#reb_clone_item_tbody').html('');
+          $('#btn_que_reset').click();
+        }
+      });
+    });
+
+    $("#btn_que_ct").click(function(){
+      var progress = '<tr>';
+          progress += '<td colspan="8">';
+          progress += '<div class="progress">';
+          progress += '<div class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>';
+          progress += '</div>';
+          progress += '</td>';
+          progress += '</tr>';
+      $('#reb_clone_item_tbody').html(progress);
+      var ct_s_num_arr = [];
+      $(".ct_s_num").each(function() {
+        var snum = $(this).data('snum');
+        var ct_s_num = $("#ct_s_num_"+snum).val();
+        ct_s_num_arr.push(ct_s_num);
+      });
+      $("#ct_s_num_str").val(ct_s_num_arr.join(','));
+      $.ajax({
+        type:'get',
+        url: '{{$tv_reh_que_ct_link}}',
+        data: $("#fd_que_ct_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_reh_que_ct_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $('#reb_clone_item_tbody').html(rs);
+          $(".reb_clone_item").draggable({
+            helper: "clone",
+            connectToSortable: ".reb_item",
+            stop: function(event, ui) {
+              var reb02_Y_selected = '';
+              var reb02_N_selected = '';
+              var item = $(this).data('item');
+              //console.log(item);
+              var col = $("#route_b .route_b_clone_tr").index() + 1; // 列位置
+              var ct_s_num = $("#ct_s_num_clone_"+item).val();
+              var ct_name = $("#ct_name_clone_"+item).val();
+              var is_new = $('input[name="is_new_clone_'+item+'"]:checked').val();
+              if(is_new == 'Y') {
+                reb02_Y_selected = 'selected';
+              }
+              else {
+                reb02_N_selected = 'selected';
+              }
+              var new_clone_item = '';
+              new_clone_item += "<tr id='route_b_tr_"+item+"' class='route_b_tr' data-item='"+item+"'>";
+              new_clone_item += "  <td class='text-left'>";
+              new_clone_item += "    <span class='form-group'>";
+              new_clone_item += "      <span id='reb01_str_"+item+"'>0</span>";
+              new_clone_item += "      <input type='hidden' id='s_num_"+item+"' name='route_b[s_num][]' value='"+item+"'>";
+              new_clone_item += "      <input type='hidden' id='reb01_"+item+"' name='route_b[reb01][]' class='col-12 form-control form-control-sm' placeholder='' value='0'>";
+              new_clone_item += "      <span id='helpBlock_reb01_"+item+"' class='help-block'></span>";
+              new_clone_item += "      <div class='help-block with-errors'></div>";
+              new_clone_item += "    </span>";
+              new_clone_item += "  </td>";
+              new_clone_item += "  <td class='text-left'>";
+              new_clone_item += "    <span class='form-group'>";
+              new_clone_item += "      <span id='ct_name_str_"+item+"'>"+ct_name+"</span>";
+              new_clone_item += "      <input type='hidden' id='ct_s_num_"+item+"' name='route_b[ct_s_num][]' class='ct_s_num' data-snum='"+item+"' value='"+ct_s_num+"'>";
+              new_clone_item += "      <input type='hidden' id='ct_name_"+item+"' name='route_b[ct_name][]' class='col-12 form-control form-control-sm' value='"+ct_name+"'>";
+              new_clone_item += "      <span id='helpBlock_ct_s_num_"+item+"' class='help-block'></span>";
+              new_clone_item += "      <div class='help-block with-errors'></div>";
+              new_clone_item += "    </span>";
+              new_clone_item += "  </td>";
+              new_clone_item += "  <td class='text-left'>";
+              new_clone_item += "    <span class='form-group'>";
+              new_clone_item += "      <select id='reb02_"+item+"'' name='route_b[reb02][]' class='form-control form-control-sm reb02_sel' data-snum='"+item+"'>";
+              new_clone_item += "        <option value='N' "+reb02_N_selected+">已知</option>";
+              new_clone_item += "        <option value='Y' "+reb02_Y_selected+">未知</option>";
+              new_clone_item += "      </select>";
+              new_clone_item += "      <span id='helpBlock_reb02_"+item+"' class='help-block'></span>";
+              new_clone_item += "      <div class='help-block with-errors'></div>";
+              new_clone_item += "    </span>";
+              new_clone_item += "  </td>";
+              new_clone_item += "  <td class='text-left'>";
+              new_clone_item += "    <span class='form-group'>";
+              new_clone_item += "      <select id='reb03_vp_s_num"+item+"'' name='route_b[reb03_vp_s_num][]' class='form-control form-control-sm' data-snum='"+item+"'>";
+              new_clone_item += "        <option value=''>-請選擇-</option>";
+              new_clone_item += "        {{foreach from=$tv_verification_person_row key=kvp item=vvp}}";
+              new_clone_item += "          <option value='{{$vvp.s_num}}'>{{$vvp.vp01}}{{$vvp.vp02}}</option>";
+              new_clone_item += "        {{/foreach}}";
+              new_clone_item += "      </select>";
+              new_clone_item += "      <span id='helpBlock_reb02_"+item+"' class='help-block'></span>";
+              new_clone_item += "      <div class='help-block with-errors'></div>";
+              new_clone_item += "    </span>";
+              new_clone_item += "  </td>";
+              new_clone_item += "  <td class='text-left'>";
+              new_clone_item += "    <span class='form-group'>";
+              new_clone_item += "      <textarea id='reb99_"+item+"'' class='form-control form-control-sm' name='route_b[reb99][]' rows='1'></textarea>";
+              new_clone_item += "      <span id='helpBlock_reb99_"+item+"' class='help-block'></span>";
+              new_clone_item += "      <div class='help-block with-errors'></div>";
+              new_clone_item += "    </span>";
+              new_clone_item += "  </td>";
+              new_clone_item += "  <td align='center'>";
+              new_clone_item += "    <button type='button' class='btn btm-sm btn-C2 route_b_del' data-route_b_s_num='"+item+"' data-toggle='modal' data-target='.pop-route_b_del'>{{$tv_del_btn}}</button>";
+              new_clone_item += "  </td>";
+              new_clone_item += "</tr>";
+              var len = eval($('#route_b tr').length); // 目前的筆數，刪除資料這裡不會減少數量，避免id重複
+              if(len == 0) {
+                $('#route_b').append(new_clone_item);
+              }
+              else {
+                $($('#route_b > tr')[col-1]).after(new_clone_item);
+              }
+              $(this).remove();
+              $("#route_b .route_b_clone_tr").remove();
+              $(this).re02_sel();
+              reorder();
+            }
+          });
+        }
+      })
+      return;
+    });
+    
+    $.fn.re02_sel = function() {
+      $(".reb02_sel").change(function(){
+        var snum = $(this).data('snum');
+        if($("#reb02_"+snum).val() == 'Y') {
+          $("#reb01_"+snum).val(0);
+          $("#reb01_str_"+snum).text(0);
+        }
+        reorder();
+      });
+    }
+    $(this).re02_sel();
+
+    $("#upd_vp").click(function(){
+      $("#upd_vp_div").dialog({
+        bgiframe: true,
+        width: 550,
+        height: 550,
+        modal: false,
+        resizable: true,
+        closeOnEscape: false,
+        dialogClass: 'fixed-dialog',
+        title: "核備人員更新",
+        position: {
+          my: "right bottom",
+          at: "right bottom",
+          of: window
+        },
+        buttons: [
+          {
+            text: '關閉',
+            click: function() {
+              //$('#sel_lock_ctn').prop("checked",false);
+              $(this).dialog('close');
+            },
+          }
+        ],
+        close: function(event, ui) {
+          $('#btn_upd_vp_reset').click();
+          $("#upd_reb01_tr").hide();
+          $("#upd_reb01_tr").removeClass('d-flex');
+        }
+      });
+    });
+
+    $("#btn_upd_vp").click(function() {
+      var upd_method = $("input[name^='upd_method']:checked").val();
+      $.each($(".reb01"), function(k, v) {
+        var s_num = $(this).data('s_num');
+        var reb01_val = $(this).data('reb01_val');
+        var upd_vp_s_num = $("#upd_vp_s_num").val();
+        var upd_reb01_start = $("#upd_reb01_start").val();
+        var upd_reb01_end = $("#upd_reb01_end").val();
+        if(upd_method == '1') {
+          $("#reb03_vp_s_num_"+s_num).val(upd_vp_s_num);
+        }
+        else {
+          if(reb01_val >= upd_reb01_start && reb01_val <= upd_reb01_end) {
+            $("#reb03_vp_s_num_"+s_num).val(upd_vp_s_num);
+          }
+        }
+      });
+    });
+    
+    $("input[name^='upd_method']").click(function() {
+      var upd_method = $(this).val();
+      if(upd_method == '1') {
+        $("#upd_reb01_tr").hide();
+        $("#upd_reb01_tr").removeClass('d-flex');
+      }
+      else {
+        $("#upd_reb01_tr").show();
+        $("#upd_reb01_tr").addClass('d-flex');
+      }
+    });
+  });
+</script>
+<style>
+  .custom-size .colorpicker-saturation {
+    width: 200px;
+    height: 200px;
+  }
+  .custom-size .colorpicker-hue{
+    width: 40px;
+    height: 200px;
+  }
+  .custom-size .colorpicker-alpha {
+    width: 0px;
+    height: 0px;
+  }
+  .custom-size .colorpicker-color,
+  .custom-size .colorpicker-color div {
+    height: 40px;
+  }
+</style>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>送餐路徑</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">送餐路徑管理</a></li>
+        <li class="breadcrumb-item"><a href="#">送餐路徑</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="route_h[s_num]" value="{{$tv_route_h_row->s_num|default:'0'}}">
+      {{/if}}
+      {{assign var="swidth_left" value="20%"}}
+      {{assign var="swidth_right" value="80%"}}
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          {{if $tv_acc_kind == "M" or $tv_group_s_num == 12}}
+            <a class="nav-item nav-link active" id="nav-basic-tab" data-toggle="tab" href="#nav-basic" role="tab" aria-controls="nav-basic" aria-selected="true">路徑資料</a>
+            <a class="nav-item nav-link" id="nav-week-tab" data-toggle="tab" href="#nav-week" role="tab" aria-controls="nav-week" aria-selected="false">每日送餐員資料</a>
+            <a class="nav-item nav-link" id="nav-clients-tab" data-toggle="tab" href="#nav-clients" role="tab" aria-controls="nav-clients" aria-selected="false">路徑案主設定</a>
+          {{else}}
+            <a class="nav-item nav-link active" id="nav-clients-tab" data-toggle="tab" href="#nav-clients" role="tab" aria-controls="nav-clients" aria-selected="false">路徑案主設定</a>
+          {{/if}}
+          {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+            <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+              <div class="float-right">建檔:<span class="mainC1">{{$tv_route_h_row->b_acc_name|default:''}}({{$tv_route_h_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_route_h_row->e_acc_name|default:''}}({{$tv_route_h_row->e_date|default:""}})</span></div>
+            </span>
+          {{/if}}
+        </div>
+      </nav>
+      <input type="hidden" id="dp_s_num" name="route_h[dp_s_num]" value="{{$tv_route_h_row->dp_s_num|default:''}}">
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade {{if $tv_acc_kind == "M" or $tv_group_s_num == 12}} show active {{/if}}" id="nav-basic" role="tabpanel" aria-labelledby="nav-basic-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+              <tbody>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>路線負責人</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp_name' name='route_h[dp_name]' class='col-12 form-control form-control-sm typeahead' placeholder='請輸入路線負責人' value='{{$tv_route_h_row->dp_name|default:''}}' autocomplete='off' data-provide='typeahead'>
+                      <span id='helpBlock_dyp_s_num' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>路線代號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='reh01' name='route_h[reh01]' class='form-control form-control-sm' placeholder='請輸入路線代號' value='{{$tv_route_h_row->reh01|default:''}}' required>
+                      <span id='helpBlock_reh01' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>路線名稱</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='reh02' name='route_h[reh02]' class='form-control form-control-sm' placeholder='請輸入路線名稱' value='{{$tv_route_h_row->reh02|default:''}}' required>
+                      <span id='helpBlock_reh02' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>路線類別</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <span class='form-group'>
+                        <select id='reh03' name='route_h[reh03]' class='form-control form-control-sm' required>
+                          <option value='' selected>-請選擇-</option>
+                          {{foreach from=hlp_opt_setup("reh03", null, "get") key=k item=v}}
+                            <option value='{{$k}}'>{{$v}}</option>
+                          {{/foreach}}
+                        </select>
+                        <span id='helpBlock_reh03' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>適用時段</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <span class='form-group'>
+                        <select id='reh05' name='route_h[reh05]' class='form-control form-control-sm' required>
+                          <option value='' selected>-請選擇-</option>
+                          {{foreach from=hlp_opt_setup("reh05", null, "get") key=k item=v}}
+                            <option value='{{$k}}'>{{$v}}</option>
+                          {{/foreach}}
+                        </select>
+                        <span id='helpBlock_reh05' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>路線顏色</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div id="se_color" class="input-group colorpicker-component" >
+                        <span class="input-group-text input-group-addon"><i></i></span>
+                        <input type="text" name='route_h[reh08]' class="form-control form-control-sm" placeholder='請輸入路線顏色' value="{{$tv_route_h_row->reh08|default:'#000000'}}"/>
+                      </div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>餐條顏色</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <span class='form-group'>
+                        <select id='reh07' name='route_h[reh07]' class='form-control form-control-sm' required>
+                          <option value='' selected>-請選擇-</option>
+                          {{foreach from=hlp_opt_setup("reh07", null, "get") key=k item=v}}
+                            <option value='{{$k}}'>{{$v}}</option>
+                          {{/foreach}}
+                        </select>
+                        <span id='helpBlock_reh03' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>輔助人員</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group' multiple='multiple'>
+                      <select id='dp_s_num' name='route_sw[dp_s_num][]' multiple class='form-control form-control-sm chosen-select-deselect' data-fd_name="sw">
+                        <option value='' disabled>-請選擇-</option>
+                        {{foreach from=$tv_delivery_person_row key=kdp item=vdp}}
+                          <option value='{{$vdp.s_num}}'>{{$vdp.dp01}}{{$vdp.dp02}}</option>
+                        {{/foreach}}
+                      </select>
+                      <span id='helpBlock_reh_sw' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                    <script>
+                      {{if $tv_route_sw_row != NULL}}
+                        {{foreach from=$tv_route_sw_row key=ksw item=vsw}}
+                          $("#dp_s_num option[value='" + {{$vsw.dp_s_num}} + "']").prop("selected", true);
+                        {{/foreach}}
+                      {{/if}}
+                    </script>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>人數上限</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='reh04' name='route_h[reh04]' class='form-control form-control-sm' placeholder='請輸入人數上限' value='{{$tv_route_h_row->reh04|default:''}}' >
+                      <span id='helpBlock_reh04' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>備註</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='reh99' class='form-control form-control-sm' name='route_h[reh99]' rows='5' >{{$tv_route_h_row->reh99|default:''}}</textarea>
+                      <span id='helpBlock_reh99' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="nav-week" role="tabpanel" aria-labelledby="nav-week-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+              <thead>
+                <tr class="thead-dark">
+                  <td width="20%" class="text-nowrap">星期一</td>
+                  <td width="20%" class="text-nowrap">星期二</td>
+                  <td width="20%" class="text-nowrap">星期三</td>
+                  <td width="20%" class="text-nowrap">星期四</td>
+                  <td width="20%" class="text-nowrap">星期五</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class='table-light'>
+                    <span class='form-group'>
+                      <input type="hidden" id="reh06_mon_dp_s_num" name="route_h[reh06_mon_dp_s_num]" value="{{$tv_route_h_row->reh06_mon_dp_s_num|default:''}}">
+                      <input type='text' id='reh06_mon_dp_name' name='route_h[reh06_mon_dp_name]' class='weekday-dp col-12 form-control form-control-sm typeahead' placeholder='請輸入送餐員姓名' data-weekday="mon" value='{{$tv_route_h_row->reh06_mon_dp_name|default:''}}' autocomplete='off' data-provide='typeahead' required>
+                      <span id='helpBlock_reh06_mon_dp_name' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                  <td class='table-light'>
+                    <span class='form-group'>
+                      <input type="hidden" id="reh06_tue_dp_s_num" name="route_h[reh06_tue_dp_s_num]" value="{{$tv_route_h_row->reh06_tue_dp_s_num|default:''}}">
+                      <input type='text' id='reh06_tue_dp_name' name='route_h[reh06_tue_dp_name]' class='weekday-dp col-12 form-control form-control-sm typeahead' placeholder='請輸入送餐員姓名' data-weekday="tue" value='{{$tv_route_h_row->reh06_tue_dp_name|default:''}}' autocomplete='off' data-provide='typeahead' required>
+                      <span id='helpBlock_reh06_tue_dp_name' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                  <td class='table-light'>
+                    <span class='form-group'>
+                      <input type="hidden" id="reh06_wed_dp_s_num" name="route_h[reh06_wed_dp_s_num]" value="{{$tv_route_h_row->reh06_wed_dp_s_num|default:''}}">
+                      <input type='text' id='reh06_wed_dp_name' name='route_h[reh06_wed_dp_name]' class='weekday-dp col-12 form-control form-control-sm typeahead' placeholder='請輸入送餐員姓名' data-weekday="wed" value='{{$tv_route_h_row->reh06_wed_dp_name|default:''}}' autocomplete='off' data-provide='typeahead' required>
+                      <span id='helpBlock_dyp_s_num' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                  <td class='table-light'>
+                    <span class='form-group'>
+                      <input type="hidden" id="reh06_thu_dp_s_num" name="route_h[reh06_thu_dp_s_num]" value="{{$tv_route_h_row->reh06_thu_dp_s_num|default:''}}">
+                      <input type='text' id='reh06_thu_dp_name' name='route_h[reh06_thu_dp_name]' class='weekday-dp col-12 form-control form-control-sm typeahead' placeholder='請輸入送餐員姓名' data-weekday="thu" value='{{$tv_route_h_row->reh06_thu_dp_name|default:''}}' autocomplete='off' data-provide='typeahead' required>
+                      <span id='helpBlock_thu_dp_name' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                  <td class='table-light'>
+                    <span class='form-group'>
+                      <input type="hidden" id="reh06_fri_dp_s_num" name="route_h[reh06_fri_dp_s_num]" value="{{$tv_route_h_row->reh06_fri_dp_s_num|default:''}}">
+                      <input type='text' id='reh06_fri_dp_name' name='route_h[reh06_fri_dp_name]' class='weekday-dp col-12 form-control form-control-sm typeahead' placeholder='請輸入送餐員姓名' data-weekday="fri" value='{{$tv_route_h_row->reh06_fri_dp_name|default:''}}' autocomplete='off' data-provide='typeahead' required>
+                      <span id='helpBlock_reh06_fri_dp_name' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade {{if $tv_acc_kind != "M" and $tv_group_s_num != 12}} show active {{/if}}" id="nav-clients" role="tabpanel" aria-labelledby="nav-clients-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover table-sm col-6">        
+              <thead>
+                <tr class="thead-light">
+                  <td width="08%" class="text-nowrap">送餐順位</td>
+                  <td width="15%" class="text-nowrap">案主名稱</td>
+                  <td width="20%" class="text-nowrap">是否已知順序</td>
+                  <td width="20%" class="text-nowrap">核備人員</td>
+                  <td width="28%" class="text-nowrap">備註</td>
+                  <td width="11%" class="text-nowrap"></td>
+                </tr>
+              </thead>
+              <tbody id="route_b" class='reb_item'>
+                {{assign var="first_reb01" value="0"}}
+                {{assign var="last_reb01" value="0"}}
+                {{foreach from=$tv_route_b_row key=k item=v}}
+                  <tr id="route_b_tr_{{$v.s_num}}" class="route_b_tr" data-item="{{$v.s_num}}">
+                    <td class="text-left">
+                      <span class='form-group'>
+                        <span id="reb01_str_{{$v.s_num}}" class="reb01" data-reb01_val="{{$v.reb01|default:''}}" data-s_num="{{$v.s_num|default:''}}">{{$v.reb01|default:''}}</span>
+                        <input type='hidden' id='s_num_{{$v.s_num}}' name='route_b[s_num][]' value='{{$v.s_num}}'>
+                        <input type='hidden' id='reb01_{{$v.s_num}}' name='route_b[reb01][]' class='col-12 form-control form-control-sm' placeholder='' value='{{$v.reb01|default:''}}'>
+                        <span id='helpBlock_reb01_{{$v.s_num}}' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                    <td class="text-left">
+                      <span class='form-group'>
+                        <span id="ct_name_str_{{$v.s_num}}">{{$v.ct_name|default:''}}</span>
+                        <input type='hidden' id="ct_s_num_{{$v.s_num}}" name='route_b[ct_s_num][]' class="ct_s_num" data-snum="{{$v.s_num}}" value='{{$v.ct_s_num|default:''}}'>
+                        <input type='hidden' id="ct_name_{{$v.s_num}}" name='route_b[ct_name][]' class='col-12 form-control form-control-sm typeahead ct_name' placeholder='' value='{{$v.ct_name|default:''}}'>
+                        <span id='helpBlock_ct_s_num_{{$v.s_num}}' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                    <td class='text-left'>
+                      <span class='form-group'>
+                        <select id='reb02_{{$v.s_num}}' name='route_b[reb02][]' class='form-control form-control-sm reb02_sel' data-snum='{{$v.s_num}}'>
+                          <option value='N' selected>已知</option>
+                          <option value='Y'>未知</option>
+                        </select>
+                        <span id='helpBlock_reb02_{{$v.s_num}}' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                      <script>
+                        $("#reb02_{{$v.s_num}}").val('{{$v.reb02|default:"N"}}')
+                      </script>
+                    </td>
+                    <td class='text-left'>
+                      <span class='form-group'>
+                        <select id='reb03_vp_s_num_{{$v.s_num}}' name='route_b[reb03_vp_s_num][]' class='form-control form-control-sm reb02_sel' data-snum='{{$v.s_num}}'>
+                          <option value="0">-請選擇-</option>
+                          {{foreach from=$tv_verification_person_row key=kvp item=vvp}}
+                            <option value="{{$vvp.s_num}}">{{$vvp.vp01}}{{$vvp.vp02}}</option>
+                          {{/foreach}}
+                        </select>
+                        <span id='helpBlock_reb03_vp_s_num_{{$v.s_num}}' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                      <script>
+                        $("#reb03_vp_s_num_{{$v.s_num}}").val('{{$v.reb03_vp_s_num|default:"0"}}')
+                      </script>
+                    </td>
+                    <td class='text-left'>
+                      <span class='form-group'>
+                        <textarea id='reb99_{{$v.s_num}}' class='form-control form-control-sm' name='route_b[reb99][]' rows='1' ></textarea>
+                        <span id='helpBlock_reb99_{{$v.s_num}}' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                    <td align="center">
+                      <button type='button' class='btn btm-sm btn-C2 route_b_del' data-route_b_s_num='{{$v.s_num}}' data-toggle='modal' data-target='.pop-route_b_del'>{{$tv_del_btn}}</button>
+                    </td>
+                  </tr>
+                  {{if $v@first}}
+                    {{assign var="first_reb01" value="{{$v.reb01|default:0}}"}}
+                  {{/if}}
+                  {{if $v@last}}
+                    {{assign var="last_reb01" value="{{$v.reb01|default:0}}"}}
+                  {{/if}}
+                {{/foreach}}
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button id="que_ct" class="btn btn-warning btn-sm" type="button">案主查詢 <i class="far fa-user"></i></button>
+            <button id="upd_vp" class="btn btn-success btn-sm ml-2" type="button">核備人員更新 <i class="fas fa-dollar-sign"></i></button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- route_b 明細刪除確認彈出 -->
+  <div class="modal fade pop-route_b_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="route_b_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="route_b_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- route_b 明細刪除確認彈出 end-->
+  <!-- 查詢案主彈出 Begin-->
+  <div id="que_ct_div" style='display: none;'>
+    <form action="" id="fd_que_ct_input" name="fd_que_ct_input" method="GET" enctype="multipart/form-data">
+      <input type='hidden' id="ct_s_num_str" name='ct_s_num_str' value='' />
+      <table class="table table-sm">
+        {{assign var="swidth_left" value="col-3"}}
+        {{assign var="swidth_right" value="col-9"}}
+        <tbody>
+          <tr class='d-flex'>
+            <td class='{{$swidth_left}} table-secondary text-right'>個案姓名</td>
+            <td class='{{$swidth_right}} table-light'>
+              <span class='form-group'>
+                <div class='input-group input-group-sm'>
+                  <input type='text' id='que_ct_name' name='que_ct_name' class='col-12 form-control form-control-sm que_enter ' placeholder='請輸入個案姓名' value=''>
+                  <div class='input-group-append'>
+                    <span id='helpBlock_que_ct_name' class='help-block ml-2'></span>
+                  </div>
+                </div>
+                <div class='help-block with-errors'></div>
+              </span>
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td class='{{$swidth_left}} table-secondary text-right'>個案身分證</td>
+            <td class='{{$swidth_right}} table-light'>
+              <span class='form-group'>
+                <div class='input-group input-group-sm'>
+                  <input type='text' id='que_ct03' name='que_ct03' class='col-12 form-control form-control-sm que_enter ' placeholder='請輸入個案身分證' value=''>
+                  <div class='input-group-append'>
+                    <span id='helpBlock_que_ct03' class='help-block ml-2'></span>
+                  </div>
+                </div>
+                <div class='help-block with-errors'></div>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class='d-flex'>
+            <td class='{{$swidth_left}}'></td>
+            <td class='{{$swidth_right}} table-light'>
+              <button type="button" id="btn_que_ct" class="btn btn-success btn-sm col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+              <button id="btn_que_reset" type="reset" class="btn btn-sm btn-outline-success col-3">清除 <i class="fas fa-eraser"></i></button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <table class="table table-bordered table-striped table-hover table-sm">
+        <thead>
+          <tr class='thead-light'>
+            <th width='25%'>個案姓名</th>
+            <th width='25%'>個案身分證</th>
+            <th width='25%'>個案生日</th>
+            <th width='25%'>是否已知順序</th>
+          </tr>
+        </thead>
+        <span class='help-block'>*如不確定送餐順序，"<span class="text-danger">是否為新案主</span>"請先選擇為"<span class="text-danger">是</span>"</span>
+        <tbody id='reb_clone_item_tbody'>
+        </tbody>
+      </table>       
+    </form>
+  </div>
+  <!-- 查詢案主彈出 End-->
+  <!-- 核備人員更新彈出 Begin-->
+  <div id="upd_vp_div" style='display: none;'>
+    <form action="" id="fd_upd_vp_input" name="fd_upd_vp_input" method="post" enctype="multipart/form-data">
+      <table class="table table-sm">
+        {{assign var="swidth_left" value="col-3"}}
+        {{assign var="swidth_right" value="col-9"}}
+        <tbody>
+          <tr class='d-flex'>
+            <td class='{{$swidth_left}} table-secondary text-right'>更新方式</td>
+            <td class='{{$swidth_right}} table-light'>
+              <span class='form-group'>
+                <div class='input-group input-group-sm'>
+                  <span class="form-control form-control-sm">
+                    <input type="radio" name="upd_method" value="1" checked> 全部更新
+                    <input type="radio" name="upd_method" value="2"> 區段更新                     
+                  </span>
+                  <div class='input-group-append'>
+                    <span id='helpBlock_upd_method' class='help-block ml-2'></span>
+                  </div>
+                </div>
+                <div class='help-block with-errors'></div>
+              </span>
+            </td>
+          </tr>
+          <tr id='upd_reb01_tr' style="display: none;">
+            <td class='{{$swidth_left}} table-secondary text-right'>區間</td>
+            <td class='{{$swidth_right}} table-light'>
+              <span class='form-group'>
+                <div class="input-group input-group-sm">
+                  <input type='text' id='upd_reb01_start' name="upd_reb01_start" class='form-control form-control-sm' placeholder='請輸入送餐順位(起)' value='{{$first_reb01}}'>
+                  <div class="input-group-append">
+                    <span class="input-group-text">至</span>
+                  </div>          
+                  <input type='text' id='upd_reb01_end' name="upd_reb01_end" class='form-control form-control-sm' placeholder='請輸入送餐順位(訖)' value='{{$last_reb01}}'>
+                </div>
+                <div class='input-group-append'>
+                  <span id='helpBlock_upd_reb01' class='help-block ml-2'>目前送餐順位為：{{$first_reb01}}～{{$last_reb01}}</span>
+                </div>
+                <div class='help-block with-errors'></div>
+              </span>
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td class='{{$swidth_left}} table-secondary text-right'>核備人員</td>
+            <td class='{{$swidth_right}} table-light'>
+              <span class='form-group'>
+                <div class='input-group input-group-sm'>
+                  <select id='upd_vp_s_num' name='upd_vp_s_num' class='form-control form-control-sm'>
+                    <option value="">-請選擇-</option>
+                    {{foreach from=$tv_verification_person_row key=kvp item=vvp}}
+                      <option value="{{$vvp.s_num}}">{{$vvp.vp01}}{{$vvp.vp02}}</option>
+                    {{/foreach}}
+                  </select>                  
+                  <div class='input-group-append'>
+                    <span id='helpBlock_upd_vp_s_num' class='help-block ml-2'></span>
+                  </div>
+                </div>
+                <div class='help-block with-errors'></div>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class='d-flex'>
+            <td class='{{$swidth_left}}'></td>
+            <td class='{{$swidth_right}} table-light'>
+              <button type="button" id="btn_upd_vp" class="btn btn-success btn-sm col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+              <button id="btn_upd_vp_reset" type="reset" class="btn btn-sm btn-outline-success col-3">清除 <i class="fas fa-eraser"></i></button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>     
+    </form>
+  </div>
+  <!-- 核備人員更新彈出 End-->
+</div>

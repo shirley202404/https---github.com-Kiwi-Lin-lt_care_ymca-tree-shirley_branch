@@ -1,0 +1,89 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script>
+  $(function(){
+    $("input[name^='is_available']").click(function(){
+      var s_num = $(this).data('s_num');
+      if($(this).prop("checked")) { // 打勾
+        var is_available = "Y";
+        var old_is_flag = false;
+      }
+      else {
+        var is_available = "N";
+        var old_is_flag = true;
+      }
+      console.log(old_is_flag);
+      $.ajax({
+        type:'post',
+        url: '{{$tv_change_link}}',
+        data: {f_is_available:is_available},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_change_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_upd_ok}}");
+          }
+          else {
+            alert("{{$tv_upd_ng}}");
+            $('#is_available_'+s_num).prop('checked',old_is_flag);
+            //alert(rs);
+          }
+        }
+      })
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>GPS校正</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">系統設定檔</a></li>
+        <li class="breadcrumb-item"><a href="#">GPS校正</a></li>
+        <li class="breadcrumb-item active">設定</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter no_print">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content  modal-C1 ">
+            <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+              <div class="text-center paTB20">
+                <h2>請選擇是否開放GPS校正功能</h2>
+              </div>
+              <div class="modal-body text-left">
+                <table class="table xtable-bordered table-hover table-sm">
+                  {{assign var="swidth_left" value="col-3"}}
+                  {{assign var="swidth_right" value="col-9"}}
+                  <tbody>
+                    <div class='d-flex justify-content-center'>
+                      <span class="mr-2">關閉</span>
+                      <div class="switch">
+                        <input class="cmn-toggle cmn-toggle-round" type="checkbox" id="is_available" name="is_available" {{if $tv_open_flag|default:'N' == "Y"}} checked {{/if}}>
+                        <label for="is_available">關閉</label>
+                      </div>
+                      <span class="ml-2">開啟</span>
+                    </div>
+                  </tbody>
+                </table>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- 篩選＆搜尋表格 -->
+    </div>
+  </div>
+</div>
+
+
+

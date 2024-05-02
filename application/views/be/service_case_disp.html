@@ -1,0 +1,323 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<link rel="stylesheet" href="{{$tv_pub_url}}/bootstrap-table/bootstrap-table.min.css">
+<script src="{{$tv_pub_url}}/bootstrap-table/bootstrap-table.min.js"></script>
+<script src="{{$tv_pub_url}}/js/Chart.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/Chart.min.css">
+<style>
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .table::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .table {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    display: none;
+  }
+
+  .table-responsive {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+</style>
+<script>  
+  $(function(){
+    var ctx = document.getElementById('chart').getContext('2d');
+    data = {
+      labels: [{{foreach from=$tv_meal_order_stat_row key=k item=v}}
+                 ['{{$v.year}}/{{$v.month}}'],
+               {{/foreach}}
+              ],
+      datasets: [{
+        label: '出餐',
+        borderWidth: 0.5,
+        data: [{{foreach from=$tv_meal_order_stat_row key=k item=v}}
+                  {{$v.mlo99_y|default:0}},
+               {{/foreach}}
+              ],
+        backgroundColor: 'rgb(0, 147, 255, 0.2)',
+        borderColor: 'rgb(0, 147, 255, 1)',
+      },
+      {
+        label: '停餐',
+        borderWidth: 0.5,
+        data: [{{foreach from=$tv_meal_order_stat_row key=k item=v}}
+                  {{$v.mlo99_n|default:0}},
+               {{/foreach}}
+              ],
+        backgroundColor: 'rgb(255, 99, 132, 0.2)',
+        borderColor: 'rgb(255, 99, 132, 1)',
+      }]
+    };
+    
+    var myPieChart = new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+          responsive: true,
+          plugins: {       
+            datalabels: {
+              fontSize: 14,
+              display: true,
+              anchor: "end",
+              align: "top"
+            }
+          },               
+          title: {
+              fontSize: 18,
+              display: true,
+          },
+          scales: {
+            xAxes: [{
+	  					display: true,
+	  					scaleLabel: {
+	  						display: true,
+	  						labelString: '月份'
+	  					}
+	  				}],
+	  				yAxes: [{
+              display: true,
+	  					ticks: {
+	  					  stepSize: 1,
+                beginAtZero: true
+	  					},
+	  					scaleLabel: {
+	  						display: true,
+	  						labelString: '餐數'
+	  					}
+	  				}],
+	  			}
+        }
+    });
+
+    $(".form_month").datetimepicker({
+      locale: 'tw',
+      format: 'YYYY-MM',
+      minDate: new Date("{{"$tv_sec_start_month -1 Month"|date_format:'%Y-%m'}}"),
+      maxDate: new Date("{{$tv_sec_end_month|date_format:'%Y-%m'|default:''}}"),
+      showTodayButton: true,
+      showClear: true,
+      showClose: true,
+      allowInputToggle: true,
+      tooltips: {
+          today: '今天',
+          clear: '清除',
+          close: '關閉',
+          selectMonth: '選取月',
+          prevMonth: '上個月',
+          nextMonth: '下個月',
+          selectYear: '選擇年',
+          prevYear: '上一年',
+          nextYear: '下一年',
+          selectDecade: '選取十年',
+          prevDecade: '上十年',
+          nextDecade: '下十年',
+          prevCentury: '上世紀',
+          nextCentury: '下世紀'
+      },
+      icons: {
+        time: 'far fa-clock',
+        date: 'far fa-calendar',
+        up: 'fas fa-arrow-up',
+        down: 'fas fa-arrow-down',
+        previous: 'fas fa-chevron-left',
+        next: 'fas fa-chevron-right',
+        today: 'fas fa-calendar-check',
+        clear: 'far fa-trash-alt',
+        close: 'far fa-times-circle'
+      }
+    });
+    $('#que_start_month').val("{{$tv_que_start_month|date_format:'%Y-%m'|default:''}}");
+    $('#que_end_month').val("{{$tv_que_end_month|date_format:'%Y-%m'|default:''}}");
+
+    $('#f_search').click(function(){
+      var que_start_month = $("#que_start_month").val();
+      var que_end_month = $("#que_end_month").val();
+      location.replace("{{$tv_disp_link}}?tab=chart&que_start_month="+que_start_month+"&que_end_month="+que_end_month);
+      return;
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>開結案服務</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">個案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">開結案服務</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_service_case_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    {{if NULL != $tv_service_case_row->sec03}}
+      <div class="alert alert-warning mt-2">
+        此服務已結案，結案日期：{{$tv_service_case_row->sec03|default:''}}<br/>
+        結案原因：<br/>
+        {{$tv_service_case_row->sec03_memo|nl2br|default:''}}
+      </div>
+    {{/if}}
+    <div class="">
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link {{if $tv_tab == 'sec'}} active {{/if}}" id="nav-sec-tab" data-toggle="tab" href="#nav-sec" role="tab" aria-controls="nav-sec" aria-selected="true">開案資料</a>
+          <a class="nav-item nav-link" id="nav-mlo-tab" data-toggle="tab" href="#nav-mlo" role="tab" aria-controls="nav-mlo" aria-selected="false">訂單資料</a>
+          <a class="nav-item nav-link {{if $tv_tab == 'chart'}} active {{/if}}" id="nav-chart-tab" data-toggle="tab" href="#nav-chart" role="tab" aria-controls="nav-chart" aria-selected="false">訂單統計圖</a>
+          <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+            <div class="float-right">建檔:<span class="mainC1">{{$tv_service_case_row->b_acc_name|default:''}}({{$tv_service_case_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_service_case_row->e_acc_name|default:''}}({{$tv_service_case_row->e_date|default:""}})</span></div>
+          </span>
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade {{if $tv_tab == 'sec'}} show active {{/if}}" id="nav-sec" role="tabpanel" aria-labelledby="nav-sec-tab">
+          <table class="table table-bordered table-hover table-sm">
+            {{assign var="swidth_left" value="20%"}}
+            {{assign var="swidth_right" value="80%"}}
+            <tbody>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">區域</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->ct14|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">案主姓名</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->ct01|default:''}}{{$tv_service_case_row->ct02|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">服務現況</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec01_str|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">服務開始日</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec02|default:''|date_format:'%Y-%m-%d'}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">服務結案日</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec03|default:''|date_format:'%Y-%m-%d'}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">餐別</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec04_str|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">繳費方式</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec09_str|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">經費來源</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec05_str|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">放置點</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec06|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">繳費金額</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec07|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">備註</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec99|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">結案備註</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_row->sec03_memo|default:''|date_format:'%Y-%m-%d'}}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-pane fade" id="nav-mlo" role="tabpanel" aria-labelledby="nav-mlo-tab">
+          <table id="sec_table" class="table table-bordered table-hover table-sm" data-toggle='table' data-height="485" data-search="true" data-pagination="true" data-page-size="25" data-page-list="[25]" data-search-highlight="true" data-resizable="true">
+            <thead>
+              <tr class="thead-light text-left ">
+                <th data-field='snum' rowspan="2">序</th>
+                <th data-field='mlo01' rowspan="2">訂餐日期</th>
+                <th data-field='mlo02_str' rowspan="2">送餐時段</th>
+                <th data-field='mlo03' rowspan="2">餐點名稱</th>
+                <th colspan="5" class="text-center">餐點調整</th>
+                <th data-field='mlo99_str' rowspan="2">是否出餐</th>
+                <th data-field='mlo05_str' rowspan="2">是否有代餐</th>
+              </tr>
+              <tr class="thead-light text-left ">
+                <th data-field='mlo04_1'>特殊內容</th>
+                <th data-field='mlo04_2'>硬度份量</th>
+                <th data-field='mlo04_3'>餐食禁忌</th>
+                <th data-field='mlo04_4'>主食禁忌</th>
+                <th data-field='mlo04_5'>治療餐</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_meal_order_row key=k item=v}}
+                <tr>
+                  <td class="text-left">{{$v@iteration|default:''}}</td><!--序-->
+                  <td class="text-left">{{$v.mlo01|default:''}}({{filter_week({{$v.mlo01|date_format:'%w'}})}})</td><!--訂餐日期-->
+                  <td class="text-left">{{$v.mlo02_str|default:''}}</td><!--訂餐日期-->
+                  <td class="text-left">{{$v.mlo03|default:''}}</td><!--餐點名稱-->
+                  <td class="text-left">{{$v.mlo04_1|default:''}}</td><!--餐點調整-特殊內容-->
+                  <td class="text-left">{{$v.mlo04_2|default:''}}</td><!--餐點調整-硬度份量-->
+                  <td class="text-left">{{$v.mlo04_3|default:''}}</td><!--餐點調整-餐食禁忌-->
+                  <td class="text-left">{{$v.mlo04_4|default:''}}</td><!--餐點調整-主食禁忌-->
+                  <td class="text-left">{{$v.mlo04_5|default:''}}</td><!--餐點調整-治療餐-->
+                  <td class="text-left">{{$v.mlo99_str|default:''}}</td><!--是否出餐-->
+                  <td class="text-left">
+                    {{$v.mlo05_str|default:''}}
+                    {{if $v.mlo05 == "Y"}}
+                      ({{$v.mlo05_type}})
+                    {{/if}}
+                  </td><!--是否有代餐-->
+                </tr>
+              {{foreachelse}}
+              <tr>
+                <td colspan="99" class="alert alert-warning">
+                    查無資料!!!
+                </td>
+              </tr>
+              {{/foreach}}
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-pane fade {{if $tv_tab == 'chart'}} show active {{/if}}" id="nav-chart" role="tabpanel" aria-labelledby="nav-chart-tab">
+          <div class="white-wrapper">
+            <div class="table-filter">
+              <div class="row">
+                <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12 ml-3">
+                  <div class='maT10'></div>
+                  <div class="row">
+                    <div class="input-group input-group-sm">
+                      <div class="col-4 input-group input-group-sm">
+                        <input type='text' id='que_start_month' class='col-8 form-control form-control-sm f_que_enter_date form_month' placeholder='請輸入查詢區間日期(起)' value=''>
+                        <div class="input-group-append">
+                          <span class="input-group-text">至</span>
+                        </div>          
+                        <input type='text' id='que_end_month' class='col-8 form-control form-control-sm f_que_enter_date form_month' placeholder='請輸入查詢區間日期(訖)' value=''>
+                      </div>
+                      <div class="input-group-prepend">
+                        <button id="f_search" name="f_search" class="btn btn-C1 btn-sm ml-1" type="button">{{$tv_que_btn}}</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <canvas id="chart"></canvas>
+            </div>  
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

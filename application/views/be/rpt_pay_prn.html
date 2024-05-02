@@ -1,0 +1,326 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<style>
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .table::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .table {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    display: none;
+  }
+
+  .table-responsive {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+</style>
+<script>
+  $(function(){
+    $('.download').click(function(){
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('#show_download_info_btn').hide();
+      //console.log(s_num);
+      var strMsg = '';
+      $.ajax({
+        type:'post',
+        url: "{{$tv_download_link}}",
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_download_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          //console.log(rs);
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+
+    $("#data-table .reh").dblclick(function () {
+      $(this).upd_data(this);
+    });
+    $("#data-table .rp_date").dblclick(function () {
+      $(this).upd_date_data(this);
+    });
+        
+    $.fn.upd_data = function(change_td) {
+      var route_select = '';
+      var route_option = '';
+      var text = $(change_td).text();
+      var snum = $(change_td).data('snum');
+      var s_num = $(change_td).data('s_num');
+      {{foreach from=$tv_route_row key=k item=v}}
+        route_option += "<option value='{{$v.s_num|default:''}}' data-reh05='{{$v.reh05|default:''}}'>{{$v.reh01|default:''}}</option>";
+      {{/foreach}}
+      route_select += "<select id='reh_s_num' name='reh_s_num' data-snum='" + snum + "' data-s_num='" + s_num + "' class='col-12 form-control form-control-sm prn_enter' onblur='close_upd_data(this)'>";
+      route_select +=  "<option value='' selected>-請選擇-</option>";
+      route_select +=  route_option;
+      route_select += "</select>"
+      $(change_td).unbind('dblclick');
+      $(change_td).empty();
+      $(change_td).html(route_select).focus();
+      $("#reh_s_num option").filter(function() {
+        return $(this).text() == text;
+      }).prop('selected', true);
+    }
+    $.fn.upd_date_data = function(change_td) {
+      var text = $(change_td).text();
+      var snum = $(change_td).data('snum');
+      var s_num = $(change_td).data('s_num');
+      var date_input = "<div class='input-group form_date'>";
+      date_input += "<input id='rp{{$tv_fd_tbl_col}}12' name='rp{{$tv_fd_tbl_col}}12' data-snum='" + snum + "' data-s_num='" + s_num + "' class='col-12 form-control form-control-sm prn_enter ' onblur='close_upd_date_data(this)'>";
+      date_input += "</div>";
+      $(change_td).unbind('dblclick');
+      $(change_td).empty();
+      $(change_td).html(date_input).focus();
+      $(this).js_load();
+    }
+    $.fn.js_load = function() {
+      $(".form_date").datetimepicker({
+        locale: 'tw',
+        format: 'YYYY-MM-DD',
+        showTodayButton: true,
+        showClear: true,
+        showClose: true,
+        allowInputToggle: true,
+        tooltips: {
+            clear: '清除',
+            close: '關閉',
+            selectMonth: '選取月',
+            prevMonth: '上個月',
+            nextMonth: '下個月',
+            selectYear: '選擇年',
+            prevYear: '上一年',
+            nextYear: '下一年',
+            selectDecade: '選取十年',
+            prevDecade: '上十年',
+            nextDecade: '下十年',
+            prevCentury: '上世紀',
+            nextCentury: '下世紀'
+        },
+        icons: {
+          date: 'far fa-calendar',
+          up: 'fas fa-arrow-up',
+          down: 'fas fa-arrow-down',
+          previous: 'fas fa-chevron-left',
+          next: 'fas fa-chevron-right',
+          clear: 'far fa-trash-alt',
+          close: 'far fa-times-circle'
+        }
+      });
+      return;
+    }
+    $('#f_search').click(function(){
+      $('#que_str').val($("#f_que").val());
+      $('#fd_que_input').submit();
+    });
+    $("#f_que").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#que_str').val($(this).val());
+        $('#f_search').click();
+      }
+    });
+
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>繳費資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">報表下載</a></li>
+        <li class="breadcrumb-item"><a href="#">繳費資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm download" data-type="meal" data-toggle="modal" data-target=".pop-download">繳費名冊下載 <i class="fas fa-download"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_exit_link}}';">{{$tv_exit_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter">
+        <div class="row">
+          <div class="col-6 col-sm-4 col-md-4 col-lg-4 col-xl-3 ml-3">
+            <div class="row">
+              <form class="maT20" action="{{$tv_que_link}}" id="fd_que_input" name="fd_que_input" method="GET" enctype="multipart/form-data">
+                <div class="input-group">
+                  <input type="hidden" name="rpt_pay_month" value="{{$tv_rpt_pay_month}}">
+                  <input type="hidden" name="rpt_type" value="{{$tv_rpt_type}}">
+                  <input type="text" id="f_que" name="f_que" class="form-control form-control-sm" placeholder="請輸入搜尋內容" value="{{$tv_f_que|default:''}}">
+                  <div class="input-group-prepend">
+                    <button id="f_search" name="f_search" class="btn btn-C1 btn-sm ml-1" type="button">{{$tv_que_btn}}</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 篩選＆搜尋表格 -->
+      <div id="prn_data" class="table-responsive">
+        <meta charset="utf-8">
+          <table class="table-sm mt-2 prn_font no_print" border="0" width="100%">
+            <tr>
+              <td width="60%" class="text-left">
+                <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td width="60%" class="text-left">                                                              
+                <h1 class="mr-1 text-left font-weight-bold" style="font-size: 26pt;">{{$tv_menu_title}}</h1>  
+                </td>                                                                                           
+            </tr>
+          </table>
+          <table class="table-hover table-sm mt-0 prn_table" width="100%" border="1" id="data-table">
+            <thead>
+              <tr class="thead-light">
+                <th class="text-nowrap text-center"><span id="fd_item" class="fd_order cursorpointer" data-fd_name="item" data-order_kind="">編號</span></th>
+                <th class="text-nowrap text-center"><span id="fd_receipt_number" class="fd_order cursorpointer" data-fd_name="receipt_number" data-order_kind="">收據編號</span></th>
+                <th class="text-nowrap text-center"><span id="fd_reh01" class="fd_order cursorpointer" data-fd_name="reh01" data-order_kind="">送餐路線</span></th>
+                <th class="text-nowrap text-center"><span id="fd_ct_name" class="fd_order cursorpointer" data-fd_name="ct_name" data-order_kind="">個案姓名</span></th>
+                <th class="text-nowrap text-center"><span id="fd_ct18" class="fd_order cursorpointer" data-fd_name="ct18" data-order_kind="">繳費方式</span></th>
+                <th class="text-nowrap text-center"><span id="fd_lunch" class="fd_order cursorpointer" data-fd_name="lunch" data-order_kind="">午餐數</span></th>
+                <th class="text-nowrap text-center"><span id="fd_dinner" class="fd_order cursorpointer" data-fd_name="dinner" data-order_kind="">晚餐數</span></th>
+                <th class="text-nowrap text-center"><span id="fd_total_meal" class="fd_order cursorpointer" data-fd_name="total_meal" data-order_kind="">總餐數</span></th>
+                <th class="text-nowrap text-center"><span id="fd_total_dollar" class="fd_order cursorpointer" data-fd_name="total_dollar" data-order_kind="">合計費用</span></th>
+                <th class="text-nowrap text-center"><span id="fd_meal_type" class="fd_order cursorpointer" data-fd_name="meal_type" data-order_kind="">餐別</span></th>
+                <th class="text-nowrap text-center"><span id="fd_date" class="fd_order cursorpointer" data-fd_name="date" data-order_kind="">收款日期</span></th>
+                <th class="text-nowrap text-center"><span id="fd_memo" class="fd_order cursorpointer" data-fd_name="memo" data-order_kind="">備註</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_rpt_pay_data key=k item=v name=subsidy_data}}
+                <tr>
+                  <td class="text-center">{{$v@iteration|default:''}}</td><!--序號-->
+                  <td class="text-center">{{$tv_receipt_date|default:''}}{{$v@iteration|string_format:"%03d"|default:''}}</td><!--收據編號-->
+                  <td class="text-center reh" id="reh_{{$v@iteration}}" data-snum='{{$v@iteration}}' data-s_num='{{$v.s_num|default:''}}'>{{$v["rp{{$tv_fd_tbl_col}}04_reh01"]|default:''}}</td><!--送餐路線-->
+                  <td class="text-center">{{$v["rp{{$tv_fd_tbl_col}}02_ct_name"]|default:''}}</td><!--個案姓名-->
+                  <td class="text-center">{{$v["rp{{$tv_fd_tbl_col}}03_sec09"]|default:''}}</td><!--繳費方式-->
+                  <td class="text-center">{{$v["rp{{$tv_fd_tbl_col}}05"]|default:''}}</td><!--午餐數-->
+                  <td class="text-center">{{$v["rp{{$tv_fd_tbl_col}}06"]|default:''}}</td><!--晚餐數-->
+                  <td class="text-center">{{math equation="x + y" x={{$v["rp{{$tv_fd_tbl_col}}05"]|default:''}} y={{$v["rp{{$tv_fd_tbl_col}}06"]|default:''}}}}</td><!-- 總餐數-->
+                  <td class="text-center">{{math equation="(x + y) * meal_price" x={{$v["rp{{$tv_fd_tbl_col}}05"]|default:''}} y={{$v["rp{{$tv_fd_tbl_col}}06"]|default:''}} meal_price={{$v["rp{{$tv_fd_tbl_col}}08"]|default:0}}}}</td><!--合計費用-->
+                  <td class="text-center">{{$v["rp{{$tv_fd_tbl_col}}09"]|default:''}}</td><!--餐種-->
+                  <td class="text-center rp_date" id="rp_date_{{$v@iteration}}" data-snum='{{$v@iteration}}' data-s_num='{{$v.s_num|default:''}}'>{{$v["rp{{$tv_fd_tbl_col}}12"]|default:''}}</td><!--收款日期-->
+                  <td class="text-center">{{$v["rp{{$tv_fd_tbl_col}}03_sec99"]|default:''}}</td><!--備註-->
+                </tr>
+              {{foreachelse}}
+                <tr>
+                  <td colspan="99" class="alert alert-warning">
+                    查無資料!!!
+                  </td>
+                </tr>
+                {{/foreach}}
+            </table>
+            {{if $smarty.foreach.subsidy_data.last}}
+              <div class="row prn_font maT15">
+                <div class="col-4 text-left">
+                  &nbsp;列印日期：{{$tv_prn_date}}
+                </div>
+                <div class="col-8 text-right">
+                  製表人員：{{$tv_prn_emp}}&nbsp;
+                </div>
+              </div>
+            {{else}}
+            <p class="pagebreak"></p>
+          {{/if}}
+      </div>
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+  <!-- 下載資訊視窗彈出 -->
+  <div class="modal fade pop-download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+	   <div class="modal-body">
+		<div class="text-center paT10">
+		  <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> 資料下載</i><br></h1>
+		  <span id="show_download_info"></span>
+          </div>
+	   </div>
+	   <div class="modal-footer text-center">
+	     <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 下載資訊視窗彈出 end-->
+</div>
+<script>
+  function close_upd_data(change_td) {
+    var snum = $(change_td).data('snum');
+    var s_num = $(change_td).data('s_num');
+    var reh_s_num = $("#reh_s_num").val();
+    var reh_text = $("#reh_s_num option:selected").text();
+    $("#reh_" + snum).empty();
+    if('' != reh_s_num) {
+      $("#reh_" + snum).html(reh_text);
+    }
+    $("#reh_" + snum).bind("dblclick", function () {
+      $(this).upd_data(this);
+    });
+    $.ajax({
+      type:'post',
+      data: {s_num: s_num, reh_s_num: reh_s_num, reh_text: reh_text, rpt_type:'{{$tv_rpt_type}}', field:'rp{{$tv_fd_tbl_col}}04_reh01'},
+      url: "{{$tv_upd_reh_link}}",
+      error: function(xhr) {
+        strMsg += 'Ajax request發生錯誤[{{$tv_upd_reh_link}}]:'+xhr+'\n請重試';
+      },
+      success: function (rs) {
+        if(rs == 'ok') {
+          alert("案主路徑資料更新成功!!下載後，會自動更新資料排序!!");
+        }
+        else {
+          alert(rs);
+        }
+        return;
+      }
+    })
+  }
+  function close_upd_date_data(change_td) {
+    var snum = $(change_td).data('snum');
+    var s_num = $(change_td).data('s_num');
+    var reh_text = $('#rp{{$tv_fd_tbl_col}}12').val();
+    $("#rp_date_" + snum).empty();
+    if('' != reh_text) {
+      $("#rp_date_" + snum).html(reh_text);
+    }
+    $("#rp_date_" + snum).bind("dblclick", function () {
+      $(this).upd_date_data(this);
+    });
+    $.ajax({
+      type:'post',
+      data: {s_num: s_num, reh_text: reh_text, rpt_type:'{{$tv_rpt_type}}', field:'rp{{$tv_fd_tbl_col}}12'},
+      url: "{{$tv_upd_reh_link}}",
+      error: function(xhr) {
+        strMsg += 'Ajax request發生錯誤[{{$tv_upd_reh_link}}]:'+xhr+'\n請重試';
+      },
+      success: function (rs) {
+        if(rs == 'ok') {
+          alert("案主收款日期更新成功!!");
+        }
+        else {
+          alert(rs);
+        }
+        return;
+      }
+    })
+  }
+</script>

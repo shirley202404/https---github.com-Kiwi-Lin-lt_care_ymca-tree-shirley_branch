@@ -1,0 +1,641 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+    $(".before").attr("disabled" , true);
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      $(".before").attr("disabled" , false);
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            if(confirm("{{$tv_save_ok}}是否前往審核頁面!!")) {
+              location.replace("{{$tv_other_change_auth_link}}");
+            }
+            else {
+              location.replace("{{$tv_return_link}}");
+            }
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+    $("#ocl_sec09_before").val('{{$tv_other_change_log_identity_row->ocl_sec09_before|default:''}}');
+    $("#ocl_sec09_after").val("{{$tv_other_change_log_identity_row->ocl_sec09_after|default:'N'}}");
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $('#ct_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此案主"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        // console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              // console.log(rs);  
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#ct_s_num').val(item[2]);
+        $('#ct_name').val(item[0]);
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+            
+    $(".chosen-select-deselect").on("change" , function() {
+      var fd_name = $(this).data("fd_name");
+      var fd_val = $(this).find(":selected").data(fd_name+"01");
+      $("#"+fd_name+"_"+fd_name+"01").val(fd_val);
+    });
+    
+    $(".object").click(function(){
+      var fd_name = $(this).data("fd_name");
+      var ckeck_flag = $("."+fd_name).prop('checked');
+      var v = $("."+fd_name).val();
+      var object = [];
+      $("."+fd_name+":checkbox:checked").each(function(){
+        object.push($(this).val());
+      });
+      object = object.join(',');
+      $('#'+fd_name).val(object );
+    });    
+    
+    $("#ocl01_sel").change(function() {
+      var ct_s_num = $("#ct_s_num").val();
+      if(ct_s_num == '') {
+        $('#ocl01_sel').val(0).trigger('chosen:updated');
+        alert("請先選擇案主!!");
+        return;
+      }
+      var sel_val = $(this).val();
+      $('#ocl01').val(sel_val.join(','));
+      var sel_val_chk = ["1","2","3","4"];
+      $.each(sel_val , function(k , v) {
+        switch (v) {
+          case "1":
+             $("#identity").show();
+             $("#identity_h2").show();
+             $('#ocl_i02_date').prop("required", true);
+             get_client_data("1");
+          break;
+          case "2":
+             $("#disabled").show();
+             $("#disabled_h2").show();
+             get_client_data("2");
+          break;
+          case "3":
+             $("#route").show();
+             $("#route_h2").show();
+             $('#ocl_r06').prop("required", true);
+             get_client_route_data("3");
+          break;
+          case "4":
+             $("#service").show();
+             $("#service_h2").show();
+             get_client_service_data("4");
+          break;
+        }
+        sel_val_chk.splice(sel_val_chk.indexOf(v), 1);
+      });
+      $.each(sel_val_chk , function(k , v) {
+        switch (v) {
+          case "1":
+             $("#identity").hide();
+             $("#identity_h2").hide();
+             $('#ocl_i01_before').val('');
+             $('#ocl_i01_after').val('');
+             $('#ocl_i02_date').prop("required", false);
+             $('#identity input[type="checkbox"]').prop("checked", false);
+          break;
+          case "2":
+             $("#disabled").hide();
+             $("#disabled_h2").hide();
+             $('#disabled input[type="radio"]').prop("checked", false);
+          break;
+          case "3":
+             $("#route").hide();
+             $("#route_h2").hide();
+             $("#ocl_r01").val('');
+             $('#ocl_r06').prop("required", false);
+             $("#ocl_r02_reh_s_num").val('');
+             $("#ocl_r03_reh_s_num").val('');
+          break;
+          case "4":
+             $("#service").hide();
+             $("#service_h2").hide();
+             $("#ocl_s01_before").val('');
+             $("#ocl_s01_after").val('');
+          break;
+        }
+      });
+    });
+    
+    function get_client_data(que_type) {
+      var ct_s_num = $("#ct_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_que_client_data_link}}',
+        data: {ct_s_num:ct_s_num , que_type:que_type},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_que_client_data_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          switch (que_type) {
+            case "1":
+              $("#ocl_sec09_before").val(rs['sec09']);
+              $("#ocl_i01_before").val(rs['ct34_go']);
+              $('#ocl_i01_before_'+rs['ct34_go']).prop('checked', true);
+              $('#ocl_i01_before_'+rs['ct34_go']).attr('disabled', true);
+            break;
+            case "2":
+              var $radios = $('input[type=radio][name="ocl_d[ocl_d01_before]"]');
+              if($radios.is(':checked') === false) {
+                  $radios.filter('[value='+rs['ct37']+']').prop('checked', true);
+                  $radios.filter('[value='+rs['ct37']+']').attr('disabled', true);
+              }
+            break;
+          }
+        }
+      })
+    }
+    
+    function get_client_route_data(que_type) {
+      var ct_s_num = $("#ct_s_num").val();
+      $("#ocl_r01").change(function(){
+        var ocl_r01 = $(this).val();
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_client_route_data_link}}',
+          data: {ct_s_num:ct_s_num , ocl_r01:ocl_r01},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_client_route_data_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            rs = JSON.parse(rs)
+            $("#ocl_r02_reb01").val(eval(rs['reb01']));
+            $("#ocl_r02_reh_s_num").val(eval(rs['s_num']));
+            $("#ocl_r02_vp_s_num").val(eval(rs['reb03_vp_s_num']));
+            $('#ocl_r02_reh_s_num').attr('disabled', true);
+          }
+        })
+      });
+    }
+    
+    function get_client_service_data(que_type) {
+      var ct_s_num = $("#ct_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_que_client_service_data_link}}',
+        data: {ct_s_num:ct_s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_que_client_service_data_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $("#ocl_s01_before").val(eval(rs));
+          $('#ocl_s01_before').attr('disabled', true);
+        }
+      })
+    }
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>非餐食異動</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">開案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">非餐食異動</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_other_change_log_h_row->b_acc_name|default:''}}({{$tv_other_change_log_h_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_other_change_log_h_row->e_acc_name|default:''}}({{$tv_other_change_log_h_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="ocl_h[s_num]" value="{{$tv_other_change_log_h_row->s_num|default:'0'}}">
+      {{/if}}
+      <div class="table-responsive" style="height:80%">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          {{assign var="none_display" value="style='display:none;'"}}
+          <h2 class="bg-secondary text-white text-left">非餐食異動單</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='hidden' id='ct_s_num' name='ocl_h[ct_s_num]' value="{{$tv_other_change_log_h_row->ct_s_num|default:{{$tv_ct_s_num}}}}">
+                  <input type='text' id='ct_name' name='ocl_h[ct_name]' class='col-12 form-control form-control-sm' placeholder='請輸入案主姓名' autocomplete="off" value="{{$tv_other_change_log_h_row->ct01|default:{{$tv_ct_name}}}}{{$tv_other_change_log_h_row->ct02|default:''}}" {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                  <span id='helpBlock_ct_name' class='help-block'></span>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>異動項目</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group' multiple='multiple'>
+                  <input type="hidden" id='ocl01' name='ocl_h[ocl01]' value="{{$tv_other_change_log_h_row->ocl01|default:''}}">
+                  <select id='ocl01_sel' multiple class='form-control form-control-sm chosen-select-deselect' data-fd_name="ocl" required>
+                    <option value='' disabled>-請選擇-</option>
+                    <option value='1'>身分別</option>
+                    <option value='2'>失能等級</option>
+                    <option value='3'>更改路線</option>
+                    <option value='4'>服務現況</option>
+                    <option value='5'>變更基礎資料</option>
+                    <option value='6'>照會營養師</option>
+                    <option value='7'>其他問題</option>
+                  </select>
+                  <span id='helpBlock_ocl01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+                <script>
+                  var ocl01 = "{{$tv_other_change_log_h_row->ocl01|default:''}}";
+                  if(ocl01 != '') {
+                    $.each(ocl01.split(","), function(k,v){
+                      $("#ocl01_sel option[value='" + v + "']").prop("selected", true);
+                    });
+                  }
+                </script>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>異動備註</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <textarea id='ocl99' class='form-control form-control-sm' name='ocl_h[ocl99]' rows='5' >{{$tv_other_change_log_h_row->ocl99|default:''}}</textarea>
+                  <span id='helpBlock_ocl99' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="identity" class="table table-bordered table-hover table-sm"  {{if !in_array(1 , $tv_ocl01_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="ocl_i[s_num]" value="{{$tv_other_change_log_m_row->s_num|default:''}}">
+          <h2 id="identity_h2" class="bg-secondary text-white text-left" {{if !in_array(1 , $tv_ocl01_arr) }} {{$none_display}} {{/if}}>身分別異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>異動日期</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class='input-group'>
+                    <div class='input-group-prepend'>
+                      <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                    </div>
+                    <input type='text' id='ocl_i02_date' name='ocl_i[ocl_i02_date]' class='form-control form-control-sm form_date' placeholder='請輸入異動日期' value='{{$tv_other_change_log_identity_row->ocl_i02_date|default:''}}'>
+                  </div>
+                  <span id='helpBlock_ocl_i02_date' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>身分別(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type="hidden" name="ocl_i[ocl_i01_before]" id="ocl_i01_before" value="{{$tv_other_change_log_identity_row->ocl_i01_before|default:''}}">
+                  {{foreach from=hlp_opt_setup("ct34_go", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input class="before" type="checkbox" id="ocl_i01_before_{{$k}}" data-fd_name="ocl_i01_before" class="ocl_i01_before object" value="{{$k}}" {{if $tv_other_change_log_identity_row->ocl_i01_before|default:'' == {{$k}} }} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>身分別(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type="hidden" name="ocl_i[ocl_i01_after]" id="ocl_i01_after" value="{{$tv_other_change_log_identity_row->ocl_i01_after|default:''}}">
+                  {{foreach from=hlp_opt_setup("ct34_go", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="checkbox" id="ocl_i01_after_{{$k}}" data-fd_name="ocl_i01_after" class="ocl_i01_after object" value="{{$k}}" {{if $tv_other_change_log_identity_row->ocl_i01_after|default:'' == {{$k}} }} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>繳費方式(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='ocl_sec09_before' name='ocl_i[ocl_sec09_before]' class='form-control form-control-sm before' disabled>
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=hlp_opt_setup("sec09", null, "get") key=k item=v}}
+                      <option value='{{$k}}'>{{$v}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_sec09' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>繳費方式(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='ocl_sec09_after' name='ocl_i[ocl_sec09_after]' class='form-control form-control-sm'>
+                    <option value='N' selected>不變</option>
+                    {{foreach from=hlp_opt_setup("sec09", null, "get") key=k item=v}}
+                      <option value='{{$k}}'>{{$v}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_sec09' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>收費金額(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input tpye="text" id='scca01' name='scca[scca01]' class='form-control form-control-sm' value="{{$tv_other_change_log_h_row->scca01|default:''}}">
+                  <span id='helpBlock_sec09' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="disabled" class="table table-bordered table-hover table-sm" {{if !in_array(2 , $tv_ocl01_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="ocl_d[s_num]" value="{{$tv_other_change_log_mp_row->s_num|default:''}}">
+          <h2 id="disabled_h2" class="bg-secondary text-white text-left" {{if !in_array(2 , $tv_ocl01_arr) }} {{$none_display}} {{/if}}>失能等級異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>失能程度(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  {{foreach from=hlp_opt_setup("ct37", null, "get") key=k item=v}}
+                    <input type="radio" class="before" name="ocl_d[ocl_d01_before]" value="{{$k}}" {{if $tv_other_change_log_disabled_row->ocl_d01_before|default:'' == {{$k}} }} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>失能程度(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  {{foreach from=hlp_opt_setup("ct37", null, "get") key=k item=v}}
+                    <input type="radio" name="ocl_d[ocl_d01_after]" value="{{$k}}" {{if $tv_other_change_log_disabled_row->ocl_d01_after|default:'' == {{$k}} }} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="route" class="table table-bordered table-hover table-sm" {{if !in_array(3 , $tv_ocl01_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="mil_s[s_num]" value="{{$tv_other_change_log_s_row->s_num|default:''}}">
+          <h2 id="route_h2" class="bg-secondary text-white text-left" {{if !in_array(3 , $tv_ocl01_arr) }} {{$none_display}} {{/if}}>送餐路線異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>異動日期</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class='input-group'>
+                    <div class='input-group-prepend'>
+                      <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                    </div>
+                    <input type='text' id='ocl_r06' name='ocl_r[ocl_r06]' class='form-control form-control-sm form_date' placeholder='請輸入異動日期' value='{{$tv_other_change_log_route_row->ocl_r01|default:''}}'>
+                  </div>
+                  <span id='helpBlock_ocl_r06' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>修改路線類別</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='ocl_r01' name='ocl_r[ocl_r01]' class='form-control form-control-sm'>
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=hlp_opt_setup("reh05", null, "get") key=k item=v}}
+                      <option value='{{$k}}'>{{$v}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_ocl_r01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <script >
+                $("#ocl_r01").val("{{$tv_other_change_log_route_row->ocl_r01|default:''}}");
+              </script>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>路線(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='ocl_r02_reh_s_num' name='ocl_r[ocl_r02_reh_s_num]' class='form-control form-control-sm before'>
+                    <option value="" selected>-請選擇-</option>
+                    {{foreach from=$tv_route_h_row key=k item=v}}
+                      <option value="{{$v.s_num}}">{{$v.reh01}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_ocl_r02_reh_s_num' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <script >
+                $("#ocl_r02_reh_s_num").val("{{$tv_other_change_log_route_row->ocl_r02_reh_s_num|default:''}}");
+              </script>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>送餐順位(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='ocl_r02_reb01' name='ocl_r[ocl_r02_reb01]' class='form-control form-control-sm before' placeholder='請輸入送餐順位' value="{{$tv_other_change_log_route_row->ocl_r02_reb01|default:''}}" >
+                  <span id='helpBlock_ocl_r02_reb01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>路線(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='ocl_r03_reh_s_num' name='ocl_r[ocl_r03_reh_s_num]' class='form-control form-control-sm'>
+                    <option value="" selected>-請選擇-</option>
+                    {{foreach from=$tv_route_h_row key=k item=v}}
+                      <option value="{{$v.s_num}}">{{$v.reh01}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_ocl_r03_reh_s_num' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <script >
+                $("#ocl_r03_reh_s_num").val("{{$tv_other_change_log_route_row->ocl_r03_reh_s_num|default:''}}");
+              </script>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>送餐順位(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='ocl_r03_reb01' name='ocl_r[ocl_r03_reb01]' class='form-control form-control-sm' placeholder='請輸入送餐順位' value="{{$tv_other_change_log_route_row->ocl_r03_reb01|default:''}}" >
+                  <span id='helpBlock_ocl_r03_reb01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="service" class="table table-bordered table-hover table-sm" {{if !in_array(4 , $tv_ocl01_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="mil_p[s_num]" value="{{$tv_other_change_log_p_row->s_num|default:''}}">
+          <h2 id="service_h2" class="bg-secondary text-white text-left" {{if !in_array(4 , $tv_ocl01_arr) }} {{$none_display}} {{/if}}>服務現況異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>服務現況(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='ocl_s01_before' name='ocl_s[ocl_s01_before]' class='form-control form-control-sm before'>
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=hlp_opt_setup("sec01", null, "get") key=k item=v}}
+                      <option value='{{$k}}'>{{$v}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_ocl_s01_before' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <script >
+                $("#ocl_s01_before").val("{{$tv_other_change_log_service_row->ocl_s01_before|default:''}}");
+              </script>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>服務現況(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='ocl_s01_after' name='ocl_s[ocl_s01_after]' class='form-control form-control-sm'>
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=hlp_opt_setup("sec01", null, "get") key=k item=v}}
+                      <option value='{{$k}}'>{{$v}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_ocl_s01_after' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <script >
+                $("#ocl_s01_after").val("{{$tv_other_change_log_service_row->ocl_s01_after|default:''}}");
+              </script>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>

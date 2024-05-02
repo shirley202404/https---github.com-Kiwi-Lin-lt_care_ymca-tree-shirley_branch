@@ -1,0 +1,137 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>客訴處理單(營養師)</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">個案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">客訴處理單(營養師)</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_service_case_complaint_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_service_case_complaint_row->b_acc_name|default:''}}({{$tv_service_case_complaint_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_service_case_complaint_row->e_acc_name|default:''}}({{$tv_service_case_complaint_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        {{assign var="swidth_left_2" value="7.5%"}}
+        {{assign var="swidth_right_2" value="92.5%"}}
+        <tbody>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>客戶資料</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <table class="table table-hover table-sm">
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left_2}}' class='text-right'><span class="text-danger">*</span>案主姓名</td>
+                  <td width='{{$swidth_right_2}}' class='table-light'>
+                    <span class="text-dark">
+                      {{$tv_service_case_complaint_row->ct01|default:''}}{{$tv_service_case_complaint_row->ct02|default:''}}
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left_2}}' class='text-right'><span class="text-danger">*</span>服務名稱</td>
+                  <td width='{{$swidth_right_2}}' class='table-light'>
+                    <span class="text-dark">
+                      {{$tv_service_case_complaint_row->sec04_str|default:''}}
+                    </span>
+                  </td>
+                </tr>
+                <tr class="d-flex">
+                  <td width='{{$swidth_left_2}}' class='text-right'>路線</td>
+                  <td width="{{$swidth_right_2}}" class="table-light">
+                    <span class="text-dark">
+                      {{$tv_service_case_complaint_row->reh01|default:''}}
+                    </span>
+                  </td>
+                </tr>
+                <tr class="d-flex">
+                  <td width='{{$swidth_left_2}}' class='text-right'>餐種</td>
+                  <td width="{{$swidth_right_2}}" class="table-light">
+                    <span class="text-dark">
+                      {{$tv_service_case_complaint_row->ml01|default:''}}
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left_2}}' class='text-right'>餐點調整</td>
+                  <td width='{{$swidth_right_2}}' class='table-light'>
+                    <span>一. 特殊內容：</span>
+                    <span class='text-dark' id="mil_m01_1_str">{{$tv_service_case_complaint_row->mil_m01_1_str|default:''}}</span>
+                    <br/>
+                    <span>二. 硬度&份量：</span>
+                    <span class='text-dark' id="mil_m01_2_str">{{$tv_service_case_complaint_row->mil_m01_2_str|default:''}}</span>
+                    <br/>
+                    <span>三. 餐食禁忌：</span>
+                    <span class='text-dark' id="mil_m01_3_str">{{$tv_service_case_complaint_row->mil_m01_3_str|default:''}}</span>
+                    <br/>
+                    <span>四. 主食禁忌：</span>
+                    <span class='text-dark' id="mil_m01_4_str">{{$tv_service_case_complaint_row->mil_m01_4_str|default:''}}</span>
+                    <br/>
+                    <span>五. 治療餐：</span>
+                    <span class='text-dark' id="mil_m01_5_str">{{$tv_service_case_complaint_row->mil_m01_5_str|default:''}}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>客訴情形</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <table class="table table-hover table-sm">
+                <tr class="d-flex">
+                  <td width="{{$swidth_left_2}}" class="text-right">受理日期</td>
+                  <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_complaint_row->sect01|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left_2}}" class="text-right">照會人員</td>
+                  <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_complaint_row->sect02|default:''}}</span></td>
+                </tr>
+                <tr class="d-flex">
+                  <td width="{{$swidth_left_2}}" class="text-right">照會事項</td>
+                  <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_complaint_row->sect03|default:''}}</span></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">原因分析</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_complaint_row->sect04|nl2br|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">改善對策</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_complaint_row->sect05|nl2br|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">處理措施</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_complaint_row->sect06|nl2br|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">評值</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_complaint_row->sect07|nl2br|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">主管簽核</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_complaint_row->sect99|default:''}}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

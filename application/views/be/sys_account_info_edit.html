@@ -1,0 +1,130 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script>
+  $(function(){
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#account_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err_msg}}');
+        return;
+      }
+      var acc_name = $('#acc_name').val();
+      var acc_phone = $('#acc_phone').val();
+      var acc_tel = $('#acc_tel').val();
+      var acc_depname = $('#acc_depname').val();
+      var acc_email = $('#acc_email').val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: {f_acc_name:acc_name,
+               f_acc_phone:acc_phone,
+               f_acc_tel:acc_tel,
+               f_acc_depname:acc_depname,
+               f_acc_email:acc_email
+              },
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok_msg}}");
+            location.replace("{{$tv_now_link}}");
+          }
+          else {
+            alert(rs);
+          }
+        }
+      })
+    });
+  });
+</script>
+
+<div class="right-content">
+	<div class="page-title clearfix">
+    <div class="float-left">
+      <h1>修改個人資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active">修改個人資料</li>
+      </ol>
+    </div>
+		<div class="float-right">
+			<button type="button" id="save" class="btn btn-C1">儲存</button>
+			<button type="button" class="btn btn-C4" onclick="location.href='{{$tv_pwd_edit_link}}';">修改密碼 <i class="fa fa-key" aria-hidden="true"></i></button>
+		</div>
+	</div>
+	<!-- container-fluid -->
+	<div class="container-fluid">
+		<form class="maT20" id="account_input" data-toggle="validator">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>帳號</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span class="text-primary">{{$tv_acc_row->acc_user}}</span>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>群組</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span class="text-primary">{{$tv_acc_row->acg_name}}</span>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>姓名</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+						      <input type="text" id="acc_name" name="acc_name" class="form-control form-control-sm" placeholder="請輸入姓名" value="{{$tv_acc_row->acc_name|default:''}}" required>
+						      <div class="help-block with-errors"></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>手機</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+						      <input type="text" id="acc_phone" name="acc_phone" class="form-control form-control-sm" placeholder="請輸入手機" value="{{$tv_acc_row->acc_phone|default:''}}">
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>電話</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+						      <input type="tel" id="acc_tel" name="acc_tel" class="form-control form-control-sm" placeholder="請輸入電話" value="{{$tv_acc_row->acc_tel|default:''}}">
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>單位</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+						      <input type="text" id="acc_depname" name="acc_depname" class="form-control form-control-sm" placeholder="" value="{{$tv_acc_row->acc_depname|default:''}}">
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>Email</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+						      <input type="email" id="acc_email" name="acc_email" class="form-control form-control-sm" placeholder="請輸入Email" value="{{$tv_acc_row->acc_email|default:''}}">
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+		</form>
+		<span>資料異動時間：{{$tv_acc_row->e_date|default:''}}</span>
+	</div>
+	<!-- container-fluid end-->
+</div>

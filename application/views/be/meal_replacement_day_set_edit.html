@@ -1,0 +1,340 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        $("#save").prop('disabled',false);
+        $(".one_click").prop('disabled',false);
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+
+    $("#mlds01").datetimepicker({
+      locale: 'tw',
+      format: 'YYYY-MM-DD',
+      showTodayButton: true,
+      showClear: true,
+      showClose: true,
+      allowInputToggle: true,
+      tooltips: {
+        today: '今天',
+        clear: '清除',
+        close: '關閉',
+        selectMonth: '選取月',
+        prevMonth: '上個月',
+        nextMonth: '下個月',
+        selectYear: '選擇年',
+        prevYear: '上一年',
+        nextYear: '下一年',
+        selectDecade: '選取十年',
+        prevDecade: '上十年',
+        nextDecade: '下十年',
+        prevCentury: '上世紀',
+        nextCentury: '下世紀'
+      },
+      icons: {
+        time: 'far fa-clock',
+        date: 'far fa-calendar',
+        up: 'fas fa-arrow-up',
+        down: 'fas fa-arrow-down',
+        previous: 'fas fa-chevron-left',
+        next: 'fas fa-chevron-right',
+        today: 'fas fa-calendar-check',
+        clear: 'far fa-trash-alt',
+        close: 'far fa-times-circle'
+      }
+    });
+
+    $(".other_form_date").datetimepicker({
+      locale: 'tw',
+      format: 'YYYY-MM-DD',
+      showTodayButton: true,
+      showClear: true,
+      showClose: true,
+      allowInputToggle: true,
+      tooltips: {
+        today: '今天',
+        clear: '清除',
+        close: '關閉',
+        selectMonth: '選取月',
+        prevMonth: '上個月',
+        nextMonth: '下個月',
+        selectYear: '選擇年',
+        prevYear: '上一年',
+        nextYear: '下一年',
+        selectDecade: '選取十年',
+        prevDecade: '上十年',
+        nextDecade: '下十年',
+        prevCentury: '上世紀',
+        nextCentury: '下世紀'
+      },
+      icons: {
+        time: 'far fa-clock',
+        date: 'far fa-calendar',
+        up: 'fas fa-arrow-up',
+        down: 'fas fa-arrow-down',
+        previous: 'fas fa-chevron-left',
+        next: 'fas fa-chevron-right',
+        today: 'fas fa-calendar-check',
+        clear: 'far fa-trash-alt',
+        close: 'far fa-times-circle'
+      }
+    });
+
+    $("#mlds01").on("dp.change", function(e) {
+      var mlds01 = $(this).val();
+      $(this).set_time_opt(mlds01, 'Y')
+    });
+
+    $.fn.set_time_opt = function(mlds01, is_clear) {
+      var reset_list = ['mlds03_begin', 'mlds03_end',
+                        'mlds04_begin', 'mlds04_end',
+                        'mlds05_begin', 'mlds05_end'
+                       ];
+      if(mlds01 != '') {
+        var first_date = moment(mlds01, "YYYY-MM-DD").day(1).format("YYYY-MM-DD");
+        var last_date =  moment(mlds01, "YYYY-MM-DD").day(7).format("YYYY-MM-DD");
+        $('#mlds01').val(first_date);
+        $('#mlds02').val(last_date);
+        $.each(reset_list, function(k, v) {
+          $(`#${v}`).data("DateTimePicker").minDate(false);
+          $(`#${v}`).data("DateTimePicker").maxDate(false);
+          $(`#${v}`).data("DateTimePicker").minDate(first_date);
+          $(`#${v}`).data("DateTimePicker").maxDate(last_date);
+        });
+        if(is_clear == "Y") {
+          $(".other_form_date").val('');
+        }
+        $(".other_form_date").prop('readonly', false);
+      }
+      else {
+        $('#mlds01').val('');
+        $('#mlds02').val('');
+        $(".other_form_date").val('');
+        $(".other_form_date").prop('readonly', true);
+      }
+    }
+
+    {{if 'upd' == $tv_msel}}
+      $(this).set_time_opt('{{$tv_meal_replacement_day_set_row->mlds01|default:''}}', 'N');
+    {{/if}}
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>{{$tv_cur_breadcrumb|default:''}}</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">{{$tv_prev_breadcrumb|default:''}}</a></li>
+        <li class="breadcrumb-item"><a href="#">{{$tv_cur_breadcrumb|default:''}}</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm one_click" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_meal_replacement_day_set_row->b_acc_name|default:''}}({{$tv_meal_replacement_day_set_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_meal_replacement_day_set_row->e_acc_name|default:''}}({{$tv_meal_replacement_day_set_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id='s_num' name='s_num' value='{{$tv_meal_replacement_day_set_row->s_num|default:'0'}}'>
+      {{/if}}
+      <div class="table-responsive" style="height: 80%;">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>發放時間調整</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm">起</span>
+                    </div>
+                    <input type='text' id='mlds01' name='mlds01' class='form-control form-control-sm' placeholder='請輸入發放時間調整-起' value='{{$tv_meal_replacement_day_set_row->mlds01|default:''}}' required>
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm">迄</span>
+                    </div>
+                    <input type='text' id='mlds02' name='mlds02' class='form-control form-control-sm' placeholder='請輸入發放時間調整-迄' value='{{$tv_meal_replacement_day_set_row->mlds02|default:''}}' required readonly>
+                  </div>
+                  <span id='helpBlock_mlds01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>非熟代午餐發放時間</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm">起</span>
+                    </div>
+                    <input type='text' id='mlds03_begin' name='mlds03_begin' class='form-control form-control-sm other_form_date' placeholder='請輸入非熟代午餐發放時間-起' value='{{$tv_meal_replacement_day_set_row->mlds03_begin|default:''}}' required readonly>
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm">迄</span>
+                    </div>
+                    <input type='text' id='mlds03_end' name='mlds03_end' class='form-control form-control-sm other_form_date' placeholder='請輸入非熟代午餐發放時間-迄' value='{{$tv_meal_replacement_day_set_row->mlds03_end|default:''}}' required readonly>
+                  </div>
+                  <span id='helpBlock_mlds01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>非熟代晚餐發放時間</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm">起</span>
+                    </div>
+                    <input type='text' id='mlds04_begin' name='mlds04_begin' class='form-control form-control-sm other_form_date' placeholder='請輸入非熟代晚餐發放時間-起' value='{{$tv_meal_replacement_day_set_row->mlds04_begin|default:''}}' required readonly>
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm">迄</span>
+                    </div>
+                    <input type='text' id='mlds04_end' name='mlds04_end' class='form-control form-control-sm other_form_date' placeholder='請輸入非熟代晚餐發放時間-迄' value='{{$tv_meal_replacement_day_set_row->mlds04_end|default:''}}' required readonly>
+                  </div>
+                  <span id='helpBlock_mlds01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>熟代發放時間</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm">起</span>
+                    </div>
+                    <input type='text' id='mlds05_begin' name='mlds05_begin' class='form-control form-control-sm other_form_date' placeholder='請輸入熟代發放時間-起' value='{{$tv_meal_replacement_day_set_row->mlds05_begin|default:''}}' required readonly>
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroup-sizing-sm">迄</span>
+                    </div>
+                    <input type='text' id='mlds05_end' name='mlds05_end' class='form-control form-control-sm other_form_date' placeholder='請輸入熟代發放時間-迄' value='{{$tv_meal_replacement_day_set_row->mlds05_end|default:''}}' required readonly>
+                  </div>
+                  <span id='helpBlock_mlds01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class="d-flex">
+              <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+              <td width="{{$swidth_right}}" class="table-light">
+                <span class='form-group'>
+                  <span class="form-control form-control-sm">
+                    <input type="radio" name="is_available" value="1" {{if $tv_meal_replacement_day_set_row->is_available|default:0==1}} checked {{/if}}> 是
+                    <input type="radio" name="is_available" value="0" {{if $tv_meal_replacement_day_set_row->is_available|default:0==0}} checked {{/if}}> 否
+                  </span>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>

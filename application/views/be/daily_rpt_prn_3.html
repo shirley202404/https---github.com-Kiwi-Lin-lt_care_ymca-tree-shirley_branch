@@ -1,0 +1,254 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('.download').click(function(){
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('#show_download_info_btn').hide();
+      var strMsg = '';
+      $.ajax({
+        type:'post',
+        url: "{{$tv_download_link}}",
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤['+url+']:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>訂單資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">作業專區</a></li>
+        <li class="breadcrumb-item"><a href="#">訂單資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      {{if $tv_rpt_type == 2 }}
+        <button type="button" class="btn btn-light btn-sm download" data-type="meal" data-toggle="modal" data-target=".pop-download">餐條EXCEL下載 <i class="fas fa-download"></i></button>
+      {{/if}}
+      {{if $tv_rpt_type == 3 }}
+        <button type="button" class="btn btn-light btn-sm download" data-type="stats" data-toggle="modal" data-target=".pop-download">餐點統計表下載 <i class="fas fa-download"></i></button>
+      {{/if}}
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_exit_link}}';">{{$tv_exit_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div id="prn_data" class="table-responsive">
+        <meta charset="utf-8">
+        <nav>
+          <div class="nav nav-tabs no_print" id="nav-tab" role="tablist">
+            {{foreach from=$tv_prn_stats_data key=k item=v name=prn_data}}
+              <a class="nav-item nav-link {{if $k == "0"}} active {{/if}}" id="nav-{{$k}}-tab" data-toggle="tab" href="#nav-{{$k}}" role="tab" aria-controls="nav-{{$k}}" aria-selected="true">餐點統計表({{$v.info.reh05_str|default:''}})</a>
+            {{/foreach}}
+          </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+          {{foreach from=$tv_prn_stats_data key=k item=v}}
+            {{assign var="s_col_2" value="0"}}
+            {{assign var="s_col_3_normal" value="0"}}
+            {{assign var="s_col_3_veg" value="0"}}
+            {{assign var="s_col_4_normal" value="0"}}
+            {{assign var="s_col_4_veg" value="0"}}
+            {{assign var="s_col_5" value="0"}}
+            {{assign var="s_col_6_L_total" value="0"}}
+            {{assign var="s_col_6_L_R" value="0"}}
+            {{assign var="s_col_6_L_P" value="0"}}
+            {{assign var="s_col_6_L_V" value="0"}}
+            {{assign var="s_col_6_M_total" value="0"}}
+            {{assign var="s_col_6_M_R" value="0"}}
+            {{assign var="s_col_6_M_P" value="0"}}
+            {{assign var="s_col_6_M_V" value="0"}}
+            {{assign var="s_col_6_S_total" value="0"}}
+            {{assign var="s_col_6_S_R" value="0"}}
+            {{assign var="s_col_6_S_P" value="0"}}
+            {{assign var="s_col_6_S_V" value="0"}}
+            {{assign var="s_col_7_total" value="0"}}
+            {{assign var="s_col_7_R" value="0"}}
+            {{assign var="s_col_7_P" value="0"}}
+            {{assign var="s_col_8_total" value="0"}}
+            {{assign var="s_col_8_R" value="0"}}  
+            {{assign var="s_col_8_P" value="0"}}  
+            <div class="tab-pane fade show {{if $k == "0"}} active {{/if}}" id="nav-{{$k}}" role="tabpanel" aria-labelledby="nav-{{$k}}-tab">
+              <table class="table-sm mt-2 prn_font no_print" border="0" width="100%">
+                <tr>
+                  <td width="60%" class="text-left">
+                    <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td width="60%" class="text-left">                                                              
+                    <h1 class="mr-1 text-left font-weight-bold" style="font-size: 26pt;">{{$tv_menu_title}}({{$v.info.reh05_str|default:''}})</h1>  
+                  </td>                                                                                           
+                </tr>
+              </table>
+              <table class="table table-bordered table-hover table-sm mt-0" width="100%">
+                <thead>
+                  <tr class="thead-light">
+                    <th class="text-nowrap align-middle text-center" rowspan="3" style="width: 6%"><span>路線\餐食種類</span></th><!--12-->
+                    <th class="text-nowrap align-middle text-center" rowspan="3" style="width: 6%"><span>一般餐</span></th><!--12-->
+                    <th class="text-nowrap align-middle text-center" colspan="2" style="width: 6%"><span>飯</span></th><!--12-->
+                    <th class="text-nowrap align-middle text-center" colspan="2" style="width: 6%"><span>白粥</span></th><!--12-->
+                    <th class="text-nowrap align-middle text-center" rowspan="3" style="width: 6%"><span>素食</span></th><!--12-->
+                    <th class="text-nowrap align-middle text-center" colspan="12" style="width: 6%"><span>飯糰總數</span></th><!--12-->
+                    <th class="text-nowrap align-middle text-center" colspan="6" style="width: 6%"><span>菜盒</span></th><!--12-->
+                  </tr>
+                  <tr class="thead-light">
+                    <th class="text-nowrap align-middle text-center" rowspan="2" style="width: 6%"><span>一般</span></th>
+                    <th class="text-nowrap align-middle text-center" rowspan="2" style="width: 6%"><span>素食</span></th>
+                    <th class="text-nowrap align-middle text-center" rowspan="2" style="width: 6%"><span>一般</span></th>
+                    <th class="text-nowrap align-middle text-center" rowspan="2" style="width: 6%"><span>素食</span></th>
+                    <th class="text-nowrap align-middle text-center" colspan="4" style="width: 6%"><span>大</span></th>
+                    <th class="text-nowrap align-middle text-center" colspan="4" style="width: 6%"><span>中</span></th>
+                    <th class="text-nowrap align-middle text-center" colspan="4" style="width: 6%"><span>小</span></th>
+                    <th class="text-nowrap align-middle text-center" colspan="3" style="width: 6%"><span>正常</span></th>
+                    <th class="text-nowrap align-middle text-center" colspan="3" style="width: 6%"><span>碎食</span></th>
+                  </tr>
+                  <tr class="thead-light">
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>總數</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>飯</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>粥</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>素食</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>總數</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>飯</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>粥</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>素食</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>總數</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>飯</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>粥</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>素食</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>總數</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>飯</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>粥</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>總數</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>飯</span></th>
+                    <th class="text-nowrap align-middle text-center" style="width: 3%"><span>粥</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{foreach from=$v.statics key=k2 item=v2}}
+                    <tr>
+                      <td>{{$v2.col_1|default:''}}</td>
+                      <td class="text-center">{{$v2.col_2|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_3_normal|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_3_veg|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_4_normal|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_4_veg|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_5|default:''|number_format}}</td>
+                      <td class="text-center table-warning">{{$v2.col_6_L_total|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_L_R|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_L_P|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_L_V|default:''|number_format}}</td>
+                      <td class="text-center table-warning">{{$v2.col_6_M_total|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_M_R|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_M_P|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_M_V|default:''|number_format}}</td>
+                      <td class="text-center table-warning">{{$v2.col_6_S_total|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_S_R|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_S_P|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_6_S_V|default:''|number_format}}</td>
+                      <td class="text-center table-warning">{{$v2.col_7_total|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_7_R|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_7_P|default:''|number_format}}</td>
+                      <td class="text-center table-warning">{{$v2.col_8_total|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_8_R|default:''|number_format}}</td>
+                      <td class="text-center">{{$v2.col_8_P|default:''|number_format}}</td>
+                    </tr>
+                    {{$s_col_2 = $s_col_2 + (int) $v2.col_2|default:0}}
+                    {{$s_col_3_normal = $s_col_3_normal + (int) $v2.col_3_normal|default:0}}
+                    {{$s_col_3_veg = $s_col_3_veg + (int) $v2.col_3_veg|default:0}}
+                    {{$s_col_4_normal = $s_col_4_normal + (int) $v2.col_4_normal|default:0}}
+                    {{$s_col_4_veg = $s_col_4_veg + (int) $v2.col_4_veg|default:0}}
+                    {{$s_col_5 = $s_col_5 + (int) $v2.col_5|default:0}}
+                    {{$s_col_6_L_total = $s_col_6_L_total + (int) $v2.col_6_L_total|default:0}}
+                    {{$s_col_6_L_R = $s_col_6_L_R + (int) $v2.col_6_L_R|default:0}}
+                    {{$s_col_6_L_P = $s_col_6_L_P + (int) $v2.col_6_L_P|default:0}}
+                    {{$s_col_6_L_V = $s_col_6_L_V + (int) $v2.col_6_L_V|default:0}}
+                    {{$s_col_6_M_total = $s_col_6_M_total + (int) $v2.col_6_M_total|default:0}}
+                    {{$s_col_6_M_R = $s_col_6_M_R + (int) $v2.col_6_M_R|default:0}}
+                    {{$s_col_6_M_P = $s_col_6_M_P + (int) $v2.col_6_M_P|default:0}}
+                    {{$s_col_6_M_V = $s_col_6_M_V + (int) $v2.col_6_M_V|default:0}}
+                    {{$s_col_6_S_total = $s_col_6_S_total + (int) $v2.col_6_S_total|default:0}}
+                    {{$s_col_6_S_R = $s_col_6_S_R + (int) $v2.col_6_R_R|default:0}}
+                    {{$s_col_6_S_P = $s_col_6_S_P + (int) $v2.col_6_P_P|default:0}}
+                    {{$s_col_6_S_V = $s_col_6_S_V + (int) $v2.col_6_S_V|default:0}}
+                    {{$s_col_7_total = $s_col_7_total + (int) $v2.col_7_total|default:0}}
+                    {{$s_col_7_R = $s_col_7_R + (int) $v2.col_7_R|default:0}}
+                    {{$s_col_7_P = $s_col_7_P + (int) $v2.col_7_P|default:0}}
+                    {{$s_col_8_total = $s_col_8_total + (int) $v2.col_8_total|default:0}}
+                    {{$s_col_8_R = $s_col_8_R + (int) $v2.col_8_R|default:0}}
+                    {{$s_col_8_P = $s_col_8_P + (int) $v2.col_8_P|default:0}}
+                  {{/foreach}}
+                  <!-- 總數 -->
+                  <tr class="table-danger">
+                    <td>總數</td>
+                    <td class="text-center">{{$s_col_2|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_3_normal|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_3_veg|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_4_normal|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_4_veg|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_5|default:''|number_format}}</td>
+                    <td class="text-center table-warning">{{$s_col_6_L_total|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_L_R|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_L_P|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_L_V|default:''|number_format}}</td>
+                    <td class="text-center table-warning">{{$s_col_6_M_total|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_M_R|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_M_P|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_M_V|default:''|number_format}}</td>
+                    <td class="text-center table-warning">{{$s_col_6_S_total|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_S_R|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_S_P|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_6_S_V|default:''|number_format}}</td>
+                    <td class="text-center table-warning">{{$s_col_7_total|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_7_R|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_7_P|default:''|number_format}}</td>
+                    <td class="text-center table-warning">{{$s_col_8_total|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_8_R|default:''|number_format}}</td>
+                    <td class="text-center">{{$s_col_8_P|default:''|number_format}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          {{/foreach}}
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+  <!-- 下載資訊視窗彈出 -->
+  <div class="modal fade pop-download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+	   <div class="modal-body">
+		<div class="text-center paT10">
+		  <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> 資料下載</i><br></h1>
+		  <span id="show_download_info"></span>
+          </div>
+	   </div>
+	   <div class="modal-footer text-center">
+	     <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 下載資訊視窗彈出 end-->
+</div>

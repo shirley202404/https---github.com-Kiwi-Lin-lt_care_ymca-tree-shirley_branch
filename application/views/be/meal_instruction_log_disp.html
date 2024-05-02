@@ -1,0 +1,192 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>餐食異動審核</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">開案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">餐食異動審核</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_meal_instruction_auth_row->b_acc_name|default:''}}({{$tv_meal_instruction_auth_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_meal_instruction_auth_row->e_acc_name|default:''}}({{$tv_meal_instruction_auth_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主姓名</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_log_h_row->ct01|default:''}}{{$tv_meal_instruction_log_h_row->ct02|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">服務名稱</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_log_h_row->sec01_str|default:''}}-{{$tv_meal_instruction_log_h_row->sec04_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">生效日期</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_log_h_row->mil01|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">異動類型</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_log_h_row->mil02_str|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">備註</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_log_h_row->mil99|nl2br|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">社工核准人員</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_auth_row->sw_acc_name|default:''}}</span></td>
+          </tr>
+          {{*<tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">核銷核准人員</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_auth_row->wo_acc_name|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">餐條製作核准人員</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_auth_row->me_acc_name|default:''}}</span></td>
+          </tr>*}}
+        </tbody>
+      </table>
+      {{if in_array(1 , $tv_mil02_arr) }}
+        <table class="table table-bordered table-hover table-sm">
+          <h2 class="bg-secondary text-white text-left">餐點異動</h2>
+          <tbody>
+            <tr class="d-flex">
+              <td width="{{$swidth_left}}" class="table-secondary text-right">餐種(異動前)</td>
+              <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_log_m_row->ml01_before|default:''}}</span></td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>餐種調整(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 飯糰：{{$tv_meal_instruction_log_m_row->mil_m01_1_before_str}}</span><br/>
+                <span>二. 菜盒：{{$tv_meal_instruction_log_m_row->mil_m01_2_before_str}}</span><br/>
+                <span>三. 菜盒內容：{{$tv_meal_instruction_log_m_row->mil_m01_3_before_str}}</span><br/>
+                <span>四. 素食：{{$tv_meal_instruction_log_m_row->mil_m01_4_before_str}}</span><br/>
+                <span>五. 初一、十五素食：{{$tv_meal_instruction_log_m_row->mil_m01_5_before_str}}</span>
+              </td>
+            </tr>
+            <tr class="d-flex">
+              <td width="{{$swidth_left}}" class="table-secondary text-right">餐種(異動後)</td>
+              <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_meal_instruction_log_m_row->ml01|default:''}}</span></td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>餐點調整(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 飯糰：{{$tv_meal_instruction_log_m_row->mil_m01_1_str}}</span><br/>
+                <span>二. 菜盒：{{$tv_meal_instruction_log_m_row->mil_m01_2_str}}</span><br/>
+                <span>三. 菜盒內容：{{$tv_meal_instruction_log_m_row->mil_m01_3_str}}</span><br/>
+                <span>四. 素食：{{$tv_meal_instruction_log_m_row->mil_m01_4_str}}</span><br/>
+                <span>五. 初一、十五素食：{{$tv_meal_instruction_log_m_row->mil_m01_5_str}}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      {{/if}}
+      {{if in_array(2 , $tv_mil02_arr) }}     
+        <table class="table table-bordered table-hover table-sm">
+          <h2 class="bg-secondary text-white text-left">代餐異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>代餐(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 代餐狀況：{{$tv_meal_instruction_log_mp_row->mil_mp01_before_str|default:''}}</span><br/>
+                <span>二. 代餐種類：{{$tv_meal_instruction_log_mp_row->mil_mp01_type_before_str|default:''}}</span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>代餐(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 代餐狀況：{{$tv_meal_instruction_log_mp_row->mil_mp01_str|default:''}}</span><br/>
+                <span>二. 代餐種類：{{$tv_meal_instruction_log_mp_row->mil_mp01_type_str|default:''}}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      {{/if}}
+      {{if in_array(3 , $tv_mil02_arr) }}
+        <table class="table table-bordered table-hover table-sm">
+          <h2 class="bg-secondary text-white text-left">停復餐異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>出餐狀況(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 出餐狀況：{{$tv_meal_instruction_log_s_row->mil_s01_before_str|default:''}}</span><br/>
+                <span>二. 原因說明：{{$tv_meal_instruction_log_s_row->mil_s01_reason_before_str|default:''}}</span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>出餐狀況(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 出餐狀況：{{$tv_meal_instruction_log_s_row->mil_s01_str|default:''}}</span><br/>
+                <span>二. 原因說明：{{$tv_meal_instruction_log_s_row->mil_s01_reason_str|default:''}}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      {{/if}}
+      {{if in_array(4 , $tv_mil02_arr) }}
+        <table class="table table-bordered table-hover table-sm">
+          <h2 class="bg-secondary text-white text-left">固定暫停異動</h2>
+          <tbody>
+            <tr class="d-flex">
+              <td width="{{$swidth_left}}" class="table-secondary text-right">固定暫停(異動前)</td>
+              <td width="{{$swidth_right}}" class="table-light">{{$tv_meal_instruction_log_p_row->mil_p01_before_str|default:''}}</td>
+            </tr>
+            <tr class="d-flex">
+              <td width="{{$swidth_left}}" class="table-secondary text-right">固定暫停(異動後)</td>
+              <td width="{{$swidth_right}}" class="table-light">{{$tv_meal_instruction_log_p_row->mil_p01_str|default:''}}</td>
+            </tr>
+          </tbody>
+        </table>
+      {{/if}}
+      {{if in_array(5 , $tv_mil02_arr) }}
+        <table class="table table-bordered table-hover table-sm">
+          <h2 class="bg-secondary text-white text-left">自費戶異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>自費戶(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 是否為自費戶：{{$tv_meal_instruction_log_i_row->mil_i01_before_str|default:''}}</span><br/>
+                <span>二. 原因說明：{{$tv_meal_instruction_log_i_row->mil_i01_reason_before|default:''}}</span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>自費戶(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 是否為自費戶：{{$tv_meal_instruction_log_i_row->mil_i01_str|default:''}}</span><br/>
+                <span>二. 原因說明：{{$tv_meal_instruction_log_i_row->mil_i01_reason|default:''}}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      {{/if}}
+      {{if in_array(6 , $tv_mil02_arr) }}
+        <table class="table table-bordered table-hover table-sm">
+          <h2 class="bg-secondary text-white text-left">補班日出餐異動</h2>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>出餐狀況</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$tv_meal_instruction_log_d_row->mil_d01_str|default:''}}</td>
+            </tr>
+          </tbody>
+        </table>
+      {{/if}}
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

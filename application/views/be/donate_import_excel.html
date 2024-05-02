@@ -1,0 +1,157 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script language="javascript">
+  $(function(){
+    $("#save").click(function(){
+      var err_msg = '';
+      var excel_file = $('#excel_file').val();
+      if(excel_file == '') {
+        alert('請選擇上傳檔案!!!');
+        return;
+      }
+      var xls_info  = '<div class="progress">';
+          xls_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%;">'
+          xls_info += '    <span>資料處理中，請稍候...</span>';
+          xls_info += '   </div>';
+          xls_info += ' </div>';
+      $('#show_xls_info').html(xls_info);
+      $('#show_xls_info_btn').hide(); // 上線用,測試就mark起來
+      $('.pop-xls').modal("show");
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          //console.log(rs);
+          $('#show_xls_info').html(rs);
+          $('#show_xls_info_btn').show();
+          return;
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    $('#show_xls_info_btn').click(function(){
+      //$('.pop-xls').modal("hide"); // 上線用,測試就mark起來
+      location.replace("{{$tv_return_link}}"); // 回到瀏覽 // 上線用,測試就取消mark
+    });
+});
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>捐款徵信資料匯入</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">捐款管理</a></li>
+        <li class="breadcrumb-item"><a href="#">捐款徵信資料匯入</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      <div class="">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          <tr>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>上傳捐款徵信資料</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <span class='form-group'>
+                <div class='input-group input-group-sm'>
+                  <div class='input-group-append'>
+                    <a href='javascript:;' class='file'>上傳
+                      <input text='hidden' id='excel_file' name='excel_file' value=''>
+                      <input type='file' name='files' accept=".xls,.xlsx" data-url='{{$tv_upload_link}}' data-att_name='excel_file'>
+                    </a>
+                    <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='excel_file' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                  </div>
+                  <span id='excel_file_str' class='form-control form-control-sm' readonly></span>
+                </div>
+                <br>
+                <span id='helpBlock_excel_file' class='help-block'>僅接受XLS、XLSX檔案</span>
+              </span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- 匯入資訊視窗彈出 -->
+  <div class="modal fade pop-xls" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content  modal-C1">
+        <div class="modal-body">
+          <div class="text-center paTB20">
+            <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true">上傳資料結果</i><br></h1>
+            <span id="show_xls_info"></span>
+          </div>
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" id="show_xls_info_btn" class="btn btn-C1">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 匯入資訊視窗彈出 end-->
+</div>

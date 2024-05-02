@@ -1,0 +1,170 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<!-- file upload -->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('news_content', { height: '300px', width: '100%' ,language: 'zh-cn'});
+    CKEDITOR.replace('news_content', { height: '300px', width: '100%'});
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+                $.each(data.result.files, function (index, file) {
+                  if(file.error) {
+                    alert(file.error);
+                    return;
+                  }
+                  //file.name = decodeURIComponent(file.name); // 對應
+                  //console.log(file.name);
+                  var att_name = data.att_name;
+                  $('#'+att_name).val(file.name);
+                  $('#'+att_name+'_str').text(file.name);
+                });
+        }
+      });
+    });
+    $("#news_file_del").click(function(){
+      $('#news_file').val('');
+      $('#news_file_str').text('');
+    });
+
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>最新消息</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">最新消息</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add'}}
+        <input type="hidden" id="s_num" name="s_num" value="{{$tv_news_row->s_num|default:'0'}}">
+      {{/if}}
+      <input type="hidden" id="news_type" name="news_type" value="{{$tv_news_row->news_type|default:'1'}}">
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-6">
+          <div class="form-group">
+            <label>發佈日期</label>
+            <div class='input-group date form_date'>
+              <span class='input-group-text input-group-addon' id='basic-addon1'><i class="far fa-calendar-alt"></i></span>
+              <input type="text" id="news_publication" name="news_publication" class="form-control form-control-sm" placeholder="yyyy-mm-dd" aria-describedby="basic-addon1" value="{{$tv_news_row->news_publication|default:""}}" required>
+            </div>
+            <div class="help-block with-errors"></div>
+          </div>
+        </div>
+        <div class="clear"></div>
+        <div class="col-xs-12 col-sm-12">
+          <div class="form-group">
+            <label>檔案上傳</label><br>
+            <a href="javascript:;" class="file maT10">選擇檔案
+              <input text="hidden" id="news_file" name="news_file" value="{{$tv_news_row->news_file|default:''}}">
+              <input type="file" name="files" data-url="{{$tv_upload_link}}" data-att_name="news_file">
+              <i class="fa fa-upload" aria-hidden="true"></i>
+            </a>
+            <div class="lesson-time">
+              <div class="row">
+                <div class="col-sm-4 col-xs-4 col-lg-8">
+                  <div class="list clearfix">
+                    <div class="float-left"><span id="news_file_str">{{$tv_news_row->news_file|default:''}}</span></div>
+                    <div class="float-right">
+                      <button type="button" class="btn btn-C2 btn-sm" data-toggle="modal" data-target=".pop-container">刪除</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="clear"></div>
+        <div class="col-xs-12 col-sm-12">
+          <div class="form-group">
+            <label>標題</label>
+            <input type="text" id="news_title" name="news_title" class="form-control form-control-sm" placeholder="請輸入標題" aria-describedby="basic-addon1" value="{{$tv_news_row->news_title|default:""}}" required>
+            <div class="help-block with-errors"></div>
+          </div>
+        </div>
+        <div class="clear"></div>
+        <div class="col-xs-12 col-sm-12">
+          <div class="form-group">
+            <label>內容</label>
+            <textarea id="news_content" name="news_content">{{$tv_news_row->news_content|default:""}}</textarea>
+          </div>
+        </div>
+        <div class="clear"></div>
+        <div class="col-xs-12 col-sm-12 col-md-6">
+          <div class="form-group">
+            <label>上架</label>
+            <span class="form-control form-control-sm">
+              <input type="radio" name="is_available" value="1" {{if $tv_news_row->is_available|default:0==1}} checked {{/if}}> 是
+              <input type="radio" name="is_available" value="0" {{if $tv_news_row->is_available|default:0==0}} checked {{/if}}> 否
+            </span>
+          </div>
+        </div>
+      </div>
+      <span>更新日期：{{$tv_news_row->e_date|default:""}}</span>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="news_file_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>

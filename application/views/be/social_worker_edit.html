@@ -1,0 +1,561 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script src="{{$tv_pub_url}}/js/jquery.twzipcode.min.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    // $('.twzipcode').twzipcode();
+    $('.twzipcode').twzipcode();
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+    $('#sw07').val('{{$tv_social_worker_row->sw07|default:''}}');
+    $('#group_s_num').val('{{$tv_social_worker_row->group_s_num|default:''}}');
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    $("#sw03").blur(function() {
+      var sw03_val = $("#sw03").val();
+      if(sw03_val != '') {
+        $.ajax({
+          type:'post',
+          url: '{{$tv_chk_sw03_link}}',
+          data: {sw03:sw03_val},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_chk_sw03_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            if(rs != "true") {
+              $("#sw03").val('');
+              alert("此身分證已重複請重新輸入");
+            }
+          }
+        })
+      }
+    });
+    
+    $("#sw08_start").blur(function() {
+      var date = new Date();
+      var year = date.getFullYear();
+      var sw08_start = $(this).val();
+      if(sw08_start != '') {
+        var sw08_start_arr = sw08_start.split("-");
+        var sw09 = year - sw08_start_arr[0];
+        $("#sw09").val(sw09);
+      }
+    });
+    
+    $("#sw08_end").blur(function() {
+      var $radios = $('input[type=radio][name="is_available"]');
+      if($(this).val() != '') {
+        $radios.filter("[value='0']").prop('checked', true);
+        $radios.filter("[value='1']").prop('checked', false);
+      }
+      else {
+        $radios.filter("[value='0']").prop('checked', false);
+        $radios.filter("[value='1']").prop('checked', true);
+      }
+    });
+    
+    // sw_ra刪除 Begin //
+    $(document).on("click", ".sw_ra_del", function () {
+      var sw_ra_s_num = $(this).data('sw_ra_s_num');
+      $(".sw_ra_del #f_del_s_num").val(sw_ra_s_num);
+    });
+        
+    $(document).on('click',"#sw_ra_del",function() {
+      var sw_ra_s_num = $(".sw_ra_del #f_del_s_num").val();
+      $('#sw_ra_tr_'+sw_ra_s_num).remove();
+      $(this).sw_ra_item_reset();
+      return;
+    });
+    // sw_ra刪除 End //
+    
+    $('.add_sw_ra_row').click(function(){
+      var add_num = $('#add_num').val(); // 第x筆
+      var add_qty = $('#add_qty').val(); // 新增筆數
+      $(this).sw_ra_add_row(add_num , add_qty);
+      return;
+    });
+    
+    // 重新顯示欄位的序1,2,3... Begin //
+    $.fn.sw_ra_item_reset = function() {
+      var item_num = 1;
+      $('.sw_ra_item').each(function() {
+        $(this).text(item_num);
+        item_num++;
+      })
+    }
+    // 重新顯示欄位的序1,2,3... End //
+
+    // 新增x筆明細 Begin //
+    $.fn.sw_ra_add_row = function(add_num,add_qty) {
+      var wfn_cnt = eval($('#std_sw_ra_cnt').val()); // 目前的筆數，刪除資料這裡不會減少數量，避免id重複
+      if(wfn_cnt == 0) {
+        var first_flag = 'Y';
+      }
+      else {
+        var first_flag = 'N';
+      }
+      for (i = 1; i <= add_qty; i++) {
+        var snum = wfn_cnt+i; // 目前的筆數，刪除資料這裡不會減少數量，避免id重複        
+        var new_add_sw_ra_row = $('#sw_ra_tr_STD_SNUM')[0].outerHTML;
+        var add_sw_ra_row = replaceAll(new_add_sw_ra_row,'STD_SNUM',snum);
+        var add_sw_ra_row = replaceAll(add_sw_ra_row,'STD_ITEM','sw_ra_item');
+        $('#std_sw_ra_cnt').val(snum);
+        std_sw_ra_cnt = eval($('#std_sw_ra_cnt').val());
+        if('Y' == first_flag ) {
+          $('#sw_ra').append(add_sw_ra_row);
+        }
+        else {
+          $($('#sw_ra > tr')[add_num-1]).after(add_sw_ra_row);
+        }
+        $('#twzipcode_copy_'+snum).twzipcode();
+      }
+      $(this).sw_ra_item_reset();
+    }
+    // 新增x筆明細 End //
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>社工資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">員工管理</a></li>
+        <li class="breadcrumb-item"><a href="#">社工資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_social_worker_row->b_acc_name|default:''}}({{$tv_social_worker_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_social_worker_row->e_acc_name|default:''}}({{$tv_social_worker_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator" autocomplete="off">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="s_num" value="{{$tv_social_worker_row->s_num|default:'0'}}">
+      {{/if}}
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-basic-tab" data-toggle="tab" href="#nav-basic" role="tab" aria-controls="nav-basic" aria-selected="true">基本資料</a>
+          <a class="nav-item nav-link" id="nav-region-tab" data-toggle="tab" href="#nav-region" role="tab" aria-controls="nav-region" aria-selected="false">負責區域</a>
+          {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+            <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+              <div class="float-right">建檔:<span class="mainC1">{{$tv_social_worker_row->b_acc_name|default:''}}({{$tv_social_worker_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_social_worker_row->e_acc_name|default:''}}({{$tv_social_worker_row->e_date|default:""}})</span></div>
+            </span>
+          {{/if}}
+        </div>
+      </nav>
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-basic" role="tabpanel" aria-labelledby="nav-basic-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="20%"}}
+              {{assign var="swidth_right" value="80%"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>姓</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='sw01' name='sw01' class='form-control form-control-sm' placeholder='請輸入姓' value='{{$tv_social_worker_row->sw01|default:''}}' required>
+                      <span id='helpBlock_sw01' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>名</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='sw02' name='sw02' class='form-control form-control-sm' placeholder='請輸入名' value='{{$tv_social_worker_row->sw02|default:''}}' required>
+                      <span id='helpBlock_sw02' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>所屬群組</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <select id='group_s_num' name='group_s_num' class='form-control form-control-sm' required>
+                        <option value='' selected>-請選擇-</option>
+                        {{foreach from=$tv_sys_account_group_row key=k item=v}}
+                          <option value='{{$v.s_num}}'>{{$v.acg_name}}</option>
+                        {{/foreach}}
+                      </select>
+                      <span id='helpBlock_group_s_num' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>身份證字號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='sw03' name='sw03' class='form-control form-control-sm' placeholder='請輸入身份證字號' value='{{$tv_social_worker_row->sw03|default:''}}' required>
+                      <span id='helpBlock_sw03' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>性別</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <span class='form-control form-control-sm'>
+                        <input type='radio' name='sw04' value='M' {{if $tv_social_worker_row->sw04|default:M==M}} checked {{/if}}> 男
+                        <input type='radio' name='sw04' value='F' {{if $tv_social_worker_row->sw04|default:M==F}} checked {{/if}}> 女
+                      </span>
+                      <span id='helpBlock_sw04' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>員工編號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='sw05' name='sw05' class='form-control form-control-sm' placeholder='請輸入員工編號' value='{{$tv_social_worker_row->sw05|default:''}}' autocomplete="off" required>
+                      <span id='helpBlock_sw05' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>登入密碼</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='password' id='sw_pwd' name='sw_pwd' class='form-control form-control-sm' placeholder="{{$tv_pwd_placeholder}}" value="" autocomplete="new-password">
+                      <span id='helpBlock_sw_pwd' class='help-block'>
+                        {{if $tv_msel == 'add' or $tv_msel == 'cpy'}}
+                        {{else}}
+                          空白=不修改密碼。
+                        {{/if}}  
+                      </span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>Email Address</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='email' id='sw06' name='sw06' class='form-control form-control-sm' placeholder='請輸入Email Address' value='{{$tv_social_worker_row->sw06|default:''}}' autocomplete="off">
+                      <span id='helpBlock_sw06' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>到職日</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='sw08_start' name='sw08_start' class='form-control form-control-sm' placeholder='請輸入到職日' value='{{$tv_social_worker_row->sw08_start|default:''}}' >
+                      </div>
+                      <span id='helpBlock_sw08_start' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>離職日</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='sw08_end' name='sw08_end' class='form-control form-control-sm' placeholder='請輸入離職日' value='{{$tv_social_worker_row->sw08_end|default:''}}' >
+                      </div>
+                      <span id='helpBlock_sw08sw08_end' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>年資</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='number' min='0' step='any' id='sw09' name='sw09' class='form-control form-control-sm' placeholder='請輸入年資' value='{{$tv_social_worker_row->sw09|default:''}}' >
+                      <span id='helpBlock_sw09' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>手機門號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='sw10' name='sw10' class='form-control form-control-sm' placeholder='請輸入手機門號' value='{{$tv_social_worker_row->sw10|default:''}}' >
+                      <span id='helpBlock_sw10' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>是否具送餐員身分</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <span class='form-control form-control-sm'>
+                        <input type='radio' name='sw30' value='Y' {{if $tv_social_worker_row->sw30|default:'N'=='Y'}} checked {{/if}}> 是
+                        <input type='radio' name='sw30' value='N' {{if $tv_social_worker_row->sw30|default:'N'=='N'}} checked {{/if}}> 否
+                      </span>
+                      <span id='helpBlock_sw30' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>備註</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='sw99' class='form-control form-control-sm' name='sw99' rows='5' >{{$tv_social_worker_row->sw99|default:''}}</textarea>
+                      <span id='helpBlock_sw99' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+                  <td width="{{$swidth_right}}" class="table-light">
+                    <span class='form-group'>
+                      <span class="form-control form-control-sm">
+                        <input type="radio" name="is_available" value="1" {{if $tv_social_worker_row->is_available|default:0==1}} checked {{/if}}> 是
+                        <input type="radio" name="is_available" value="0" {{if $tv_social_worker_row->is_available|default:0==0}} checked {{/if}}> 否
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="nav-week" role="tabpanel" aria-labelledby="nav-week-tab">
+          <table class="table table-bordered table-hover table-sm">
+            <thead>
+              <tr class="thead-light">
+                <th width="10%" class="text-nowrap">序</th>
+                <th width="80%" class="text-nowrap">負責區域</th>
+                <th width="10%" class="text-nowrap"></th>
+              </tr>
+            </thead>
+            <tbody id="sw_ra">
+              {{assign var="snum" value="1"}}
+              <input type="hidden" id='std_sw_ra_cnt' value="{{$tv_sw_ra_row|count|default:'1'}}">
+              {{foreach from=$tv_sw_ra_row key=k item=v}}
+                <tr class="sw_ra_tr" id="sw_ra_tr_{{$v.s_num}}" data-item="{{$snum}}">
+                  <input type='hidden' id='s_num_{{$v.s_num}}' name='sw_ra[s_num][]' value='{{$v.s_num}}'>
+                  <td class='text-left'><span class="sw_ra_item">{{$snum}}</span></td>
+                  <td class='table-light'>
+                    <div class='form-group'>
+                      <div class="twzipcode">
+                        <div class="input-group input-group-sm">
+                          <div class="input-group-append">
+                            <span class="input-group-text">郵遞區號</span>
+                          </div>
+                          <div data-role="zipcode" data-style="form-control form-control-sm" data-name="sw_ra[sw_ra01][]" data-id="sw_ra01_{{$v.s_num}}"  data-value="{{$v.sw_ra01|default:''}}"></div>
+                          <div class="input-group-append">
+                            <span class="input-group-text">縣市</span>
+                          </div>
+                          <div data-role="county" data-class="form-control form-control-sm" data-style="width:100px;" data-name="sw_ra[sw_ra02][]" data-id="sw_ra02_{{$v.s_num}}" data-value="{{$v.sw_ra02|default:''}}"></div>
+                          <div class="input-group-append">
+                            <span class="input-group-text">鄉鎮市區</span>
+                          </div>
+                          <div data-role="district" data-class="form-control form-control-sm" data-style="width:100px;" data-name="sw_ra[sw_ra03][]" data-id="sw_ra03_{{$v.s_num}}" data-value="{{$v.sw_ra03|default:''}}"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-right">
+                    <button type='button' class='btn btn-C2 btn-xs sw_ra_del' data-sw_ra_s_num='{{$v.s_num}}' data-toggle='modal' data-target='.pop-sw_ra_del'>{{$tv_del_btn}}</button>
+                  </td>
+                </tr>
+                {{assign var="snum" value="{{$snum+1}}"}}
+              {{/foreach}}
+              <script>
+                $(function(){
+                  $(this).sw_ra_add_row(1); // 預設再多1筆空白
+                });
+              </script>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="8" class="text-left">
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">序第</span>
+                    </div>
+                    <input type="number" id="add_num" min="1" step="1" max="{{$tv_sw_ra_row|count|default:0}}" style="text-align:right;width: 3em;" value="{{$tv_sw_ra_row|count|default:0}}">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">筆後新增</span>
+                    </div>
+                    <input type="number" id="add_qty" min="1" step="1" size="2" style="text-align:right;width: 3em;" value="1">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">筆</span>
+                    </div>
+                    <button class="btn btn-warning btn-sm add_sw_ra_row" type="button">確定 <i class="fa fa-plus" aria-hidden="true"></i></button>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- route_b 明細刪除確認彈出 -->
+  <div class="modal fade pop-sw_ra_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="sw_ra_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="sw_ra_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- route_b 明細刪除確認彈出 end-->
+  {{*預先增加一筆空白資料，主要用來複製用。 Begin*}}
+    <table style="display:none;">
+      <tr id="sw_ra_tr_STD_SNUM" class="sw_ra_tr" data-item="STD_SNUM">
+        <input type="hidden" id="s_num_STD_SNUM" name="sw_ra[s_num][]" value="0">
+        <td class='text-left'><span class="STD_ITEM"></span></td>
+        <td class='table-light'>
+          <div class='form-group'>
+            <div id="twzipcode_copy_STD_SNUM">
+              <div class="input-group input-group-sm">
+                <div class="input-group-append">
+                  <span class="input-group-text">郵遞區號</span>
+                </div>
+                <div data-role="zipcode" data-style="form-control form-control-sm" data-name="sw_ra[sw_ra01][]" data-id="sw_ra01_STD_SNUM"  data-value=""></div>
+                  <div class="input-group-append">
+                <span class="input-group-text">縣市</span>
+                </div>
+                <div data-role="county" data-class="form-control form-control-sm" data-style="width:100px;" data-name="sw_ra[sw_ra02][]" data-id="sw_ra02_STD_SNUM" data-value=""></div>
+                <div class="input-group-append">
+                  <span class="input-group-text">鄉鎮市區</span>
+                </div>
+                <div data-role="district" data-class="form-control form-control-sm" data-style="width:100px;" data-name="sw_ra[sw_ra03][]" data-id="sw_ra03_STD_SNUM" data-value=""></div>
+              </div>
+            </div>
+          </div>
+        </td>
+        <td class="text-right">
+          <button type='button' class='btn btn-C2 btn-xs sw_ra_del' data-sw_ra_s_num='STD_SNUM' data-toggle='modal' data-target='.pop-sw_ra_del'>{{$tv_del_btn}}</button>
+        </td>
+      </tr>
+    </table>
+  {{*預先增加一筆空白資料，主要用來複製用。 End*}}
+</div>

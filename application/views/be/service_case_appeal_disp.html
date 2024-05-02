@@ -1,0 +1,148 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>客訴處理單(其他)</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">個案管理</a></li>
+        <li class="breadcrumb-item"><a href="#">客訴處理單(其他)</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_service_case_appeal_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="nav-appeal-tab" data-toggle="tab" href="#nav-appeal" role="tab" aria-controls="nav-appeal" aria-selected="true">客訴處理單</a>
+        <a class="nav-item nav-link" id="nav-track-tab" data-toggle="tab" href="#nav-track" role="tab" aria-controls="nav-track" aria-selected="false">追蹤紀錄</a>
+        <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+          <div class="float-right">建檔:<span class="mainC1">{{$tv_dietitian_note_row->b_acc_name|default:''}}({{$tv_dietitian_note_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_dietitian_note_row->e_acc_name|default:''}}({{$tv_dietitian_note_row->e_date|default:""}})</span></div>
+        </span>
+      </div>
+    </nav>
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-appeal" role="tabpanel" aria-labelledby="nav-appeal-tab">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover table-sm">
+            {{assign var="swidth_left" value="20%"}}
+            {{assign var="swidth_right" value="80%"}}
+            {{assign var="swidth_left_2" value="10%"}}
+            {{assign var="swidth_right_2" value="90%"}}
+            <tbody>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>案主姓名</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span>{{$tv_service_case_appeal_row->ct01|default:''}}{{$tv_service_case_appeal_row->ct02|default:''}}</span>
+                </td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">客訴類型</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca01_str|default:''}}</span></td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>申訴情形</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-sm">
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">受理日期</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca11|default:''}}</span></td>
+                    </tr>
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">申訴人</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca12|default:''}}</span></td>
+                    </tr>
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">申訴人關係</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca13|default:''}}</span></td>
+                    </tr>
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">申訴事由</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca14|nl2br|default:''}}</span></td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>受理情形</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-sm">
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">受理人員</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca22|default:''}}</span></td>
+                    </tr>
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">填表日期</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca23|default:''}}</span></td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>處理情形</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-sm">
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">處理過程</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca34|nl2br|default:''}}</span></td>
+                    </tr>
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">處置建議</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca35|nl2br|default:''}}</span></td>
+                    </tr>
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">後續追蹤</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca36_str|default:''}}</span></td>
+                    </tr>
+                    <tr class="d-flex">
+                      <td width="{{$swidth_left_2}}" class="text-right">後續追蹤日期</td>
+                      <td width="{{$swidth_right_2}}" class="table-light"><span class="text-dark">{{$tv_service_case_appeal_row->seca36_date|default:''}}</span></td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="nav-track" role="tabpanel" aria-labelledby="nav-track-tab">
+        {{foreach from=$tv_service_case_appeal_track_row key=k item=v}}
+          <div class="float-left maT10">此筆追蹤紀錄，建檔時間:<span class="mainC1">{{$v.b_date|default:''}}</span>-修改時間:<span class="mainC1">{{$v.e_date|default:""}}</span></div>
+          <table class="table table-bordered table-hover table-sm maB15">
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤人員</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$v.secat01|default:''}}</td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤日期</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$v.secat02|default:''}}</td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>追蹤內容</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$v.secat03|default:''|nl2br}}</td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>是否持續追蹤</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$v.secat11_str|default:''}}{{if $v.secat11|default:"N" == "Y"}}，預計下次追蹤日：{{$v.secat11_date|date_format:"%Y"}}年{{$v.secat11_date|date_format:"%m"}}月 {{/if}}</td>
+            </tr>
+          </table>
+        {{foreachelse}}
+          <h2 class="maT10">查無資料!!</h2>
+        {{/foreach}}
+      </div>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

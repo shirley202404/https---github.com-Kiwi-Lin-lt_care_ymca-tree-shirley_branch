@@ -1,0 +1,445 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<style type="text/css">
+  .gbcF7e{
+    background-color: #9b9b9b; 
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .table::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .table {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    display: none;
+  }
+
+  .table-responsive {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  body {
+   counter-reset: page_num;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .page_num {
+    /* position: absolute; */
+    position: relative;
+    page-break-before: always;
+    page-break-after: always;
+    /* bottom: 0; */
+    /* right: -50; */
+  }
+
+  .page_num::before {
+    /* position: relative; */
+    /* bottom: -20px; */
+    counter-increment: page_num;
+    content: '頁次: ' counter(page_num);
+  }
+
+  @page {
+    size: A4 portrait;
+    margin:5mm;
+  }
+  
+  @media print { 
+    .prn_table td.bgwarning { 
+      background-color: #ffc107 !important;
+      page-break-before: always;
+      page-break-after: always;
+    }
+    .footer {
+      position: fixed;
+      bottom: 5px;
+      left: 10px;
+    }
+  }
+  
+  @media screen {
+    .footer {
+      display: none
+    }
+  }
+
+</style>
+<!--
+<script>
+  $(document).ready(function(){
+    $('#btn-print-preview').on('click', function(){
+      $('.nav-tabs').hide();
+      $headings = $('.nav-tabs li a');
+      $('.tab-content .tab-pane').each(function(i, el){
+        $(this).addClass('active');
+      });
+    });
+  });
+</script>
+-->
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>電子看板</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">電子看板</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button class="btn btn-info btn-sm" id="btn-print-preview" onclick="window.print()">列印本頁</button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_exit_link}}';">{{$tv_exit_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div id="prn_data" class="table-responsive">
+        <nav>
+          <div class="nav nav-tabs no_print" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-total-tab" data-toggle="tab" href="#nav-total" role="tab" aria-controls="nav-total" aria-selected="true">送餐總表</a>
+            <a class="nav-item nav-link" id="nav-stop-tab" data-toggle="tab" href="#nav-stop" role="tab" aria-controls="nav-stop" aria-selected="false">停復餐名單</a>
+            <a class="nav-item nav-link" id="nav-mp-tab" data-toggle="tab" href="#nav-mp" role="tab" aria-controls="nav-mp" aria-selected="false">代餐統計表</a>
+          </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+          <div class="tab-pane fade show active" id="nav-total" role="tabpanel" aria-labelledby="nav-total-tab">
+            <table class="table-sm mt-2 prn_font" border="0" width="100%">
+              <tr>
+                <td width="60%" class="text-left">
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}-{{$tv_menu_title}}</h1>
+                </td>
+              </tr>
+            </table>
+            <div class="float-right"><h1 class="mr-1 text-left font-weight-bold" style="font-size: 13pt;">總餐數: {{$tv_daily_shipment_data|count|default:0}}</h1></div>                          
+            <table class="table-hover mt-2 table-sm prn_table" width="100%" border="1">
+              <thead>
+                <tr class="thead-light">
+                  <th class="text-nowrap gbcF7e">順序</th>
+                  <th class="text-nowrap gbcF7e">路線</th>
+                  <th class="text-nowrap gbcF7e">個案姓名</th>
+                  <th class="text-nowrap gbcF7e">案主手機</th>
+                  <th class="text-nowrap gbcF7e">案主家電</th>
+                  <th class="text-nowrap gbcF7e">聯絡地址</th>
+                  <th class="text-nowrap gbcF7e">是否自費</th>
+                  <th class="text-nowrap gbcF7e">餐別</th>
+                  <th class="text-nowrap gbcF7e">餐種</th>
+                  <th class="text-nowrap gbcF7e">特殊內容</th>
+                  <th class="text-nowrap gbcF7e">代餐種類</th>
+                  <th class="text-nowrap gbcF7e" style="width:10%">放置點</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{foreach from=$tv_daily_shipment_data key=k item=v name=daily_shipment_data}}
+                  <tr>
+                    <td class="text-left">{{$v.dys08|default:''}}</td><!--順序-->
+                    <td class="text-left">{{$v.dys07|default:''}}</td><!--路線-->
+                    <td class="text-left">{{$v.ct_name|default:''}}</td><!--個案姓名-->
+                    <td class="text-left" style='word-wrap:break-word;word-break:break-all;max-width:150px;'>{{$v.ct06_telephone|default:'無'}}</td><!--案主電話-->                    
+                    <td class="text-left" style='word-wrap:break-word;word-break:break-all;max-width:150px;'>{{$v.ct06_homephone|default:'無'}}</td><!--案主電話-->                    
+                    <td class="text-left" style='word-wrap:break-word;word-break:break-all;max-width:250px;'>{{$v.ct_address|default:''}}</td><!--聯絡地址-->
+                    <td class="text-left">{{$v.dys13|default:''}}</td><!--是否自費-->
+                    <td class="text-left">{{$v.dys02|default:''}}</td><!--餐別-->
+                    <td class="text-left">{{$v.dys03|default:''}}</td><!--餐種-->
+                    <td class="text-left">{{$v.dys04|default:''}}</td><!-- 特殊內容-->
+                    <td class="text-left">{{$v.dys05_type|default:''}}</td><!--代餐種類-->
+                    <td class="text-left">{{$v.sec06|default:''|nl2br}}</td><!--代餐種類-->
+                  </tr>
+                {{foreachelse}}
+                  <tr>
+                    <td colspan="99" class="alert alert-warning">
+                      查無資料!!!
+                    </td>
+                  </tr>
+                {{/foreach}}
+              </tbody>
+            </table>
+            {{if $smarty.foreach.daily_shipment_data.last}}
+              <div class="row prn_font maT15 footer">
+                <div class="col-12 text-right">
+                  &nbsp;列印日期：{{$tv_prn_date}}
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;列印人員：{{$tv_prn_emp}}&nbsp;
+                </div>
+              </div>
+            {{else}}
+              <p class="pagebreak"></p>
+            {{/if}}
+          </div>
+            
+          <div class="tab-pane fade" id="nav-stop" role="tabpanel" aria-labelledby="nav-stop-tab">
+            <table class="table-sm mt-2 prn_font" border="0" width="100%">
+              <tr>
+                <td width="60%" class="text-left">
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}-停復餐名單</h1>
+                </td>
+              </tr>
+            </table>    
+            <table class="table-sm prn_font" border="0" width="100%">
+              <tr>
+                <td width="15%" class="text-right font-weight-bold" style="font-size: 15pt;">停餐名單：</td>
+                <td width="85%" class="text-left font-weight-bold" style="font-size: 13pt;">{{$tv_stop_str|default:''}}</td>   
+              </tr>
+              <tr>
+                <td width="15%" class="text-right font-weight-bold" style="font-size: 15pt;">停餐名單(三天內)：</td>
+                <td width="85%" class="text-left font-weight-bold" style="font-size: 13pt;">{{$tv_stop_three_str|default:''}}</td>   
+              </tr>
+              <tr>
+                <td width="15%" class="text-right font-weight-bold" style="font-size: 15pt;">復餐名單(三天內)：</td>
+                <td width="85%" class="text-left font-weight-bold" style="font-size: 13pt;">{{$tv_restore_str|default:''}}</td>                                                                                           
+              </tr>
+            </table> 
+            <div class="row prn_font maT15 footer">
+              <div class="col-12 text-right">
+                &nbsp;列印日期：{{$tv_prn_date}}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;列印人員：{{$tv_prn_emp}}&nbsp;
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="nav-mp" role="tabpanel" aria-labelledby="nav-mp-tab">
+            <table class="table-sm mt-2 prn_font" border="0" width="100%">
+              <tr>
+                <td width="60%" class="text-left">
+                  <h1 class="mr-1 text-left font-weight-bold" style="font-size: 18pt;">{{$tv_company_name}}-代餐統計表</h1>
+                </td>
+              </tr>
+            </table> 
+            {{foreach from=$tv_meal_replacement_data key=k item=v}}
+              {{assign var="mil_mp01_type_str" value=radio_value("mil_mp01_type")}}
+              {{if $k == 1}}
+                {{assign var="stitle" value="午餐"}}
+              {{else}}
+                {{assign var="stitle" value="晚餐"}}
+              {{/if}}
+              <div class="maTB10"></div>
+              <table class="table-hover mt-2 table-sm prn_table" width="100%">
+                <thead>
+                  <tr class="gbcF7e">
+                    <th colspan="3" class="text-left font-weight-bold">熟代統計表({{$stitle|default:''}})</th>
+                  </tr>
+                  <tr class="thead-light">
+                    <th class="text-nowrap" style="width:33%">代碼</th>
+                    <th class="text-nowrap" style="width:33%">代餐種類</th>
+                    <th class="text-nowrap" style="width:33%">筆數</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{foreach from=$v key=ktype item=vtype}}
+                    <tr>
+                      <td class="text-left">{{$tv_route_str|default:''}}</td><!--路線代碼-->
+                      <td class="text-left">{{$mil_mp01_type_str[$ktype]}}</td><!--代餐種類-->
+                      <td class="text-right">{{$vtype.total}}</td><!--代餐數量-->
+                    </tr>
+                  {{foreachelse}}
+                    <tr>
+                      <td colspan="99" class="alert alert-warning">
+                        查無資料!!!
+                      </td>
+                    </tr>
+                  {{/foreach}}
+                </tbody>
+              </table> 
+            {{/foreach}}
+
+            {{foreach from=$tv_item_replacement_data key=k item=v}}
+              {{assign var="mil_mp01_type_str" value=radio_value("mil_mp01_type")}}
+              {{if $k == 1 or $k == 2}}
+                {{assign var="reh_type" value="1"}}
+              {{else}}
+                {{assign var="reh_type" value="2"}}
+              {{/if}}
+              {{assign var="mil_mp01_type_str" value=radio_value("mil_mp01_type")}}
+              {{if $k == 1}}
+                {{assign var="stitle" value="午餐"}}
+              {{/if}}
+              {{if $k == 2}}
+                {{assign var="stitle" value="中晚餐"}}
+              {{/if}}
+              {{if $k == 3}}
+                {{assign var="stitle" value="晚餐"}}
+              {{/if}}
+              <div class="maTB10"></div>
+              <table class="table-hover mt-2 table-sm prn_table" width="100%">
+                <thead>
+                  <tr class="gbcF7e">
+                    <th colspan="3" class="text-left font-weight-bold">非熟代統計表({{$stitle|default:''}})</th>
+                  </tr>
+                  <tr class="thead-light">
+                    <th class="text-nowrap" style="width:33%">代碼</th>
+                    <th class="text-nowrap" style="width:33%">代餐種類</th>
+                    <th class="text-nowrap" style="width:33%">筆數</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{foreach from=$v key=k2 item=v2}}
+                    {{if $k2 == $reh_type}}
+                      {{foreach from=$v2 key=ktype item=vtype}}
+                        <tr>
+                          <td class="text-left">{{$tv_route_str|default:''}}</td><!--路線代碼-->
+                          <td class="text-left">{{$mil_mp01_type_str[$ktype]}}</td><!--代餐種類-->
+                          <td class="text-right">{{$vtype.total}}</td>
+                        </tr>
+                      {{foreachelse}}
+                        <tr>
+                          <td colspan="99" class="alert alert-warning">
+                            查無資料!!!
+                          </td>
+                        </tr>
+                      {{/foreach}}
+                    {{/if}}
+                  {{foreachelse}}
+                    <tr>
+                      <td colspan="99" class="alert alert-warning">
+                        查無資料!!!
+                      </td>
+                    </tr>
+                  {{/foreach}}
+                </tbody>
+              </table> 
+            {{/foreach}}
+
+            <div class="row prn_font maT15 footer">
+              <div class="col-12 text-right">
+                &nbsp;列印日期：{{$tv_prn_date}}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;列印人員：{{$tv_prn_emp}}&nbsp;
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+</div>
+<!-- 浮水印
+<script type="text/javascript">
+
+  function testprint() {
+    watermark({ watermark_txt: "溫州機場" })//傳入動態水印內容
+    window.print()
+  }
+
+  window.onafterprint = function () {
+    location.reload()
+  }
+
+  function watermark(settings) {
+    //默認設置
+    var defaultSettings = {
+      watermark_txt: "text",
+      watermark_x: 100,//水印起始位置x軸座標
+      watermark_y: 20,//水印起始位置Y軸座標
+      watermark_rows: 20,//水印行數
+      watermark_cols: 20,//水印列數
+      watermark_x_space: 100,//水印x軸間隔
+      watermark_y_space: 50,//水印y軸間隔
+      watermark_color: '#bd1b21',//水印字體顏色
+      watermark_alpha: 0.3,//水印透明度
+      watermark_fontsize: '18px',//水印字體大小
+      watermark_font: '微軟雅黑',//水印字體
+      watermark_width: 120,//水印寬度
+      watermark_height: 80,//水印長度
+      watermark_angle: 15//水印傾斜度數
+    };
+    //採用配置項替換默認值，作用類似jquery.extend
+    if (arguments.length === 1 && typeof arguments[0] === "object") {
+      var src = arguments[0] || {};
+      for (key in src) {
+        if (src[key] && defaultSettings[key] && src[key] === defaultSettings[key])
+          continue;
+        else if (src[key])
+          defaultSettings[key] = src[key];
+      }
+    }
+
+    var oTemp = document.createDocumentFragment();
+
+    //獲取頁面最大寬度
+    var page_width = Math.max(document.body.scrollWidth, document.body.clientWidth);
+    //獲取頁面最大長度
+    var page_height = Math.max(document.body.scrollHeight, document.body.clientHeight);
+
+    //如果將水印列數設置爲0，或水印列數設置過大，超過頁面最大寬度，則重新計算水印列數和水印x軸間隔
+    if (defaultSettings.watermark_cols == 0 ||
+      (parseInt(defaultSettings.watermark_x
+        + defaultSettings.watermark_width * defaultSettings.watermark_cols
+        + defaultSettings.watermark_x_space * (defaultSettings.watermark_cols - 1))
+        > page_width)) {
+      defaultSettings.watermark_cols =
+        parseInt((page_width
+          - defaultSettings.watermark_x
+          + defaultSettings.watermark_x_space)
+          / (defaultSettings.watermark_width
+            + defaultSettings.watermark_x_space));
+      defaultSettings.watermark_x_space =
+        parseInt((page_width
+          - defaultSettings.watermark_x
+          - defaultSettings.watermark_width
+          * defaultSettings.watermark_cols)
+          / (defaultSettings.watermark_cols - 1));
+    }
+    //如果將水印行數設置爲0，或水印行數設置過大，超過頁面最大長度，則重新計算水印行數和水印y軸間隔
+    if (defaultSettings.watermark_rows == 0 ||
+      (parseInt(defaultSettings.watermark_y
+        + defaultSettings.watermark_height * defaultSettings.watermark_rows
+        + defaultSettings.watermark_y_space * (defaultSettings.watermark_rows - 1))
+        > page_height)) {
+      defaultSettings.watermark_rows =
+        parseInt((defaultSettings.watermark_y_space
+          + page_height - defaultSettings.watermark_y)
+          / (defaultSettings.watermark_height + defaultSettings.watermark_y_space));
+      defaultSettings.watermark_y_space =
+        parseInt((page_height
+          - defaultSettings.watermark_y
+          - defaultSettings.watermark_height
+          * defaultSettings.watermark_rows)
+          / (defaultSettings.watermark_rows - 1));
+    }
+    var x;
+    var y;
+    for (var i = 0; i < defaultSettings.watermark_rows; i++) {
+      y = defaultSettings.watermark_y + (defaultSettings.watermark_y_space + defaultSettings.watermark_height) * i;
+      for (var j = 0; j < defaultSettings.watermark_cols; j++) {
+        x = defaultSettings.watermark_x + (defaultSettings.watermark_width + defaultSettings.watermark_x_space) * j;
+
+        var mask_div = document.createElement('div');
+        mask_div.id = 'mask_div' + i + j;
+        mask_div.appendChild(document.createTextNode(defaultSettings.watermark_txt));
+        //設置水印div傾斜顯示
+        mask_div.style.webkitTransform = "rotate(-" + defaultSettings.watermark_angle + "deg)";
+        mask_div.style.MozTransform = "rotate(-" + defaultSettings.watermark_angle + "deg)";
+        mask_div.style.msTransform = "rotate(-" + defaultSettings.watermark_angle + "deg)";
+        mask_div.style.OTransform = "rotate(-" + defaultSettings.watermark_angle + "deg)";
+        mask_div.style.transform = "rotate(-" + defaultSettings.watermark_angle + "deg)";
+        mask_div.style.visibility = "";
+        mask_div.style.position = "absolute";
+        mask_div.style.left = x + 'px';
+        mask_div.style.top = y + 'px';
+        mask_div.style.overflow = "hidden";
+        mask_div.style.zIndex = "9999";
+        //mask_div.style.border="solid #eee 1px";
+        mask_div.style.opacity = defaultSettings.watermark_alpha;
+        mask_div.style.fontSize = defaultSettings.watermark_fontsize;
+        mask_div.style.fontFamily = defaultSettings.watermark_font;
+        mask_div.style.color = defaultSettings.watermark_color;
+        mask_div.style.textAlign = "center";
+        mask_div.style.width = defaultSettings.watermark_width + 'px';
+        mask_div.style.height = defaultSettings.watermark_height + 'px';
+        mask_div.style.display = "block";
+        oTemp.appendChild(mask_div);
+      };
+    };
+    document.body.appendChild(oTemp);
+  }
+
+</script>
+-->

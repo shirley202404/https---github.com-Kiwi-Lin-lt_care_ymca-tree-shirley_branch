@@ -1,0 +1,195 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>迷你營養評估表</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">迷你營養評估表</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_clients_hlth_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <div class="float-right">建檔:<span class="mainC1">{{$tv_clients_hlth_row->b_acc_name|default:''}}({{$tv_clients_hlth_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_clients_hlth_row->e_acc_name|default:''}}({{$tv_clients_hlth_row->e_date|default:""}})</span></div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        <tbody>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">填表日期</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth01|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">案主名稱</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->ct01|default:''}}{{$tv_clients_hlth_row->ct02|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">MNA合計分數</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth02|default:''}}，{{$tv_clients_hlth_row->cth02_opt_str|default:''}}</span></td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>基本資料</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <table class="table table-hover table-sm" id="basic">
+                <tbody>
+                  <tr class="d-flex">
+                    <td width="{{$swidth_left}}">案主身高</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth22|default:''}}公分</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width="{{$swidth_left}}">案主體重</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth23|default:''}}公斤</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width="{{$swidth_left}}">案主膝高</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth24|default:''}}公分</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width="{{$swidth_left}}">案主BMI</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth25|default:''}}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>營養篩檢</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <table class="table table-hover table-sm" id="health">
+                <tbody>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>1. 過去三個月之中，是否因食慾不佳消化問題、咀嚼或吞嚥困難以致進食量越來越少?</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth31_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>2. 近三個月體重變化</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth32_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>3. 行動力</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth33_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>4. 過去三個月內曾有精神性壓力或急性疾病發作</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth34_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>5. 神經精神問題</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth35_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>6. 身體質量指數(BMI)</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth36_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>營養篩檢分數</td>
+                    <td width='{{$swidth_right}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          {{$tv_clients_hlth_row->cth45|default:''}}，{{$tv_clients_hlth_row->cth45_opt_str|default:''}}                          
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td width='{{$swidth_left}}' class='table-secondary text-right'>一般評估</td>
+            <td width='{{$swidth_right}}' class='table-light'>
+              <table class="table table-hover table-sm" id="normal">
+                <tbody>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>7. 可以獨立生活</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth51_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>8. 每天需服用三種以上的處方藥物</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth52_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>9. 褥瘡或皮膚潰瘍</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth53_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>10. 一天中可以吃幾餐完整的餐食</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth54_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>11-1. 蛋白質攝取量-每天至少攝取一份乳製品</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth55_1_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>11-3. 蛋白質攝取量-每天均吃些肉、魚、雞鴨類</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth55_2_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>11-3. 蛋白質攝取量-每天均吃些肉、魚、雞鴨類</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth55_3_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>11. 蛋白質攝取量</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth55_total_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>12. 每天至少攝取二份或二份以上的蔬菜或水果</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth56_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>13. 每天攝取多少液體</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth57_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>14. 進食的形式</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth58_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>15. 他們覺得自己營養方面有沒有問題?</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth59_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>16. 與其他同年齡的人比較，他們認為自己的健康狀況如何?</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth60_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>17. 臀中圍MAC</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth61_mac|default:''}}公分，{{$tv_clients_hlth_row->cth61_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>18. 小腿圍C.C.</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth62_cc|default:''}}公分，{{$tv_clients_hlth_row->cth62_str|default:''}}</span></td>
+                  </tr>
+                  <tr class="d-flex">
+                    <td width='{{$swidth_left}}'>一般評估總分</td>
+                    <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth70|default:''}}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">備註</td>
+            <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_clients_hlth_row->cth99|nl2br|default:''}}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

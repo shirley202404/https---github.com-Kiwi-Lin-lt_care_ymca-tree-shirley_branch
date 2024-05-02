@@ -1,0 +1,1176 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $("#save").click(function() {
+      console.log(1);
+      if($("#mih_cnt").val() <= 0) {
+        var length = $('#mil02_sel :selected').length;
+        if(length < 4) {
+          alert("此服務為第一次新增異動，請確認四類異動資料是否都已建立!!");
+          return;
+        }
+      }
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      $('.instruction_table').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $(".before_object").prop("disabled" , false);
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            if(confirm("{{$tv_save_ok}}是否前往審核頁面!!")) {
+              location.replace("{{$tv_meal_instruction_auth_link}}");
+            }
+            else {
+              location.replace("{{$tv_return_link}}");
+            }
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    {{if $tv_msel == "upd" or  $tv_msel == "add"}}
+      $(".before_object").prop("disabled" , true);
+    {{/if}}
+    
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    function clear_tag(str){
+      return str.replace(/<[^>]+>/g,"");//去掉所有的html標記
+    }
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $('#ct_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此案主"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        // console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              // console.log(rs);  
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#ct_s_num').val(item[2]);
+        $('#ct_name').val(item[0]);
+        if('' != item[2]) {
+          $("#sec_s_num").empty();
+          $.ajax({
+            type:'post',
+            url: '{{$tv_que_sec_link}}',
+            data: {ct_s_num:item[2]},
+            error: function(xhr) {
+              err_msg = 'Ajax request發生錯誤[{{$tv_que_sec_link}}]:'+xhr+'\n請重試';
+              alert(err_msg);
+            },
+            success: function (rs) {
+              var rs_row = jQuery.parseJSON(rs);
+              if(rs_row != null) {
+                $("#sec_s_num").append("<option value=''>-請選擇-</option>").trigger("chosen:updated");
+                $.each(rs_row , function(k , v) {
+                  var sec99 = clear_tag(v.sec99);
+                  // console.log(sec99);
+                  $("#sec_s_num").append("<option value='" + v.s_num + "' data-sec01='" + v.sec01 + "' data-mih_cnt='" + v.mih_cnt + "'>" + v.sec04_str + "(" + v.sec02 +"開始)(" + sec99 + ")</option>").trigger("chosen:updated");
+                })
+              }
+            }
+          })
+        }
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+    
+    function hide_meal_table(sel_val_chk) {
+      $.each(sel_val_chk , function(k , v) {
+        switch (v) {
+          case "1":
+             $("#meal").hide();
+             $("#meal_h2").hide();
+             $('#ml_ml01').val("");
+             $('#mil_m01_1_object').val("");
+             $('.ml_s_num option').prop('selected', false).trigger('chosen:updated'); // 清除餐點選
+             $('#meal input[type="checkbox"]').prop("checked", false);
+          break;
+          case "2":
+             $("#meal_replacement").hide();
+             $("#meal_replacement_h2").hide();
+             $('#meal_replacement input[type="radio"]').prop("checked", false);
+          break;
+          case "3":
+             $("#stop").hide();
+             $("#stop_h2").hide();
+             $('#stop input[type="radio"]').prop("checked", false);
+          break;
+          case "4":
+             $("#pause").hide();
+             $("#pause_h2").hide();
+             $('#pause input[type="checkbox"]').prop("checked", false);
+          break;
+          case "5":
+             $("#identity").hide();
+             $("#identity_h2").hide();
+             $('#mil_i01_reason').val('');
+             $('#identity input[type="radio"]').prop("checked", false);
+          break;
+          case "6":
+             $("#makeup").hide();
+             $("#makeup_h2").hide();
+             $('#makeup input[type="radio"]').prop("checked", false);
+          break;
+        }
+      });
+    }
+    
+    $('#mil01').blur(function() {
+      var mil01 = $(this).val();
+      var temp_mil01 = $("#temp_mil01").val();
+      // console.log(mil01);
+      // console.log(temp_mil01);
+      if(mil01 != temp_mil01) {
+        hide_meal_table(["1", "2", "3", "4", "5", "6"]);
+        $("#mil02_sel").val(0).trigger("chosen:updated");
+        $("#temp_mil01").val(mil01);
+      }
+    });
+    
+    $("#sec_s_num").on("change" , function() {
+      var sec_s_num = $(this).val();
+      var mih_cnt = $(this).find(":selected").data("mih_cnt");
+      // console.log(mih_cnt);
+      $("#mih_cnt").val(mih_cnt);
+      $("#cls_href").attr('href', "{{$tv_service_case_link}}?que_s_num=" + sec_s_num);
+      hide_meal_table(["1", "2", "3", "4", "5", "6"]);
+      $("#mil02_sel").val(0).trigger("chosen:updated");
+    });
+    
+    $("#cls_href").on("click" , function() {
+      var sec_s_num = $("#sec_s_num").val();
+      if(sec_s_num == '') {
+        alert("請先選擇服務!!");
+        return;
+      }
+    });
+    
+    $(".chosen-select-deselect").on("change" , function() {
+      var fd_name = $(this).data("fd_name");
+      var fd_val = $(this).find(":selected").data(fd_name+"01");
+      $("#"+fd_name+"_"+fd_name+"01").val(fd_val);
+    });
+    
+    $(".object").click(function(){
+      var fd_name = $(this).data("fd_name");
+      var ckeck_flag = $("."+fd_name).prop('checked');
+      var v = $("."+fd_name).val();
+      var object = [];
+      $("."+fd_name+":checkbox:checked").each(function(){
+        object.push($(this).val());
+      });
+      object = object.join(',');
+      $('#'+fd_name).val(object );
+    });    
+    
+    $("#mil02_sel").change(function() {
+      var sel_val = $(this).val();
+      {{* 極致懶惰的方法，當選擇停復餐，也要自動帶出代餐 *}}
+      if(sel_val.includes('3')) {
+        $("#mil02_sel option[value='2']").prop("selected", true);
+        $('#mil02_sel').trigger("chosen:updated");
+        sel_val = $(this).val(); // 重新抓一次select val
+      }
+      $('#mil02').val(sel_val.join(','));
+      var sel_val_chk = ["1", "2", "3", "4", "5", "6"];
+      $.each(sel_val , function(k , v) {
+        switch (v) {
+          case "1":
+             $("#meal").show();
+             $("#meal_h2").show();
+             get_client_data("1");
+          break;
+          case "2":
+             $("#meal_replacement").show();
+             $("#meal_replacement_h2").show();
+             get_client_data("2");
+          break;
+          case "3":
+             $("#stop").show();
+             $("#stop_h2").show();
+             $("#meal_replacement").show();
+             $("#meal_replacement_h2").show();
+             get_client_data("3");
+          break;
+          case "4":
+             $("#pause").show();
+             $("#pause_h2").show();
+             get_client_data("4");
+          break;
+          case "5":
+             $("#identity").show();
+             $("#identity_h2").show();
+             get_client_data("5");
+          break;
+          case "6":
+             $("#makeup").show();
+             $("#makeup_h2").show();
+             get_client_data("6");
+          break;
+        }
+        sel_val_chk.splice(sel_val_chk.indexOf(v), 1);
+      });
+      hide_meal_table(sel_val_chk);
+    });
+    
+    function get_client_data(que_type) {
+      var mil01 = $("#mil01").val();
+      var sec_s_num = $("#sec_s_num").val();
+      if(sec_s_num != '') {
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_client_data_link}}',
+          data: {sec_s_num:sec_s_num , que_type:que_type , produce_date:mil01},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_client_data_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            rs = JSON.parse(rs);
+            if(rs != null) {
+              switch (que_type) {
+                case "1": // 餐點
+                  for (i = 1; i <= 5; i++) {
+                    if(rs['mil_m01_'+i] != '') {
+                      $('#mil_m01_'+i+'_object').val(rs['mil_m01_'+i]); // 新增
+                      $('#mil_m01_'+i+'_before_object').val(rs['mil_m01_'+i]); // 之前的紀錄
+                      var split_arr = rs['mil_m01_'+i].split(",");
+                      $.each(split_arr, function(k,v){
+                        $('#mil_m01_'+i+'_'+v).prop('checked', true); // 新增
+                        $('#mil_m01_'+i+'_before_'+v).prop('checked', true); // 之前的紀錄
+                      });
+                    }
+                    $('.mil_m01_'+i+'_before_object').prop('disabled', true);
+                  }
+                  $("#ml_s_num option[value='" + rs['ml_s_num'] + "']").prop("selected", true);
+                  $("#ml_s_num").trigger("chosen:updated");
+                  $('#ml_s_num').val(rs['ml_s_num']);
+                  $("#ml_s_num_b option[value='" + rs['ml_s_num'] + "']").prop("selected", true);
+                  $('#ml_s_num_b').trigger("chosen:updated");
+                  $('#ml_s_num_b').prop('disabled', true).trigger("chosen:updated");
+                  $('#ml_s_num_before').val(rs['ml_s_num']);
+                break;
+                case "2": // 代餐
+                  var $radios = $('input[type=radio][name="mil_mp[mil_mp01]"]');
+                  var $before_radios = $('input[type=radio][name="mil_mp[mil_mp01_before]"]');
+                  var $type_radios = $('input[type=radio][name="mil_mp[mil_mp01_type]"]');
+                  var $before_type_radios = $('input[type=radio][name="mil_mp[mil_mp01_type_before]"]');
+                  if($radios.is(':checked') === false) {
+                    $radios.filter('[value='+rs['mil_mp01']+']').prop('checked', true);
+                    $before_radios.filter('[value='+rs['mil_mp01']+']').prop('checked', true);
+                  }
+                  if($type_radios.is(':checked') === false) {
+                    $type_radios.filter('[value='+rs['mil_mp01_type']+']').prop('checked', true);
+                    $before_type_radios.filter('[value='+rs['mil_mp01_type']+']').prop('checked', true);
+                  }
+                  $(".mil_mp01_before_object").prop('disabled', true);
+                  $(".mil_mp01_type_before_object").prop('disabled', true);
+                break;
+                case "3": // 停復餐
+                  var $radios = $('input[type=radio][name="mil_s[mil_s01_before]"]');
+                  var $reason_radios = $('input[type=radio][name="mil_s[mil_s01_reason_before]"]');
+                  if($radios.is(':checked') === false) {
+                    $radios.filter('[value='+rs['mil_s01']+']').prop('checked', true);
+                  }
+                  if($reason_radios.is(':checked') === false) {
+                    $reason_radios.filter('[value='+rs['mil_s01_reason']+']').prop('checked', true);
+                  }
+                  $(".mil_s01_before_object").prop('disabled', true);
+                  $(".mil_s01_reason_before_object").prop('disabled', true);
+                break;
+                case "4": // 固定暫停
+                  if(rs['mil_p01'] != '') {
+                    $('#mil_p01_before_object').val(rs['mil_p01']);
+                    var split_arr = rs['mil_p01'].split(",");
+                    $.each(split_arr, function(k,v){
+                      $('#mil_p01_before_'+v).prop('checked', true);
+                    });
+                  }
+                  $('.mil_p01_before_object').prop('disabled', true);
+                break;
+                case "5": // 自費
+                  var $radios = $('input[type=radio][name="mil_i[mil_i01_before]"]');
+                  if($radios.is(':checked') === false) {
+                    $radios.filter('[value='+rs['mil_i01']+']').prop('checked', true);
+                  }
+                  $("#mil_i01_reason_before").text(rs['mil_i01_reason'])
+                  $(".mil_i01_before_object").prop('disabled', true);
+                  $("#mil_i01_reason_before").prop('disabled', true);
+                break;
+                case "6": // 補班日出餐
+                break;
+              }
+            }
+          }
+        })
+      }
+    }
+    {{* 停付餐及代餐選項連動 Begin*}}
+    $("input[type='radio'][name='mil_mp[mil_mp01]']").click(function() {
+      var select_val = $(this).val();
+      if(select_val == "N") {
+        $(".mil_mp01_type_object").prop("disabled" , true);
+        $(".mil_mp01_type_object").prop("checked" , false);
+        $(".mil_mp01_type_object").prop("required" , false);
+      }
+      else {
+        $(".mil_mp01_type_object").prop("disabled" , false);
+        $(".mil_mp01_type_object").prop("required" , true);
+      }
+    });
+    
+    $("input[type='radio'][name='mil_s[mil_s01]']").click(function() { // 由停復餐來調整代餐的東西
+      var select_val = $(this).val();
+      if(select_val == "Y") {
+        $(".mil_mp01_type_object").prop("disabled" , false);
+        $(".mil_mp01_type_object").prop("required" , true);
+        $("input[type='radio'][name='mil_mp[mil_mp01]'][value='Y']").prop("checked",true);
+        $("input[type='radio'][name='mil_mp[mil_mp01]'][value='N']").prop("checked",false);
+      }
+      else {
+        $("input[type='radio'][name='mil_mp[mil_mp01]'][value='Y']").prop("checked",false); // 把代餐狀況"Y"取消
+        $("input[type='radio'][name='mil_mp[mil_mp01]'][value='N']").prop("checked",true); // 把代餐狀況"N"打勾
+        $(".mil_mp01_type_object").prop("required" , false);
+        $(".mil_mp01_type_object").prop("checked" , false);
+        $(".mil_mp01_type_object").prop("disabled" , true);
+      }
+    });
+    
+    {{if $tv_msel == 'upd'}}
+      {{if isset($tv_meal_instruction_log_mp_row->mil_mp01)}}
+        {{if $tv_meal_instruction_log_mp_row->mil_mp01 == "N"}}
+          $(".mil_mp01_type_object").prop("required" , false);
+          $(".mil_mp01_type_object").prop("checked" , false);
+          $(".mil_mp01_type_object").prop("disabled" , true);
+        {{else}}
+          $(".mil_mp01_type_object").prop("disabled" , false);
+          $(".mil_mp01_type_object").prop("required" , true);
+        {{/if}}
+      {{/if}}
+    {{/if}}
+    {{* 停付餐及代餐選項連動 End*}}
+    
+    {{*歷史紀錄 Begin*}}
+    hist_table(null);
+    function hist_table(que_type) {
+      if(que_type != null) { 
+        var table = ["meal" , "meal_replacement" , "stop" , "pause" , "identity"];  
+        var table_index = table.indexOf(que_type);
+        table.splice(table_index, 1);
+        $("#"+que_type+"_hist_table").show();
+      }
+      $.each(table , function(k , v) {
+        $("#"+v+"_hist_table").hide();
+      });
+    }
+    
+    $(".que").click(function(){
+      var que_type = $(this).data("que_type");
+      var sec_s_num = $("#sec_s_num").val();
+      if(sec_s_num == '') {
+        alert("請先選擇餐別!!")
+        return false;
+      }
+      switch (que_type) {
+        case "meal":
+          $("#type_h2_str").text("餐點");
+        break;
+        case "meal_replacement":
+          $("#type_h2_str").text("代餐");
+        break;
+        case "stop":
+          $("#type_h2_str").text("停復餐");
+        break;
+        case "pause":
+          $("#type_h2_str").text("固定暫停");
+        break;
+        case "identity":
+          $("#type_h2_str").text("自費");
+        break;
+      }
+      hist_table(que_type);
+      var progress = '<tr>';
+          progress += '<td colspan="5">';
+          progress += '<div class="progress">';
+          progress += '<div class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>';
+          progress += '</div>';
+          progress += '</td>';
+          progress += '</tr>';
+      $('#body_que_stop_list').html(progress);
+      $.ajax({
+        type:'post',
+        url: '{{$tv_que_hist_link}}'+que_type,
+        data: {sec_s_num:sec_s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_que_hist_link}}'+que_type+']:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          //console.log(rs);
+          $('#body_que_'+que_type+'_list').html(rs);
+          var resort = true;
+          $(".sort-table").trigger("update", [resort]);
+        }
+      })
+      return;
+    });
+    
+    $(document).on('click',".get_hist",function() {
+      var hist_type = $(this).data('type');
+       switch (hist_type) {
+        case "meal": // 餐點選擇
+           var ml_s_num = $(this).data('ml_s_num');
+           window['mil_m01_1'] = $(this).data('mil_m01_1').toString();;
+           window['mil_m01_2'] = $(this).data('mil_m01_2').toString();;
+           window['mil_m01_3'] = $(this).data('mil_m01_3').toString();;
+           window['mil_m01_4'] = $(this).data('mil_m01_4').toString();;
+           window['mil_m01_5'] = $(this).data('mil_m01_5').toString();;
+           for (i = 1; i <= 5; i++) {
+             $("#mil_m01_"+i+"_object").val('');
+             $(".mil_m01_"+i+"_object").prop('checked', false);
+             if(window['mil_m01_'+i] != '') {
+               $('#mil_m01_'+i+'_object').val(window['mil_m01_'+i]); // 新增
+               var split_arr = window['mil_m01_'+i].split(",");
+               $.each(split_arr, function(k,v){
+                 $('#mil_m01_'+i+'_'+v).prop('checked', true); // 新增
+               });
+             }
+           }
+           $("#ml_s_num option[value='" + ml_s_num + "']").prop("selected", true);
+           $("#ml_s_num").trigger("chosen:updated");
+           $('#ml_s_num').val(ml_s_num);
+        break;
+        case "meal_replacement": // 代餐選擇
+          var mil_mp01 = $(this).data('mil_mp01');
+          var mil_mp01_type = $(this).data('mil_mp01_type');
+          $('input[type=radio][name="mil_mp[mil_mp01]"]').filter('[value='+mil_mp01+']').prop('checked', true);
+          $('input[type=radio][name="mil_mp[mil_mp01_type]"]').filter('[value='+mil_mp01_type+']').prop('checked', true);
+        break;
+        case "stop": // 停復餐選擇
+          var mil_s01 = $(this).data('mil_s01');
+          var mil_s01_reason = $(this).data('mil_s01_reason');
+          $('input[type=radio][name="mil_s[mil_s01]"]').filter('[value='+mil_s01+']').prop('checked', true); // 出餐狀況(異動後)
+          $('input[type=radio][name="mil_s[mil_s01_reason]"]').filter('[value='+mil_s01_reason+']').prop('checked', true); // 原因說明(異動後)
+          $("input[type='radio'][name='mil_s[mil_s01]']").click();
+        break;
+        case "pause": // 固定暫停選擇
+          var mil_p01 = $(this).data('mil_p01').toString();
+          $(".mil_p01_object").prop('checked', false);
+          $('#mil_p01_object').val('');
+          if(mil_p01 != '') {
+            $('#mil_p01_object').val(mil_p01);
+            var split_arr = mil_p01.split(",");
+            $.each(split_arr, function(k,v){
+              $('#mil_p01_'+v).prop('checked', true);
+            });
+          }
+        break;
+        case "identity": // 自費異動選擇
+          var mil_i01 = $(this).data('mil_i01');
+          var mil_i01_reason = $(this).data('mil_i01_reason');
+          $('input[type=radio][name="mil_i[mil_i01]"]').filter('[value='+mil_i01+']').prop('checked', true);
+          $("#mil_i01_reason").val(mil_i01_reason);
+        break;
+      }
+      return;
+    });
+
+    $('#btn_que_close').click(function(){
+      $("#btn_que_close").click(); // 清除查詢資料
+      $('#body_que_list').html('');
+      $('.pop-que').modal("hide");
+    })
+    
+    {{*歷史紀錄 End*}}
+
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>餐食異動</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">開案服務管理</a></li>
+        <li class="breadcrumb-item"><a href="#">餐食異動</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_meal_instruction_log_row->b_acc_name|default:''}}({{$tv_meal_instruction_log_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_meal_instruction_log_row->e_acc_name|default:''}}({{$tv_meal_instruction_log_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="mil_h[s_num]" value="{{$tv_meal_instruction_log_h_row->s_num|default:'0'}}">
+      {{/if}}
+      <input type="hidden" id="mih_cnt" value="{{$tv_meal_instruction_log_h_row->mih_cnt|default:'0'}}">
+      <div class="table-responsive" style="height:80%">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          {{assign var="none_display" value="style='display:none;'"}}
+          <div class="row mt-2">
+            <div class="col-12">
+              <div class="card">
+                <div class="bg-secondary">
+                  <div class="float-left">
+                    <div class="card-header fcW">
+                      <h2 class="text-white text-left">餐點異動單</h2>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='hidden' id='ct_s_num' name='mil_h[ct_s_num]' value='{{$tv_meal_instruction_log_h_row->ct_s_num|default:''}}'>
+                  <input type='text' id='ct_name' name='mil_h[ct_name]' class='col-12 form-control form-control-sm' placeholder='請輸入案主姓名' autocomplete="off" value='{{$tv_meal_instruction_log_h_row->ct01|default:''}}{{$tv_meal_instruction_log_h_row->ct02|default:''}}' {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                  <span id='helpBlock_ct_name' class='help-block'></span>
+                </span>
+              </td>
+            </tr>
+           {{if $tv_msel == 'add'}}
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>餐別</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                  <select id='sec_s_num' name='mil_h[sec_s_num]' data-placeholder='-請選擇或輸入服務名稱-' class='form-control form-control-sm chosen-select-deselect' data-fd_name="sec" required>
+                    <option value='' selected>-請選擇-</option>
+                  </select>
+                    <span id='helpBlock_sec_s_num' class='help-block'>
+                      <a id="cls_href" target="_blank">結案</a>
+                    </span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+            {{else}}
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>服務名稱</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='hidden' id='sec_s_num' name="mil_h[sec_s_num]" class='col-12 form-control form-control-sm' placeholder='' autocomplete="off" value='{{$tv_meal_instruction_log_h_row->sec_s_num|default:''}}' {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                    {{$tv_meal_instruction_log_h_row->sec01_str|default:''}}-{{$tv_meal_instruction_log_h_row->sec04_str|default:''}}
+                    <span id='helpBlock_ct_name' class='help-block'></span>
+                  </span>
+                </td>
+              </tr>
+            {{/if}}
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>生效日期</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class='input-group'>
+                    <div class='input-group-prepend'>
+                      <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                    </div>
+                    <input type='hidden' id='temp_mil01' value='{{$tv_meal_instruction_log_h_row->mil01|default:''}}'>
+                    <input type='text' id='mil01' name='mil_h[mil01]' class='form-control form-control-sm form_date' placeholder='請輸入指令生效開始日期' value='{{$tv_meal_instruction_log_h_row->mil01|default:''}}' required>
+                  </div>
+                  <span id='helpBlock_mil01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>異動項目</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group' multiple='multiple'>
+                  <input type="hidden" id='mil02' name='mil_h[mil02]' value="{{$tv_meal_instruction_log_h_row->mil02|default:''}}">
+                  <select id='mil02_sel' multiple class='form-control form-control-sm chosen-select-deselect' data-fd_name="ml" required>
+                    <option value='3'>停復餐</option>
+                    <option value='1'>餐點</option>
+                    <!-- <option value='2'>代餐</option> 20230908 YMCA沒有代餐-->
+                    <option value='4'>固定暫停</option>
+                    <option value='5'>自費</option>
+                    <option value='6'>補班日出餐(一次性異動)</option>
+                  </select>
+                  <span id='helpBlock_mil02' class='help-block'>如為開案後第一次建立，五項異動項目都需建立第一筆異動資料，除了補班日出餐除外</span>
+                  <div class='help-block with-errors'></div>
+                </span>
+                <script>
+                  var mil02 = "{{$tv_meal_instruction_log_h_row->mil02|default:''}}";
+                  if(mil02 != '') {
+                    $.each(mil02.split(","), function(k,v){
+                      $("#mil02_sel option[value='" + v + "']").prop("selected", true);
+                    });
+                  }
+                </script>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>異動備註</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <textarea id='mil99' class='form-control form-control-sm' name='mil_h[mil99]' rows='5' >{{$tv_meal_instruction_log_h_row->mil99|default:''}}</textarea>
+                  <span id='helpBlock_mil99' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="stop" class="instruction_table table table-bordered table-hover table-sm" {{if !in_array(3 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="mil_s[s_num]" value="{{$tv_meal_instruction_log_s_row->s_num|default:''}}">
+          <div  id="stop_h2" class="row mt-2" {{if !in_array(3 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+            <div class="col-12">
+              <div class="card">
+                <div class="bg-secondary">
+                  <div class="float-left">
+                    <div class="card-header fcW">
+                      <h2 class="text-white text-left">停復餐異動</h2>
+                    </div>
+                  </div>
+                  <div class="float-right mt-md-2 mr-3 mb-2"><button type="button" class="btn btn-info que" data-que_type="stop" data-toggle="modal" data-target=".pop-que">歷史紀錄查詢<i class="fas fa-caret-right ml-2"></i></button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>出餐狀況(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 出餐狀況：</span>
+                <span class='form-group'>
+                  {{foreach from=hlp_opt_setup("mil_s01", null, "get") key=k item=v}}
+                    <input type="radio" name="mil_s[mil_s01_before]" class="mil_s01_before_object before_object" value="{{$k}}" {{if $tv_meal_instruction_log_s_row->mil_s01_before|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>二. 原因說明(異動前)：</span>
+                <span class='form-group'>
+                  {{foreach from=hlp_opt_setup("mil_s01_reason", null, "get") key=k item=v}}
+                    <input type="radio" name="mil_s[mil_s01_reason_before]" class="mil_s01_reason_before_object before_object" value="{{$k}}" {{if $tv_meal_instruction_log_s_row->mil_s01_reason_before|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>出餐狀況(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 出餐狀況：</span>
+                <span class='form-group'>
+                  {{foreach from=hlp_opt_setup("mil_s01", null, "get") key=k item=v}}
+                    <input type="radio" name="mil_s[mil_s01]" value="{{$k}}" {{if $tv_meal_instruction_log_s_row->mil_s01|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>二. 原因說明(異動後)：</span>
+                <span class='form-group'>
+                  {{foreach from=hlp_opt_setup("mil_s01_reason", null, "get") key=k item=v}}
+                    <input type="radio" name="mil_s[mil_s01_reason]" value="{{$k}}" {{if $tv_meal_instruction_log_s_row->mil_s01_reason|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="meal" class="instruction_table table table-bordered table-hover table-sm"  {{if !in_array(1 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="mil_m[s_num]" value="{{$tv_meal_instruction_log_m_row->s_num|default:''}}">
+          <div  id="meal_h2" class="row mt-2" {{if !in_array(1 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+            <div class="col-12">
+              <div class="card">
+                <div class="bg-secondary">
+                  <div class="float-left">
+                    <div class="card-header fcW">
+                      <h2 class="text-white text-left">餐點異動</h2>
+                    </div>
+                  </div>
+                  <div class="float-right mt-md-2 mr-3 mb-2"><button type="button" class="btn btn-info que" data-que_type="meal" data-toggle="modal" data-target=".pop-que">歷史紀錄查詢<i class="fas fa-caret-right ml-2"></i></button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>餐種(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[ml_s_num_before]" id="ml_s_num_before" value="{{$tv_meal_instruction_log_m_row->ml_s_num_before|default:''}}">
+                  <select id='ml_s_num_b' data-placeholder='-請選擇或輸入餐點名稱-' class='form-control form-control-sm ml_s_num chosen-select-deselect before_object' data-fd_name="ml">
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=$tv_meals_row key=k item=v}}
+                      <option value='{{$v.s_num}}' data-ml01="{{$v.ml01}}">{{$v.ml01}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_ml_s_num_before' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+                <script>
+                  $("#ml_s_num_before").val("{{$tv_meal_instruction_log_m_row->ml_s_num_before|default:''}}");
+                </script>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>餐點調整(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 飯糰：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_1_before]" id="mil_m01_1_before_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_1_before|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_1", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_1_before_{{$k}}" name="mil_m[mil_m01_1_before]" data-fd_name="mil_m01_1_before_object" class="mil_m01_1_before_object object before_object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_1_before_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>二. 菜盒：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_2_before]" id="mil_m01_2_before_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_2_before|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_2", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_2_before_{{$k}}" name="mil_m[mil_m01_2_before]" data-fd_name="mil_m01_2_before_object" class="mil_m01_2_before_object object before_object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_2_before_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>三. 菜盒內容：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_3_before]" id="mil_m01_3_before_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_3_before|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_3", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_3_before_{{$k}}"  name="mil_m[mil_m01_3_before]" data-fd_name="mil_m01_3_before_object" class="mil_m01_3_before_object object before_object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_3_before_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>四. 素食：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_4_before]" id="mil_m01_4_before_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_4_before|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_4", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_4_before_{{$k}}" name="mil_m[mil_m01_4_before]" data-fd_name="mil_m01_4_before_object" class="mil_m01_4_before_object object before_object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_4_before_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>五. 初一、十五素食：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_5_before]" id="mil_m01_5_before_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_5_before|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_5", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_5_before_{{$k}}" name="mil_m[mil_m01_5_before]" data-fd_name="mil_m01_5_before_object" class="mil_m01_5_before_object object before_object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_5_before_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>餐種(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='ml_s_num' name='mil_m[ml_s_num]' data-placeholder='-請選擇或輸入餐種名稱-' class='form-control form-control-sm ml_s_num chosen-select-deselect' data-fd_name="ml">
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=$tv_meals_row key=k item=v}}
+                      <option value='{{$v.s_num}}' data-ml01="{{$v.ml01}}">{{$v.ml01}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_ml_s_num' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+                <script>
+                  $("#ml_s_num").val("{{$tv_meal_instruction_log_m_row->ml_s_num|default:''}}");
+                </script>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>餐點調整(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 飯糰：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_1]" id="mil_m01_1_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_1|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_1", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_1_{{$k}}" name="mil_m[mil_m01_1]" data-fd_name="mil_m01_1_object" class="mil_m01_1_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_1_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>二. 菜盒：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_2]" id="mil_m01_2_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_2|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_2", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_2_{{$k}}" name="mil_m[mil_m01_2]" data-fd_name="mil_m01_2_object" class="mil_m01_2_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_2_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>三. 菜盒內容：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_3]" id="mil_m01_3_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_3|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_3", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_3_{{$k}}" name="mil_m[mil_m01_3]" data-fd_name="mil_m01_3_object" class="mil_m01_3_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_3_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>四. 素食：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_4]" id="mil_m01_4_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_4|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_4", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="radio" id="mil_m01_4_{{$k}}" name="mil_m[mil_m01_4]" data-fd_name="mil_m01_4_object" class="mil_m01_4_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_4_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>五. 初一、十五素食：</span>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_m[mil_m01_5]" id="mil_m01_5_object" value="{{$tv_meal_instruction_log_m_row->mil_m01_5|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_m01_5", null, "get") key=k item=v}}
+                    <input type="radio" id="mil_m01_5_{{$k}}" name="mil_m[mil_m01_5]" data-fd_name="mil_m01_5_object" class="mil_m01_5_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_m_row->mil_m01_5_arr|default:''}} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="meal_replacement" class="instruction_table table table-bordered table-hover table-sm" {{if !in_array(2 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="mil_mp[s_num]" value="{{$tv_meal_instruction_log_mp_row->s_num|default:''}}">
+          <div  id="meal_replacement_h2" class="row mt-2" {{if !in_array(2 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+            <div class="col-12">
+              <div class="card">
+                <div class="bg-secondary">
+                  <div class="float-left">
+                    <div class="card-header fcW">
+                      <h2 class="text-white text-left">代餐異動</h2>
+                    </div>
+                  </div>
+                  <div class="float-right mt-md-2 mr-3 mb-2"><button type="button" class="btn btn-info que" data-que_type="meal_replacement" data-toggle="modal" data-target=".pop-que">歷史紀錄查詢<i class="fas fa-caret-right ml-2"></i></button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </table>
+        <table id="pause" class="instruction_table table table-bordered table-hover table-sm" {{if !in_array(4 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="mil_p[s_num]" value="{{$tv_meal_instruction_log_p_row->s_num|default:''}}">
+          <div  id="pause_h2" class="row mt-2" {{if !in_array(4 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+            <div class="col-12">
+              <div class="card">
+                <div class="bg-secondary">
+                  <div class="float-left">
+                    <div class="card-header fcW">
+                      <h2 class="text-white text-left">固定暫停異動</h2>
+                    </div>
+                  </div>
+                  <div class="float-right mt-md-2 mr-3 mb-2"><button type="button" class="btn btn-info que" data-que_type="pause" data-toggle="modal" data-target=".pop-que">歷史紀錄查詢<i class="fas fa-caret-right ml-2"></i></button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>固定暫停(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_p[mil_p01_before]" id="mil_p01_before_object" value="{{$tv_meal_instruction_log_p_row->mil_p01_before|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_p01", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="checkbox" id="mil_p01_before_{{$k}}" data-fd_name="mil_p01_before_object" class="mil_p01_before_object before_object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_p_row->mil_p01_before_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>固定暫停(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type="hidden" name="mil_p[mil_p01]" id="mil_p01_object" value="{{$tv_meal_instruction_log_p_row->mil_p01|default:''}}">
+                  {{foreach from=hlp_opt_setup("mil_p01", null, "get") key=k item=v}}
+                    <label class="checkbox-inline">
+                      <input type="checkbox" id="mil_p01_{{$k}}" data-fd_name="mil_p01_object" class="mil_p01_object object" value="{{$k}}" {{if $k|in_array:$tv_meal_instruction_log_p_row->mil_p01_arr|default:''}} checked {{/if}}> {{$v}}
+                    </label>
+                  {{/foreach}}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="identity" class="instruction_table table table-bordered table-hover table-sm" {{if !in_array(5 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="mil_i[s_num]" value="{{$tv_meal_instruction_log_i_row->s_num|default:''}}">
+          <div  id="identity_h2" class="row mt-2" {{if !in_array(5 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+            <div class="col-12">
+              <div class="card">
+                <div class="bg-secondary">
+                  <div class="float-left">
+                    <div class="card-header fcW">
+                      <h2 class="text-white text-left">自費異動</h2>
+                    </div>
+                  </div>
+                  <div class="float-right mt-md-2 mr-3 mb-2"><button type="button" class="btn btn-info que" data-que_type="identity" data-toggle="modal" data-target=".pop-que">歷史紀錄查詢<i class="fas fa-caret-right ml-2"></i></button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>自費(異動前)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 是否為自費戶：</span>
+                <span class='form-group'>
+                  {{foreach from=hlp_opt_setup("mil_i01", null, "get") key=k item=v}}
+                    <input type="radio" class="mil_i01_before_object before_object" name="mil_i[mil_i01_before]" value="{{$k}}" {{if $tv_meal_instruction_log_i_row->mil_i01_before|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>二. 變更說明(異動前)：</span>
+                <span class='form-group'>
+                  <textarea id='mil_i01_reason_before' class='form-control form-control-sm before_object' name='mil_i[mil_i01_reason_before]' rows='3' >{{$tv_meal_instruction_log_i_row->mil_i01_reason_before|default:''}}</textarea>
+                  <span id='helpBlock_mil_i01_reason_before' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+                <br/>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>自費(異動後)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span>一. 是否為自費戶(異動後)：</span>
+                <span class='form-group'>
+                  {{foreach from=hlp_opt_setup("mil_i01", null, "get") key=k item=v}}
+                    <input type="radio" name="mil_i[mil_i01]" value="{{$k}}" {{if $tv_meal_instruction_log_i_row->mil_i01|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                  {{/foreach}}
+                </span>
+                <br/>
+                <span>二. 變更說明：</span>
+                <span class='form-group'>
+                  <textarea id='mil_i01_reason' class='form-control form-control-sm' name='mil_i[mil_i01_reason]' rows='3' >{{$tv_meal_instruction_log_i_row->mil_i01_reason|default:''}}</textarea>
+                  <span id='helpBlock_mil_i01_reason' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+                <br/>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table id="makeup" class="instruction_table table table-bordered table-hover table-sm" {{if !in_array(6 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+          <input type="hidden" id="s_num" name="mil_d[s_num]" value="{{$tv_meal_instruction_log_d_row->mil_d|default:''}}">
+          <div  id="makeup_h2" class="row mt-2" {{if !in_array(6 , $tv_mil02_arr) }} {{$none_display}} {{/if}}>
+            <div class="col-12">
+              <div class="card">
+                <div class="bg-secondary">
+                  <div class="float-left">
+                    <div class="card-header fcW">
+                      <h2 class="text-white text-left">補班日出餐異動</h2>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>出餐狀況</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type="radio" name="mil_d[mil_d01]" value="Y" {{if $tv_meal_instruction_log_d_row->mil_d01|default:N==Y}} checked {{/if}}> 出餐
+                  <input type="radio" name="mil_d[mil_d01]" value="N" {{if $tv_meal_instruction_log_d_row->mil_d01|default:N==N}} checked {{/if}}> 停餐
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+  <!-- 停復餐歷史紀錄彈出 -->
+  <div class="modal fade pop-que" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog  modal-lg" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paT20">
+          {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+          <h2><span id="type_h2_str"></span>異動歷史紀錄</h2>
+        </div>
+        <div class="modal-body text-left">
+          <div class="table-responsive">
+            <table id="meal_hist_table" class="table table-bordered table-striped table-hover table-sm sort-table">
+              <thead>
+                <tr class="thead-light">
+                  <th width="10%">異動時間</th>
+                  <th width="10%">餐種</th>
+                  <th width="10%">飯糰</th>
+                  <th width="10%">菜盒</th>
+                  <th width="10%">菜盒內容</th>
+                  <th width="10%">素食</th>
+                  <th width="15%">初一、十五素食</th>
+                </tr>
+              </thead>
+              <tbody id="body_que_meal_list">
+              </tbody>
+            </table>
+            <table id="meal_replacement_hist_table" class="table table-bordered table-striped table-hover table-sm sort-table">
+              <thead>
+                <tr class="thead-light">
+                  <th width="10%">異動時間</th>
+                  <th width="10%">代餐狀況</th>
+                  <th width="10%">代餐種類</th>
+                </tr>
+              </thead>
+              <tbody id="body_que_meal_replacement_list">
+              </tbody>
+            </table>
+            <table id="stop_hist_table" class="table table-bordered table-striped table-hover table-sm sort-table">
+              <thead>
+                <tr class="thead-light">
+                  <th width="10%">異動時間</th>
+                  <th width="10%">出餐狀況</th>
+                  <th width="10%">原因說明</th>
+                </tr>
+              </thead>
+              <tbody id="body_que_stop_list">
+              </tbody>
+            </table>
+            <table id="pause_hist_table" class="table table-bordered table-striped table-hover table-sm sort-table">
+              <thead>
+                <tr class="thead-light">
+                  <th width="10%">異動時間</th>
+                  <th width="10%">固定暫停</th>
+                </tr>
+              </thead>
+              <tbody id="body_que_pause_list">
+              </tbody>
+            </table>
+            <table id="identity_hist_table" class="table table-bordered table-striped table-hover table-sm sort-table">
+              <thead>
+                <tr class="thead-light">
+                  <th width="10%">異動時間</th>
+                  <th width="10%">是否為自費戶</th>
+                  <th width="10%">變更說明</th>
+                </tr>
+              </thead>
+              <tbody id="body_que_identity_list">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 停復餐歷史紀錄彈出 end-->
+</div>

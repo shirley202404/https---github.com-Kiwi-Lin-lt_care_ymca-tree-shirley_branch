@@ -1,0 +1,136 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/Chart.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/Chart.min.css">
+<script src="{{$tv_pub_url}}/js/html2canvas.min.js"></script>
+<script src="{{$tv_pub_url}}/js/jquery.qrcode.min.js"></script>
+
+<style>
+  .table-responsive {
+    height: 500px;
+    max-height: 500px;
+  }
+</style>
+
+<script>
+  $(function () {
+    async function get_notify_client() {
+      var download_info  = "<tr>";
+          download_info += '  <td colspan="7">';
+          download_info += '    <div class="progress progress-striped active">';
+          download_info += '      <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '        <span>資料載入中，請稍候...</span>';
+          download_info += '       </div>';
+          download_info += '     </div>';
+          download_info += '   </td>';
+          download_info += ' </tr>';
+      $('#notify_client_tbody').html(download_info);
+
+      await $.ajax({
+        xhr: function() {
+          var xhr = new window.XMLHttpRequest();
+          var progressBar = $(".progressbar");
+          xhr.addEventListener("progress", function(evt) {
+            console.log(evt);
+            if (evt.lengthComputable) {
+                var percentComplete = (evt.loaded / evt.total)*100;
+                percentComplete = Math.floor(percentComplete);
+                console.log(percentComplete);
+                progressBar.css("width", percentComplete + "%");
+                progressBar.html(percentComplete+'%');
+              }
+            }, false);
+          return xhr;
+        },
+        type:'post',
+        url: '{{$tv_get_notify_clients_link}}',
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_get_notify_clients_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $("#static_str").html(rs['rtn_static_str']);
+          $("#notify_client_tbody").html(rs['rtn_tbody_str']);
+          $(".btn_sec").click(function() {
+            var que_s_num = $(this).data('que_s_num');
+            window.open("{{$tv_service_case_link}}" + que_s_num, "_blank");
+          });
+          return;
+        }
+      });
+    }
+
+    get_notify_client();
+  });
+</script>
+
+<div class="right-content">
+  <div class="page-title">
+    <h1>後台管理系統-首頁</h1>
+  </div>
+  <div class="container-fluid">
+    <span id="main">
+      <div class='maT10'></div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card card-default mt-3">
+            <div class="card-header">
+              <i class="fas fa-history"></i>&nbsp個案停餐名單(已滿三個月)
+              <div class="float-right">
+                <p id="static_str"></p>
+              </div>  
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover table-sm">
+                  <thead>
+                    <tr class="thead-light">
+                      <th>區域</th>
+                      <th>案主姓名</th>
+                      <th>服務現況</th>
+                      <th>服務開始日</th>
+                      <th>餐別</th>
+                      <th>最後停餐異動日</th>
+                      <th style="width:08%"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="notify_client_tbody">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card card-default mt-3">
+            <div class="card-header"><i class="fas fa-code-branch"></i>&nbsp; 更新紀錄</div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover table-sm">
+                  <thead>
+                    <tr class="thead-light">
+                      <th style="width:08%">版本</th>
+                      <th style="width:13%">日期</th>
+                      <th style="width:10%">發佈者</th>
+                      <th>說明</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>V1.1.0</td>
+                      <td>2023-03-25</td>
+                      <td>Kiwi</td>
+                      <td>
+                        系統開發測試!!!
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>

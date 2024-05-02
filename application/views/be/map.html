@@ -1,0 +1,109 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<link rel="stylesheet" href="{{$tv_pub_url}}/leaflet/dist/leaflet.css" />
+<script src="{{$tv_pub_url}}/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.featuregroup.subgroup@1.0.2/dist/leaflet.featuregroup.subgroup.js"></script>
+<!--
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+-->
+<style>
+  #map {
+    height: 75vh;
+  }
+  
+  .leaflet-div-event-new {
+    background: transparent;
+    border: 0px transparent;
+    text-align: center; 
+  }
+</style>
+
+<script>
+  $(function() {  
+    
+    {{* 宣告圖標 Begin*}}
+    
+      var draw_reh_0 = [];
+      var layer_reh_0 = [];
+      var clients_reh_none_set = [];
+      var icon_none_set = L.divIcon({
+        html: "<span style='font-size:30px'><i style='color:#808080;' class='fas fa-map-marker-alt'></i></span>",
+        iconAnchor: [12,25],
+        popupAnchor: [0,-25],
+        className: "leaflet-div-event-new"
+      });
+      {{foreach from=$tv_route_row key=k item=v}}  
+        var icon_{{$v.s_num}} = L.divIcon({
+          html: "<span style='font-size:30px'><i style='color:{{$v.reh08}};' class='fas fa-map-marker-alt'></i></span>",
+          iconAnchor: [12,25],
+          popupAnchor: [0,-25],
+          className: "leaflet-div-event-new"
+        });
+        var draw_reh_{{$v.s_num}} = []; // 畫線
+        var layer_reh_{{$v.s_num}} = [];
+        var clients_reh_{{$v.s_num}} = [];
+      {{/foreach}}      
+    {{* 宣告圖標 End *}}
+    
+    var map = L.map('map', {
+      maxZoom: 18,
+      attributionControl: false, // 是否秀出「leaflet」的貢獻標記
+      zoomControl: true , // 是否秀出 - + 按鈕
+    }).setView(['24.25799087995934', '120.71303191579813'], 11);
+
+    var parentGroup = L.markerClusterGroup().addTo(map);
+    var overlays = {};
+    
+    {{foreach from=$tv_clients_row key=k item=v}}  
+      {{if $v.ct16 != 0 and $v.ct17 != 0}}
+        var popup_str = '';
+        popup_str += '案主名稱：{{$v.ct01}}{{$v.ct02}}<br/>';
+        popup_str += '案主手機：{{$v.ct06_telephone}}<br/>';
+        popup_str += '案主家電：{{$v.ct06_homephone}}<br/>';
+        var item = L.marker(["{{$v.ct16}}" , "{{$v.ct17}}"] , {icon:icon_{{$v.reh_s_num|default:'none_set'}}}).bindPopup(popup_str);
+        // markers.addLayer(item)
+        clients_reh_{{$v.reh_s_num|default:'none_set'}}.push(item);
+        // draw_reh_{{$v.reh_s_num|default:0}}.push(["{{$v.ct16}}" , "{{$v.ct17}}"]); // 畫線用
+      {{/if}}
+    {{/foreach}}
+
+    var none = "<span><i class='fas fa-map-marker-alt' style='color:#808080;'></i> 未設定路線("+clients_reh_none_set.length+")</span>"
+      overlays[none] = L.featureGroup.subGroup(
+        parentGroup,
+        clients_reh_none_set
+    ).addTo(map);
+    {{foreach from=$tv_route_row key=k item=v}}
+      var k = "<span><i class='fas fa-map-marker-alt' style='color:{{$v.reh08}};'></i> {{$v.reh01|default:'none_set'}}線("+clients_reh_{{$v.s_num|default:'none_set'}}.length+"人)</span>"
+      overlays[k] = L.featureGroup.subGroup(
+        parentGroup,
+        clients_reh_{{$v.s_num|default:'none_set'}}
+      ).addTo(map);
+    {{/foreach}}
+
+    L.control.layers(null, overlays).addTo(map);
+    L.control.attribution({prefix: '<a href="https://leafletjs.com/">Leaflet</a> | 弗傳慈心基金會'}).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
+   
+    // L.mapquest.key = 't77xO3NASvKZhWYE6yrNRR6Os1HRlPP6';
+    
+  });
+</script>
+    
+<div class="right-content">
+  <div class="page-title">
+    <h1>服務地圖</h1>
+  </div>
+  <div class="container-fluid">
+    <div class="white-wrapper">
+      <div id="map" style="width: 100%;"></div>
+    </div>
+    <div class="white-wrapper">
+      <div id="leaflet" style="width: 100%;"></div>
+    </div>
+  </div>
+</div>

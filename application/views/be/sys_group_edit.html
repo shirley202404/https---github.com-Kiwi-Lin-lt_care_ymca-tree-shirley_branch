@@ -1,0 +1,325 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script>
+  $(function(){
+    $("#ga_all").click(function() {
+      if($("#ga_all").prop("checked")) {
+        $("input[name^='ga_']").each(function() {
+            $(this).prop("checked", true);
+        });
+      }
+      else {
+        $("input[name^='ga_']").each(function() {
+            $(this).prop("checked", false);
+        });
+      }
+    });
+    $("input[name^='ga_']").click(function() {
+      var fd_name   = $(this).attr('name'); // 欄位名稱
+      var sel_idx   = fd_name.indexOf('_sel');
+      if(sel_idx>0) {
+        var fd_name_p2 = $(this).attr('name').substr(0,sel_idx);  // 第二層
+        var sel_idx2   = fd_name_p2.lastIndexOf('_');
+        var fd_name_p1 = $(this).attr('name').substr(0,sel_idx2); // 第一層
+      }
+      else {
+        var fd_name_p2 = $(this).attr('name').substr(0,sel_idx);  // 第二層
+        var sel_idx2   = fd_name.lastIndexOf('_');
+        var fd_name_p1 = $(this).attr('name').substr(0,sel_idx2); // 第一層
+      }
+      //alert(sel_idx2);
+      //alert(fd_name_p2);
+      //alert(fd_name_p1);
+      //alert($(this).attr('name'));
+      //alert(fd_name)
+      if($(this).prop("checked")) {
+        //$(this).css('background-color','#98fb98');
+        $("input[name^='"+fd_name+"']").each(function() {
+            $(this).prop("checked", true)
+                   .css('background-color','#98fb98');
+            //if(sel_idx>0) {
+              $("input[name='"+fd_name_p2+"']").prop("checked", true); // 第二層也要自動打勾
+              $("input[name='"+fd_name_p1+"']").prop("checked", true); // 第一層也要自動打勾
+            //}
+        });
+      }
+      else {
+        //$(this).css('background-color','');
+        $("input[name^='"+fd_name+"']").each(function() {
+            $(this).prop("checked", false);
+        });
+      }
+    });
+
+    $("#save").click(function(){
+      //console.log($("#ga_input").serialize());
+      //return;
+      var err_msg = '';
+      $('#ga_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      //console.log($("#ga_input").serialize());
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#ga_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+
+		$("#acg_is_open").val('{{$tv_acc_group_row->acg_is_open|default:'0'}}');
+  });
+</script>
+<div class="right-content">
+	<div class="page-title clearfix">
+		<div class="float-left">
+			<h1>{{$tv_breadcrumb3}}群組</h1>
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item"><a href="" class="C1">系統管理</a></li>
+				<li class="breadcrumb-item"><a href="" class="C1">群組管理</a></li>
+				<li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+			</ol>
+		</div>
+		<div class="float-right">
+			<div class="visible-xs"><div class="maT10"></div></div>
+	    <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+	    <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+		</div>
+	</div>
+	<div class="container-fluid">
+		<!-- 表格區塊 -->
+		<div class="white-wrapper">
+			<div class="table-responsive">
+				<form id="ga_input" name="ga_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+				  <input type="hidden" id="group_s_num" name="group_s_num" value="{{$tv_acc_group_row->s_num|default:'0'}}">
+					<div class="row">
+						<div class="form-group col-6">
+							<label for="category-name">群組名稱</label>
+							<input id="category-name" type="text" class="form-control form-control-sm" id="acg_name" name="acg_name" placeholder="" value="{{$tv_acc_group_row->acg_name|default:''}}" required>
+							<div class="help-block with-errors"></div>
+						</div>
+						<div class="form-group col-6">
+							<label for="acg_is_open">是否開放選取</label>
+							<select class="form-control form-control-sm" id="acg_is_open" name="acg_is_open" required>
+								<option value="N" selected>否</option>
+								<option value="Y">是</option>
+							</select>
+							<div class="help-block with-errors"></div>
+						</div>
+		  		</div>
+					<div class="form-group">
+						<label for="category-name">使用者</label>
+						<span class="form-control form-control-sm text-primary" readonly>{{$tv_acc_group_row->acc_name|default:''}}</span>
+					</div>
+					{{assign var="snum" value="0"}}
+				  <table class="table table-bordered table-striped table-hover table-sm">
+				  	<thead>
+				  		<tr class="table-active">
+				  			<th>
+				  				<label class="checkbox-inline">
+				  					<input type="checkbox" id="ga_all" name="ga_all">
+				  				</label>
+				  			</th>
+				  			<th>功能項目</th>
+				  			<th><span title="1_list">瀏覽</span></th>
+				  			<th><span title="2_add">新增</span></th>
+				  			<th><span title="3_upd">修改</span></th>
+				  			<th><span title="4_del">刪除</span></th>
+				  			<th><span title="5_que">查詢</span></th>
+				  			<th><span title="6_prn">列印</span></th>
+				  			<th><span title="7_download">下載</span></th>
+				  			<th><span title="8_money">金額</span></th>
+				  			<th><span title="9_cf">發單確認</span></th>
+				  			<th><span title="10_cfreport">列印確認</span></th>
+				  		</tr>
+				  	</thead>
+				  	<tbody>
+				  	  {{foreach from=$tv_menu_head key=k item=v}}
+				  	    {{assign var="snum" value=$snum+1}}
+				  	    {{if 1 != $snum}}
+				  		    <tr class="table-active">
+				  		    	<th></th>
+				  		    	<th></th>
+				  		    	<th><span title="1_list">瀏覽</span></th>
+				  		    	<th><span title="2_add">新增</span></th>
+				  		    	<th><span title="3_upd">修改</span></th>
+				  		    	<th><span title="4_del">刪除</span></th>
+				  		    	<th><span title="5_que">查詢</span></th>
+				  		    	<th><span title="6_prn">列印</span></th>
+				  		    	<th><span title="7_download">下載</span></th>
+				  		    	<th><span title="8_money">金額</span></th>
+				  		    	<th><span title="9_cf">發單確認</span></th>
+				  		    	<th><span title="10_cfreport">列印確認</span></th>
+				  		    </tr>
+				  		  {{/if}}
+				  		  {{if !empty($tv_menu_body[$k]) }}
+				  		    <tr style="background-color:#F5F5F8">
+				  		    	<td>
+				  		    		<label class="checkbox-inline">
+				  		    			<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}" value="Y">
+				  		    		</label>
+				  		    	</td>
+				  		    	<td>{{$v.sys_menu_name}}</td>
+				  		    	<td>
+				  		        <label class="checkbox-inline hiddenx">
+				  		        	<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_list" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_list" value="Y" {{$tv_menu[{{$k}}]['agu_open_list_checked']}}>
+				  		        </label>
+				  		    	</td>
+				  		    	<td>&nbsp;</td>
+				  		    	<td>&nbsp;</td>
+				  		    	<td>&nbsp;</td>
+				  		    	<td>&nbsp;</td>
+				  		    	<td>&nbsp;</td>
+				  		    	<td>&nbsp;</td>
+				  		    	<td>&nbsp;</td>
+				  		    	<td>&nbsp;</td>
+				  		    	<td>&nbsp;</td>
+				  		    </tr>
+				  		    {{foreach from=$tv_menu key=k2 item=v2}}
+				  		      {{if $v2.sys_menu_level==$k}}
+				  		        <tr>
+				  		        	<td>
+				  		        		<label class="checkbox-inline">
+				  		        			<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}" value="Y">
+				  		        		</label>
+				  		        	</td>
+				  			        <td>&nbsp;&nbsp;&nbsp;<span style="color:#808080;" class="text-secondary">{{$v2.sys_menu_name}}</span></td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_list" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_list" value="Y" {{$v2.agu_open_list_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_add" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_add" value="Y" {{$v2.agu_open_add_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_upd" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_upd" value="Y" {{$v2.agu_open_upd_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_del" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_del" value="Y" {{$v2.agu_open_del_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_que" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_que" value="Y" {{$v2.agu_open_que_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_prn" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_prn" value="Y" {{$v2.agu_open_prn_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_download" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_download" value="Y" {{$v2.agu_open_download_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_money" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_money" value="Y" {{$v2.agu_open_money_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_cf" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_cf" value="Y" {{$v2.agu_open_cf_checked}}>
+				  			        	</label>
+				  			        </td>
+				  			        <td>
+				  			        	<label class="checkbox-inline">
+				  			        		<input type="checkbox" id="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_cfreport" name="ga_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_{{$k2}}_sel_cfreport" value="Y" {{$v2.agu_open_cfreport_checked}}>
+				  			        	</label>
+				  			        </td>
+
+				  		      {{/if}}
+				  		    {{/foreach}}
+				  		  {{else}}
+				  		    <tr style="background-color:#F5F5F8">	
+				  		    	<td>
+				  		    		<label class="checkbox-inline">
+				  		    			<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}" value="Y">
+				  		    		</label>
+				  		    	</td>
+				  		    	<td>{{$v.sys_menu_name}}</td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_list" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_list" value="Y" {{$tv_menu[$k]['agu_open_list_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_add" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_add" value="Y" {{$tv_menu[$k]['agu_open_add_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_upd" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_upd" value="Y" {{$tv_menu[$k]['agu_open_upd_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_del" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_del" value="Y" {{$tv_menu[$k]['agu_open_del_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_que" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_que" value="Y" {{$tv_menu[$k]['agu_open_que_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_prn" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_prn" value="Y" {{$tv_menu[$k]['agu_open_prn_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_download" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_download" value="Y" {{$tv_menu[$k]['agu_open_download_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_money" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_money" value="Y" {{$tv_menu[$k]['agu_open_money_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_cf" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_cf" value="Y" {{$tv_menu[$k]['agu_open_cf_checked']}}>
+				  			    	</label>
+				  			    </td>
+				  			    <td>
+				  			    	<label class="checkbox-inline">
+				  			    		<input type="checkbox" id="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_cfreport" name="ga_{{$v.sys_menu_level}}_{{$k|str_pad:3:'0':STR_PAD_LEFT}}_sel_cfreport" value="Y" {{$tv_menu[$k]['agu_open_cfreport_checked']}}>
+				  			    	</label>
+				  			    </td>
+
+				  		    </tr>
+				  		  {{/if}}
+				  	  {{/foreach}}
+				  	</tbody>
+				  </table>
+				</form>
+			</div>
+		</div>
+		<!-- 表格區塊 end-->
+	</div>
+</div>

@@ -1,0 +1,636 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+    $('.fd_que').click(function(){
+      $('#que_kind').val('que');
+    });
+    $('#f_search').click(function(){
+      $('#que_str').val($("#f_que").val());
+      $('#fd_que_input').submit();
+    });
+    $("#f_que").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#que_str').val($(this).val());
+        $('#f_search').click();
+      }
+    });
+    $(".que_enter").keypress(function(event) {
+      if( event.which == 13 ) {
+        $('#fd_que_input').submit();
+      }
+    });
+    $("#btn_que").click(function(){
+      $('#fd_que_input').submit();
+      return;
+    });
+    $('#btn_que_close').click(function(){
+      $("#btn_que_reset").click(); // 清除查詢資料
+      $('.pop-que').modal("hide");
+    })
+    
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+            //alert(rs);
+          }
+        }
+      })
+      return;
+    });
+    $("input[name^='is_available']").click(function(){
+      var s_num = $(this).data('s_num');
+      if($(this).prop("checked")) { // 打勾
+        var is_available = 1;
+        var old_is_flag = false;
+      }
+      else {
+        var is_available = 0;
+        var old_is_flag = true;
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}upd_is_available',
+        data: {f_kind:'upd_is_available',f_s_num:s_num,f_is_available:is_available},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_save_link}}]upd_is_available:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+          }
+          else {
+            alert("{{$tv_upd_ng}}");
+            $('#is_available_'+s_num).prop('checked',old_is_flag);
+            //alert(rs);
+          }
+        }
+      })
+    });
+    $(".fd_order").click(function(){
+      $('#que_kind').val('order');
+      var fd_name = $(this).data('fd_name');
+      var order_kind = $(this).data('order_kind');
+      if('asc'==order_kind) {
+        $(this).data('order_kind','desc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-down"></i>');
+        order_kind = 'desc';
+      }
+      else {
+        $(this).data('order_kind','asc');
+        //$('#icon_'+fd_name).html('<i class="fas fa-sort-up"></i>');
+        order_kind = 'asc';
+      }
+      //order_kind = $(this).data('order_kind');
+      $('#que_order_fd_name').val(fd_name);
+      $('#que_order_kind').val(order_kind);
+      //console.log(fd_name);
+      //console.log(order_kind);
+      $('#fd_que_input').submit();
+    });
+    //console.log('{{$tv_que_order_fd_name}}');
+    {{if '' != $tv_que_order_fd_name}}
+      if('asc'=='{{$tv_que_order_kind}}') {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-up"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','asc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','asc');
+      }
+      else {
+        $('#icon_'+'{{$tv_que_order_fd_name}}').html('<i class="fas fa-sort-down"></i>');
+        $('#{{$tv_que_order_fd_name}}').data('order_kind','desc');
+        $('#fd_'+'{{$tv_que_order_fd_name}}').data('order_kind','desc');
+      }
+      $('#que_order_fd_name').val('{{$tv_que_order_fd_name}}');
+      $('#que_order_kind').val('{{$tv_que_order_kind}}');
+      //console.log($('#que_order_fd_name').val());
+      //console.log($('#que_order_kind').val());
+    {{/if}}
+    $('#que_str').val('{{$tv_que_str}}');
+    $("#route_his_ok").click(function() {
+      var q_type = $("#type").val();
+      console.log(q_type);
+      var em_s_num = $("#em_s_num").val();
+      var history_date = $("#history_date").val();
+      location.replace('{{$tv_route_history_link}}?dp_s_num='+em_s_num+'&history_date='+history_date+'&type='+q_type);
+    });
+
+    // $("#btn_que_work_q").click(function(){
+    //   $('#fd_que_work_q').submit();
+    //   return;
+    // });
+
+    $('#btn_que_work_q_close').click(function(){
+      $("#btn_que_work_q_reset").click(); // 清除查詢資料
+      $('.pop-work_q').modal("hide");
+    })
+
+    $("#btn_que_work_q").click(function() {
+      var strMsg = '';
+      $('.pop-work_q').modal("hide");
+      var que_ct_name = $("#que_ct_name").val();
+      var que_reh_s_num = $("#que_reh_s_num").val();
+      var que_dys01_start= $("#que_dys01_start").val();
+      var que_dys01_end = $("#que_dys01_end").val();
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('.pop-download').modal("show");
+      $('#show_download_info_btn').hide();
+      //console.log(s_num);
+      $.ajax({
+        type:'get',
+        url: '{{$tv_download_link}}',
+        data: {que_ct_name:que_ct_name, que_reh_s_num:que_reh_s_num, que_dys01_start:que_dys01_start, que_dys01_end:que_dys01_end},
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_download_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+    
+    $('#btn_que_punch_log_close').click(function(){
+      $("#btn_que_punch_log_reset").click(); // 清除查詢資料
+      $('.pop-punch_log').modal("hide");
+    })
+
+    $("#btn_que_punch_log").click(function() {
+      var strMsg = '';
+      $('.pop-punch_log').modal("hide");
+      var download_info  = '<div class="progress progress-striped active">';
+          download_info += '   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;">';
+          download_info += '    <span>資料處理中，請稍候...</span>';
+          download_info += '   </div>';
+          download_info += ' </div>';
+      $('#show_download_info').html(download_info);
+      $('.pop-download').modal("show");
+      $('#show_download_info_btn').hide();
+      //console.log(s_num);
+      $.ajax({
+        type:'get',
+        url: '{{$tv_download_link}}',
+        data: $("#fd_que_punch_log").serialize(),
+        error: function(xhr) {
+          strMsg += 'Ajax request發生錯誤[{{$tv_download_link}}]:'+xhr+'\n請重試';
+        },
+        success: function (rs) {
+          rs = JSON.parse(rs);
+          $('#show_download_info').html(rs);
+          $('#show_download_info_btn').show();
+          return;
+        }
+      })
+    });
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      {{if $tv_source == "work_q"}}
+      <h1>關懷紀錄</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">工作紀錄</a></li>
+        <li class="breadcrumb-item"><a href="#">關懷紀錄</a></li>
+        <li class="breadcrumb-item active">路線列表</li>
+      </ol>
+      {{/if}}
+      {{if $tv_source == "gps_log"}}
+      <h1>GPS</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">工作紀錄</a></li>
+        <li class="breadcrumb-item"><a href="#">GPS</a></li>
+        <li class="breadcrumb-item active">路線列表</li>
+      </ol>
+      {{/if}}
+      {{if $tv_source == "punch_log"}}
+      <h1>送餐打卡</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">工作紀錄</a></li>
+        <li class="breadcrumb-item"><a href="#">送餐打卡</a></li>
+        <li class="breadcrumb-item active">路線列表</li>
+      </ol>
+      {{/if}}
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      {{if $tv_source == "gps_log"}}
+        <button type="button" class="btn btn-light btn-sm route_history" data-toggle="modal" data-target=".pop-route_history">路徑歷史資料 <i class="fas fa-shoe-prints"></i></button>
+      {{/if}}
+      {{if $tv_source == "work_q"}}
+        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target=".pop-work_q">關懷紀錄下載 <i class="fas fa-download"></i></button>      
+      {{/if}}
+      {{if $tv_source == "punch_log"}}
+        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target=".pop-punch_log">打卡紀錄下載 <i class="fas fa-download"></i></button>      
+      {{/if}}
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter">
+        <div class="row">
+          <div class="col-6 col-sm-4 col-md-4 col-lg-4 col-xl-3 ml-3">
+            <div class="row">
+              <div class="input-group">
+                <input type="text" id="f_que" name="f_que" class="form-control form-control-sm" placeholder="請輸入搜尋內容" value="{{$tv_f_que}}">
+                <div class="input-group-prepend">
+                  <button id="f_search" name="f_search" class="btn btn-C1 btn-sm ml-1" type="button">{{$tv_que_btn}}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <p class="text-right">Total: {{$tv_total_rows|number_format}}</p>
+          </div>
+        </div>
+      </div>
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover table-sm">
+          <thead>
+            <tr class="thead-light">
+              <th class="text-nowrap">路線負責人</th><!--1-->
+              <th class="text-nowrap">路線代號</th><!--1-->
+              <th class="text-nowrap">路線類別</th><!--2-->
+              <th class="text-nowrap">路線輔助社工</th><!--2-->
+              <th class="text-left"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{foreach from=$tv_route_row key=k item=v}}
+              <tr>
+                <td class="text-left">{{$v.dp_name|default:''}}</td><!--1.路線負責人-->
+                <td class="text-left">{{$v.reh01|default:''}}</td><!--2.路線代號-->
+                <td class="text-left">{{$v.reh03_str|default:''}}</td><!--3.路線類別-->
+                <td class="text-left">{{$v.route_sw_str|default:'無'}}</td><!--3.路線類別-->
+                <td align='right'>
+                  {{if $tv_source == "work_q"}}
+                    <button type="button" class="btn btn-info btn-sm" onclick="location.href='{{$tv_work_q_disp_link}}?que_reh_s_num={{$v.s_num}}';">查看紀錄</button>
+                  {{/if}}
+                  {{if $tv_source == "gps_log"}}
+                    <button type="button" class="btn btn-info btn-sm" onclick="location.href='{{$tv_gps_log_disp_link}}?que_reh_s_num={{$v.s_num}}';">查看GPS</button>
+                  {{/if}}
+                  {{if $tv_source == "punch_log"}}
+                    <button type="button" class="btn btn-info btn-sm" onclick="location.href='{{$tv_punch_log_disp_link}}?que_reh_s_num={{$v.s_num}}';">查看打卡紀錄</button>
+                  {{/if}}
+                </td>
+              </tr>
+            {{foreachelse}}
+            <tr>
+              <td colspan="99" class="alert alert-warning">
+                  查無資料!!!
+              </td>
+            </tr>
+            {{/foreach}}
+          </tbody>
+        </table>
+      </div>
+      <!-- 頁籤 -->
+      <ul class="pagination justify-content-center pagination-sm" style="margin:20px 0">
+        {{$tv_pg_link}}
+      </ul>
+      <!-- 頁籤 end-->
+    </div>
+    <!-- 表格區塊 end-->
+  </div>
+  <!-- 查詢2彈出 -->
+  <div class="modal fade pop-que" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+      <div class="modal-content modal-C1 ">
+        <form class="maT20" action="{{$tv_que_link}}" id="fd_que_input" name="fd_que_input" method="GET" enctype="multipart/form-data">
+          <input type='hidden' id='que_kind' name='que_kind' class='form-control form-control-sm que_enter' value='que'>
+          <input type='hidden' id='que_order_fd_name' name='que_order_fd_name' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <input type='hidden' id='que_order_kind' name='que_order_kind' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value=''>
+          <input type='hidden' id='source' name='source' class='form-control form-control-sm que_enter' placeholder='請輸入排序' value='{{$tv_source}}'>
+          <div class="text-center paTB20">
+            {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+            <h2>請輸入查詢條件</h2>
+          </div>
+          <div class="modal-body text-left">
+            <table class="table xtable-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="col-3"}}
+              {{assign var="swidth_right" value="col-9"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>專案名稱</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_pj01' name='que_pj01' class='col-7 form-control form-control-sm que_enter ' placeholder='請輸入專案名稱' value=''>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_que_pj01' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>專案編號</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <input type='text' id='que_pj02' name='que_pj02' class='col-7 form-control form-control-sm que_enter ' placeholder='請輸入專案編號' value=''>
+                        <div class='input-group-append'>
+                          <span id='helpBlock_que_pj02' class='help-block ml-2'></span>
+                        </div>
+                      </div>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}} table-secondary text-right'>全文檢索</td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <span class='form-group'>
+                      <span class='input-group input-group-sm'>
+                        <input type='text' id='que_str' name='que_str' class='col-7 form-control form-control-sm que_enter' placeholder='' value=''>
+                        <div class="input-group-append">
+                          <span id='helpBlock_que_str' class='help-block ml-2'>(所有欄位搜尋)</span>
+                        </div>
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class='d-flex'>
+                  <td class='{{$swidth_left}}'></td>
+                  <td class='{{$swidth_right}} table-light'>
+                    <button type="button" id="btn_que" class="btn btn-C1 col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                    <button id="btn_que_reset" type="reset" class="btn btn-C1-line col-3">清除 <i class="fas fa-eraser"></i></button>
+                    <button type="button" id="btn_que_close" class="btn btn-C1-line col-3">關閉 <i class="far fa-times-circle"></i></button>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- 查詢2彈出 end-->
+  <!-- 路線歷史紀錄查詢 BEGIN -->
+  <div class="modal fade pop-route_history" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"> 路徑歷史資料搜尋</i><br></h1>
+          <div class='maT10'></div>
+          <div class="row">
+            <div class="col-12">
+              <div class="text-left ml-3 row">
+                <label for="vendor_select" class="col-sm-4 col-form-label pr-0">外送員：</label>
+                <div class="col-sm-7 p-0 mt-1">
+                  <span class="form-group">
+                    <select id="em_s_num" name="em_s_num" class='form-control form-control-sm' required>
+                      <option value="" selected>-請選擇-</option>
+                      {{foreach from=$tv_delivery_person_row key=k item=v}}
+                        <option value='{{$v.s_num}}'>{{$v.dp01}}{{$v.dp02}}</option>
+                      {{/foreach}}
+                    </select> 
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div class="text-left ml-3 row">
+                <label for="vendor_select" class="col-sm-4 col-form-label pr-0">時間：</label>
+                <div class="col-sm-7 p-0 mt-1">
+                  <span class='form-group'>
+                    <div class='input-group form_date'>
+                      <div class='input-group-prepend'>
+                        <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                      </div>
+                      <input type='text' id='history_date' name='history_date' class='form-control form-control-sm' placeholder='請輸入搜尋時間' value='' required>
+                    </div>
+                    <span id='helpBlock_history_date' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div class="text-left ml-3 row">
+                <label for="vendor_select" class="col-sm-4 col-form-label pr-0">送餐時段：</label>
+                <div class="col-sm-7 p-0 mt-1">
+                  <span class="form-group">
+                    <select id="type" name="type" class='form-control form-control-sm' required>
+                      <option value="" selected>-請選擇-</option>
+                      <option value="1">早上</option>
+                      <option value="2">下午</option>
+                    </select> 
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer text-center maT5">
+            <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+            <button type="button" id="route_his_ok" class="btn btn-C1" data-dismiss="modal">確定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 路線歷史紀錄查詢 END-->
+  <!-- 關懷紀錄 END-->
+  <div class="modal fade pop-work_q" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content modal-C1 ">
+        <div class="text-center paT20">
+          {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+          <h2>請輸入下載條件</h2>
+        </div>
+        <div class="modal-body text-left">
+          <form class="maT20" action="{{$tv_download_link}}" id="fd_que_work_q" name="fd_que_work_q" method="GET" enctype="multipart/form-data">
+            <div class="table-responsive" style="overflow: visible;">
+              <table class="table xtable-bordered table-hover table-sm">
+                {{assign var="swidth_left" value="col-3"}}
+                {{assign var="swidth_right" value="col-9"}}
+                <tbody>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>下載日期區間</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <input type='text' id='que_dys01_start' name="que_dys01_start" class='col-3 form-control form-control-sm f_que_enter_date form_date' placeholder='請輸入下載日期(起)' value=''>
+                          <div class="input-group-append">
+                            <span class="input-group-text">至</span>
+                          </div>          
+                          <input type='text' id='que_dys01_end' name="que_dys01_end" class='col-3 form-control form-control-sm f_que_enter_date form_date' placeholder='請輸入下載日期(訖)' value=''>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>案主姓名</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class='input-group input-group-sm'>
+                          <input type='text' id='que_ct_name' name='que_ct_name' class='col-7 form-control form-control-sm que_enter ' placeholder='請輸入案主姓名' value=''>
+                          <div class='input-group-append'>
+                            <span id='helpBlock_que_ct_name' class='help-block ml-2'></span>
+                          </div>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>路線</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class='input-group input-group-sm'>
+                          <select id='que_reh_s_num' name='que_reh_s_num' class='col-7 form-control form-control-sm que_enter'>
+                            <option value='all' selected>全部</option>
+                            {{foreach from=$tv_all_route_row key=k item=v}}
+                              <option value="{{$v.s_num|default:''}}" data-reh01="{{$v.s_num|default:''}}">{{$v.reh01|default:''}}</option>
+                            {{/foreach}}
+                          </select>                        
+                          <div class='input-group-append'>
+                            <span id='helpBlock_que_reh01' class='help-block ml-2'></span>
+                          </div>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}}'></td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <button type="button" id="btn_que_work_q" class="btn btn-C1 col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                      <button id="btn_que_work_q_reset" type="reset" class="btn btn-C1-line col-3">清除 <i class="fas fa-eraser"></i></button>
+                      <button type="button" id="btn_que_work_q_close" class="btn btn-C1-line col-3">關閉 <i class="far fa-times-circle"></i></button>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 關懷紀錄 END-->
+  <!-- 打卡紀錄 END-->
+  <div class="modal fade pop-punch_log" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content modal-C1 ">
+        <div class="text-center paT20">
+          {{*<h1><i class="far fa-keyboard" aria-hidden="true"></i><br></h1>*}}
+          <h2>請輸入下載條件</h2>
+        </div>
+        <div class="modal-body text-left">
+          <form class="maT20" action="{{$tv_download_link}}" id="fd_que_punch_log" name="fd_que_punch_log" method="GET" enctype="multipart/form-data">
+            <div class="table-responsive" style="overflow: visible;">
+              <table class="table xtable-bordered table-hover table-sm">
+                {{assign var="swidth_left" value="col-3"}}
+                {{assign var="swidth_right" value="col-9"}}
+                <tbody>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>下載日期區間</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <input type='text' id='que_phl01_start' name="que_phl01_start" class='col-3 form-control form-control-sm form_date' placeholder='請輸入下載日期(起)' value=''>
+                          <div class="input-group-append">
+                            <span class="input-group-text">至</span>
+                          </div>          
+                          <input type='text' id='que_phl01_end' name="que_phl01_end" class='col-3 form-control form-control-sm form_date' placeholder='請輸入下載日期(訖)' value=''>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}} table-secondary text-right'>路線</td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <span class='form-group'>
+                        <div class='input-group input-group-sm'>
+                          <select name='que_reh_s_num' class='col-7 form-control form-control-sm que_enter'>
+                            <option value='all' selected>全部</option>
+                            {{foreach from=$tv_all_route_row key=k item=v}}
+                              <option value="{{$v.s_num|default:''}}" data-reh01="{{$v.s_num|default:''}}">{{$v.reh01|default:''}}</option>
+                            {{/foreach}}
+                          </select>                        
+                          <div class='input-group-append'>
+                            <span id='helpBlock_que_reh01' class='help-block ml-2'></span>
+                          </div>
+                        </div>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class='d-flex'>
+                    <td class='{{$swidth_left}}'></td>
+                    <td class='{{$swidth_right}} table-light'>
+                      <button type="button" id="btn_que_punch_log" class="btn btn-C1 col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                      <button id="btn_que_punch_log_reset" type="reset" class="btn btn-C1-line col-3">清除 <i class="fas fa-eraser"></i></button>
+                      <button type="button" id="btn_que_punch_log_close" class="btn btn-C1-line col-3">關閉 <i class="far fa-times-circle"></i></button>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 打卡紀錄 END-->
+  <!-- 下載資訊視窗彈出 -->
+  <div class="modal fade pop-download" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content  modal-C1">
+	    <div class="modal-body">
+        <div class="text-center paT10">
+          <h1><i class="fa fa-info-circle mainC2 maB15" aria-hidden="true"> 打卡紀錄下載</i><br></h1>
+          <span id="show_download_info"></span>
+        </div>
+	    </div>
+	   <div class="modal-footer text-center">
+	     <button type="button" id="show_download_info_btn" class="btn btn-C1" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 下載資訊視窗彈出 end-->
+</div>

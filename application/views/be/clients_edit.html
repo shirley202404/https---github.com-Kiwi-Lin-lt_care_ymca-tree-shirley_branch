@@ -1,0 +1,898 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script src="{{$tv_pub_url}}/js/jquery.twzipcode.min.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    // CKEDITOR.replace('ct99', { height: '300px', width: '100%'});
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      {{if $tv_msel == 'add'}}
+        if($('input:radio[name="ct34_go"]:checked').val() == null){
+          alert("請選擇政府核准身分別!!");
+          return false;
+        }
+      {{/if}}
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            {{if $tv_msel == 'add'}}
+              location.replace("{{$tv_return_link}}");
+            {{else}}
+              location.replace("{{$tv_disp_link}}{{$tv_clients_row->s_num|default:''}}");
+            {{/if}}
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+    $('.twzipcode').twzipcode();
+    
+    $('#bn_s_num').val('{{$tv_clients_row->bn_s_num|default:''}}');
+    $('#ct07_1_rlat').val('{{$tv_clients_row->ct07_1_rlat|default:''}}');
+    $('#ct07_2_rlat').val('{{$tv_clients_row->ct07_2_rlat|default:''}}');
+    $('#ct18').val('{{$tv_clients_row->ct18|default:''}}');
+    $('#ct33').val('{{$tv_clients_row->ct33|default:''}}');
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    $(".object").click(function(){
+      var fd_name = $(this).data("fd_name");
+      var ckeck_flag = $("."+fd_name).prop('checked');
+      var v = $("."+fd_name).val();
+      var object = [];
+      $("."+fd_name+":checkbox:checked").each(function(){
+        object.push($(this).val());
+      });
+      object = object.join(',');
+      $('#'+fd_name).val(object );
+    });
+    
+    $("#ct03").blur(function() {
+      var ct03_val = $("#ct03").val();
+      if(ct03_val != '') {
+        $.ajax({
+          type:'post',
+          url: '{{$tv_chk_ct03_link}}',
+          data: {ct03:ct03_val},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_chk_ct03_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            if(rs != "true") {
+              $("#ct03").val('');
+              alert("此身分證已重複請重新輸入");
+            }
+          }
+        })
+      }
+    });
+    
+    $('#the_same').click(function(){
+      var flag = $(this).prop('checked');
+      var ct08 = $('#ct08').val();
+      var ct09 = $('#ct09').val();
+      var ct10 = $('#ct10').val();
+      var ct11 = $('#ct11').val();
+      if(flag) {
+        $('.twzipcode').twzipcode('set', {
+          'zipcode': ct08
+        });
+        $("#ct12").val(ct08);
+        $("#ct13").val(ct09);
+        $("#ct14").val(ct10);
+        $("#ct15").val(ct11);
+      }
+      else {
+        $("#ct12").val('');
+        $("#ct13").val('');
+        $("#ct14").val('');
+        $("#ct15").val('');
+      }
+      convert();
+    });
+    
+    {{if $tv_msel == "add"}}
+      $(".ct35_type_object").prop('disabled' , true);
+    {{else}}
+      {{if $tv_clients_row->ct35 == "N"}}
+        $(".ct35_type_object").prop('disabled' , true);
+      {{/if}}
+    {{/if}}
+    
+    $("#ct15").blur(function(){
+      convert();
+    });
+    
+    var ori_address = "{{$tv_clients_row->ct13|default:''}}{{$tv_clients_row->ct14|default:''}}{{$tv_clients_row->ct15|default:''}}";
+    function convert() {
+      var ct13 = $("#ct13").val();
+      var ct14 = $("#ct14").val();
+      var ct15 = $("#ct15").val();
+      if(ct13 != '' && ct14 != '' && ct15 != '') {
+        var address = ct13 + ct14 +ct15
+        if(address == ori_address) {
+          return;
+        }
+        else {
+          ori_address = address;
+        }
+        $.ajax({
+          type:'post',
+          url: '{{$tv_address_convert_link}}',
+          data: {address:address},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_address_convert_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            rs = JSON.parse(rs)
+            $("#ct16").val(rs['latitude']);
+            $("#ct17").val(rs['longitude']);
+          }
+        });
+        return;
+      }
+    }
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>案主資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">案主資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_clients_row->b_acc_name|default:''}}({{$tv_clients_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_clients_row->e_acc_name|default:''}}({{$tv_clients_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="s_num" value="{{$tv_clients_row->s_num|default:'0'}}">
+      {{/if}}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          {{assign var="swidth2_left" value="15%"}}
+          {{assign var="swidth2_right" value="85%"}}
+          <tbody>
+            {{if $tv_group_s_num != 21}}
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct01' name='ct01' class='form-control form-control-sm' placeholder='請輸入案主姓' value='{{$tv_clients_row->ct01|default:''}}' required>
+                    <span id='helpBlock_ct01' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主名</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct02' name='ct02' class='form-control form-control-sm' placeholder='請輸入案主名' value='{{$tv_clients_row->ct02|default:''}}' required>
+                    <span id='helpBlock_ct02' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>身分證字號</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct03' name='ct03' class='form-control form-control-sm' placeholder='請輸入身分證字號' value='{{$tv_clients_row->ct03|default:''}}' required>
+                    <span id='helpBlock_ct03' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">案主性別</td>
+                <td width="{{$swidth_right}}" class="table-light">
+                  <span class='form-group'>
+                    <span class="form-control form-control-sm">
+                      <input type="radio" name="ct04" value="M" {{if $tv_clients_row->ct04|default:'M'=='M'}} checked {{/if}}> 男
+                      <input type="radio" name="ct04" value="Y" {{if $tv_clients_row->ct04|default:'M'=='Y'}} checked {{/if}}> 女
+                    </span>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>案主生日</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class='input-group form_date'>
+                      <div class='input-group-prepend'>
+                        <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                      </div>
+                      <input type='text' id='ct05' name='ct05' class='form-control form-control-sm' placeholder='請輸入案主生日' value='{{$tv_clients_row->ct05|default:''|date_format:"%Y-%m-%d"}}' >
+                    </div>
+                    <span id='helpBlock_ct05' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>案主手機</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct06_telephone' name='ct06_telephone' class='form-control form-control-sm' placeholder='請輸入案主手機' value='{{$tv_clients_row->ct06_telephone|default:''}}' >
+                    <span id='helpBlock_ct06_telephone' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>案主家電</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct06_homephone' name='ct06_homephone' class='form-control form-control-sm' placeholder='請輸入案主家電' value='{{$tv_clients_row->ct06_homephone|default:''}}' >
+                    <span id='helpBlock_ct06_homephone' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>聯絡人-1</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-append">
+                        <span class="input-group-text">姓名</span>
+                      </div>
+                    <input type='text' id='ct07_1_name' name='ct07_1_name' class='form-control form-control-sm' placeholder='請輸入姓名' value='{{$tv_clients_row->ct07_1_name|default:''}}' >
+                    <span id='helpBlock_ct07_1_name' class='help-block'></span>
+                    <div class="input-group-append">
+                      <span class="input-group-text">關係</span>
+                    </div>
+                    <input type='text' id='ct07_1_rlat' name='ct07_1_rlat' class='form-control form-control-sm' placeholder='請輸入關係' value='{{$tv_clients_row->ct07_1_rlat|default:''}}' >    
+                    <div class="input-group-append">
+                      <span class="input-group-text">電話</span>
+                    </div>
+                    <input type='text' id='ct07_1_tel' name='ct07_1_tel' class='form-control form-control-sm' placeholder='請輸入電話' value='{{$tv_clients_row->ct07_1_tel|default:''}}' >
+                    <span id='helpBlock_ct07_1_tel' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>聯絡人-2</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-append">
+                        <span class="input-group-text">姓名</span>
+                      </div>
+                    <input type='text' id='ct07_2_name' name='ct07_2_name' class='form-control form-control-sm' placeholder='請輸入姓名' value='{{$tv_clients_row->ct07_2_name|default:''}}' >
+                    <span id='helpBlock_ct07_2_name' class='help-block'></span>
+                    <div class="input-group-append">
+                      <span class="input-group-text">關係</span>
+                    </div>
+                    <input type='text' id='ct07_2_rlat' name='ct07_2_rlat' class='form-control form-control-sm' placeholder='請輸入關係' value='{{$tv_clients_row->ct07_2_rlat|default:''}}' >   
+                    <span id='helpBlock_ct07_2_rlat' class='help-block'></span>
+                    <div class="input-group-append">
+                      <span class="input-group-text">電話</span>
+                    </div>
+                    <input type='text' id='ct07_2_tel' name='ct07_2_tel' class='form-control form-control-sm' placeholder='請輸入電話' value='{{$tv_clients_row->ct07_2_tel|default:''}}' >
+                    <span id='helpBlock_ct07_2_tel' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>個管</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-append">
+                        <span class="input-group-text">姓名</span>
+                      </div>
+                    <input type='text' id='ct22_name' name='ct22_name' class='form-control form-control-sm' placeholder='請輸入姓名' value='{{$tv_clients_row->ct22_name|default:''}}' >
+                    <span id='helpBlock_ct22_name' class='help-block'></span>
+                    <div class="input-group-append">
+                      <span class="input-group-text">電話</span>
+                    </div>
+                    <input type='text' id='ct22_phone' name='ct22_phone' class='form-control form-control-sm' placeholder='請輸入電話' value='{{$tv_clients_row->ct22_phone|default:''}}' >
+                    <span id='helpBlock_ct22_phone' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>照專</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-append">
+                        <span class="input-group-text">姓名</span>
+                      </div>
+                    <input type='text' id='ct23_name' name='ct23_name' class='form-control form-control-sm' placeholder='請輸入姓名' value='{{$tv_clients_row->ct23_name|default:''}}' >
+                    <span id='helpBlock_ct23_name' class='help-block'></span>
+                    <div class="input-group-append">
+                      <span class="input-group-text">電話</span>
+                    </div>
+                    <input type='text' id='ct23_phone' name='ct23_phone' class='form-control form-control-sm' placeholder='請輸入電話' value='{{$tv_clients_row->ct23_phone|default:''}}' >
+                    <span id='helpBlock_ct23_phone' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>居服</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-append">
+                        <span class="input-group-text">姓名</span>
+                      </div>
+                    <input type='text' id='ct24_name' name='ct24_name' class='form-control form-control-sm' placeholder='請輸入姓名' value='{{$tv_clients_row->ct24_name|default:''}}' >
+                    <span id='helpBlock_ct24_name' class='help-block'></span>
+                    <div class="input-group-append">
+                      <span class="input-group-text">電話</span>
+                    </div>
+                    <input type='text' id='ct24_phone' name='ct24_phone' class='form-control form-control-sm' placeholder='請輸入電話' value='{{$tv_clients_row->ct24_phone|default:''}}' >
+                    <span id='helpBlock_ct24_phone' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>戶籍地址</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <div class="twzipcode">
+                    <div class='form-group'>
+                      <div class="input-group input-group-sm">
+                        <div class="input-group-append">
+                          <span class="input-group-text">郵遞區號</span>
+                        </div>
+                        <div data-role="zipcode" data-style="form-control form-control-sm" data-name="ct08" data-id="ct08"  data-value="{{$tv_clients_row->ct08|default:''}}"></div>
+                        <div class="input-group-append">
+                          <span class="input-group-text">縣市</span>
+                        </div>
+                        <div data-role="county" data-class="form-control form-control-sm" data-style="width:100px;" data-name="ct09" data-id="ct09" data-value="{{$tv_clients_row->ct09|default:''}}"></div>
+                        <div class="input-group-append">
+                          <span class="input-group-text">鄉鎮市區</span>
+                        </div>
+                        <div data-role="district" data-class="form-control form-control-sm" data-style="width:100px;" data-name="ct10" data-id="ct10" data-value="{{$tv_clients_row->ct10|default:''}}"></div>
+                      </div>
+                      <input type="text" class="form-control form-control-sm" id="ct11" name="ct11" value="{{$tv_clients_row->ct11|default:''}}" placeholder="請輸入地址(不需要輸入縣市/鄉鎮市區)">
+                      <span id='helpBlock_ct11' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>聯絡地址</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <div class="twzipcode">
+                    <input type="checkbox" id="the_same"> 同戶籍地址
+                    <div class='form-group'>
+                      <div class="input-group input-group-sm">
+                        <div class="input-group-append">
+                          <span class="input-group-text">郵遞區號</span>
+                        </div>
+                        <div data-role="zipcode" data-style="form-control form-control-sm" data-name="ct12" data-id="ct12"  data-value="{{$tv_clients_row->ct12|default:''}}"></div>
+                        <div class="input-group-append">
+                          <span class="input-group-text">縣市</span>
+                        </div>
+                        <div data-role="county" data-class="form-control form-control-sm" data-style="width:100px;" data-name="ct13" data-id="ct13" data-value="{{$tv_clients_row->ct13|default:''}}"></div>
+                        <div class="input-group-append">
+                          <span class="input-group-text">鄉鎮市區</span>
+                        </div>
+                        <div data-role="district" data-class="form-control form-control-sm" data-style="width:100px;" data-name="ct14" data-id="ct14" data-value="{{$tv_clients_row->ct14|default:''}}"></div>
+                      </div>
+                      <input type="text" class="form-control form-control-sm" id="ct15" name="ct15" value="{{$tv_clients_row->ct15|default:''}}" placeholder="請輸入地址(不需要輸入縣市/鄉鎮市區)">
+                      <span id='helpBlock_ct15' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>案主家緯度</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct16' name='ct16' class='form-control form-control-sm' placeholder='請輸入案主家緯度' value='{{$tv_clients_row->ct16|default:''}}'>
+                    <span id='helpBlock_ct16' class='help-block'>*輸入地址後自動轉換</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>案主家經度</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct17' name='ct17' class='form-control form-control-sm' placeholder='請輸入案主家經度' value='{{$tv_clients_row->ct17|default:''}}'>
+                    <span id='helpBlock_ct17' class='help-block'>*輸入地址後自動轉換</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>匯款尾碼</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct20' name='ct20' class='form-control form-control-sm' placeholder='請輸入匯款尾碼' value='{{$tv_clients_row->ct20|default:''}}' >
+                    <span id='helpBlock_ct20' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">是否為僅OT個案</td>
+                <td width="{{$swidth_right}}" class="table-light">
+                  <span class='form-group'>
+                    <span class="form-control form-control-sm">
+                      <input type="radio" name="ct00" value="Y" {{if $tv_clients_row->ct00|default:'N'=='Y'}} checked {{/if}}> 是
+                      <input type="radio" name="ct00" value="N" {{if $tv_clients_row->ct00|default:'N'=='N'}} checked {{/if}}> 否
+                    </span>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>居住狀況</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>一. 居住狀況</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="ct31" id="ct31_object" value="{{$tv_clients_row->ct31|default:''}}">
+                          {{foreach from=hlp_opt_setup("ct31", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="ct31_{{$k}}" data-fd_name="ct31_object" class="ct31_object object" value="{{$k}}" {{if $k|in_array:$tv_clients_row->ct31_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>二. 狀況說明</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type='text' id='ct31_memo' name='ct31_memo' class='form-control form-control-sm col-12' placeholder='請輸入說明' value='{{$tv_clients_row->ct31_memo|default:''}}'>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>三. 家電狀況</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="ct21" id="ct21_object" value="{{$tv_clients_row->ct21|default:''}}">
+                          {{foreach from=hlp_opt_setup("ct21", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="ct21_{{$k}}" data-fd_name="ct21_object" class="ct21_object object" value="{{$k}}" {{if $k|in_array:$tv_clients_row->ct21_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>身分別</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>一. 政府核准</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        {{if $tv_msel != 'upd'}}
+                          <span class='form-group'>
+                            {{foreach from=hlp_opt_setup("ct34_go", null, "get") key=k item=v}}
+                              <input type="radio" name="ct34_go" value="{{$k}}" {{if $tv_clients_row->ct34_go|default:'99'== {{$k}}}} checked {{/if}}> {{$v}}
+                            {{/foreach}}
+                          </span>
+                        {{else}}
+                          <a href='{{$tv_other_change_log}}'>請從非餐食異動調整案主身分別!!</a>
+                        {{/if}}
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>二. 內部定義</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="ct34_fo" id="ct34_fo_object" value="{{$tv_clients_row->ct34_fo|default:''}}">
+                          {{foreach from=hlp_opt_setup("ct34_fo", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="ct34_fo_{{$k}}" data-fd_name="ct34_fo_object" class="ct34_fo_object object" value="{{$k}}" {{if $k|in_array:$tv_clients_row->ct34_fo_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>身心障礙</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>一. 身心障礙手冊</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <div class="input-group input-group-sm">
+                            <div class="input-group-prepend">
+                              <div class="input-group-text">
+                                <input type='radio' name='ct35' value='N' {{if $tv_clients_row->ct35|default:"N"=="N"}} checked {{/if}} onclick="memo_input(this)"> 無
+                                &nbsp;
+                                <input type='radio' name='ct35' value='Y' {{if $tv_clients_row->ct35|default:"N"=="Y"}} checked {{/if}} onclick="memo_input(this)"> 有
+                              </div>
+                            </div>
+                            <input type='text' id='ct35_end_date' name='ct35_end_date' class='form_date form-control form-control-sm' placeholder='請輸入手冊到期日期' value='{{$tv_clients_row->ct35_end_date|default:''}}' {{if $tv_clients_row->ct35|default:"N"=="N"}} readonly {{/if}}>
+                          </div>
+                          <div class="maT10"></div>
+                          <span class='form-group'>
+                            <div class="input-group input-group-sm">
+                              <div class="input-group-append">
+                                <a href="javascript:;" class="file">選擇檔案
+                                  <input text='hidden' id='ct35_file' name='ct35_file' value='{{$tv_clients_row->ct35_file|default:''}}'>
+                                  <input type="file" name="files" data-url="{{$tv_upload_link}}" data-att_name='ct35_file'>
+                                </a>
+                                  <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='ct35_file' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                              </div>
+                              <span id='pt05_str' class="form-control form-control-sm" readonly>{{$tv_partlist_row->pt05|default:''}}</span>
+                            </div>
+                          </span>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>二. 障礙類別</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="ct35_type" id="ct35_type_object" value="{{$tv_clients_row->ct35_type|default:''}}">
+                          {{foreach from=hlp_opt_setup("ct35_type", null, "get") key=k item=v}}
+                            <input type="checkbox" data-fd_name="ct35_type_object" class="ct35_type_object object" value="{{$k}}" {{if $k|in_array:$tv_clients_row->ct35_type_arr|default:'99'}} checked {{/if}} > {{$v}}
+                            <br/>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>三. 障礙等級</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          {{foreach from=hlp_opt_setup("ct35_level", null, "get") key=k item=v}}
+                            <input type="radio" name="ct35_level" value="{{$k}}" {{if $tv_clients_row->ct35_level|default:'99'== {{$k}}}} checked {{/if}}> {{$v}}
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>四. 障礙說明</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type='text' id='ct35_memo' name='ct35_memo' class='form-control form-control-sm col-12' placeholder='請輸入說明' value='{{$tv_clients_row->ct35_memo|default:''}}'>
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>健康狀況</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    {{foreach from=hlp_opt_setup("ct36", null, "get") key=k item=v}}
+                      <input type="radio" name="ct36" value="{{$k}}" {{if $tv_clients_row->ct36|default:''== {{$k}}}} checked {{/if}}> {{$v}}
+                    {{/foreach}}
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>失能程度</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    {{foreach from=hlp_opt_setup("ct37", null, "get") key=k item=v}}
+                      <input type="radio" name="ct37" value="{{$k}}" {{if $tv_clients_row->ct37|default:'' =={{$k}}}} checked {{/if}}> {{$v}}
+                    {{/foreach}}
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>疾病名稱</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <table class="table table-bordered table-hover table-sm">
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>一. 疾病1</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="ct38_1" id="ct38_1_object" value="{{$tv_clients_row->ct38_1|default:''}}">
+                          {{foreach from=hlp_opt_setup("ct38_1", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="ct38_1_{{$k}}" data-fd_name="ct38_1_object" class="ct38_1_object object" value="{{$k}}" {{if $k|in_array:$tv_clients_row->ct38_1_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>二. 疾病2</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type="hidden" name="ct38_2" id="ct38_2_object" value="{{$tv_clients_row->ct38_2|default:''}}">
+                          {{foreach from=hlp_opt_setup("ct38_2", null, "get") key=k item=v}}
+                            <label class="checkbox-inline">
+                              <input type="checkbox" id="ct38_2_{{$k}}" data-fd_name="ct38_2_object" class="ct38_2_object object" value="{{$k}}" {{if $k|in_array:$tv_clients_row->ct38_2_arr|default:''}} checked {{/if}}> {{$v}}
+                            </label>
+                          {{/foreach}}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td width='{{$swidth2_left}}'><span>三. 其他</span></td>
+                      <td width='{{$swidth2_right}}' class='table-light'>
+                        <span class='form-group'>
+                          <input type='text' id='ct38_memo' name='ct38_memo' class='form-control form-control-sm col-12' placeholder='請輸入其他疾病名稱' value='{{$tv_clients_row->ct38_memo|default:''}}'>
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>家系圖</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-append">
+                        <a href="javascript:;" class="file">選擇檔案
+                          <input text='hidden' id='ct95' name='ct95' value='{{$tv_clients_row->ct95|default:''}}'>
+                          <input type="file" name="files" data-url="{{$tv_upload_link}}" data-att_name='ct95'>
+                        </a>
+                        <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='ct95' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                      </div>
+                      <span id='ct95_str' class="form-control form-control-sm" readonly>{{$tv_clients_row->ct95|default:''}}</span>
+                    </div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>生態資源圖</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-append">
+                        <a href="javascript:;" class="file">選擇檔案
+                          <input text='hidden' id='ct96' name='ct96' value='{{$tv_clients_row->ct96|default:''}}'>
+                          <input type="file" name="files" data-url="{{$tv_upload_link}}" data-att_name='ct96'>
+                        </a>
+                        <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='ct96' data-toggle='modal' data-target='.pop-del_file'>刪除</button>
+                      </div>
+                      <span id='ct96_str' class="form-control form-control-sm" readonly>{{$tv_clients_row->ct96|default:''}}</span>
+                    </div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>個案評估摘要</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <textarea id='ct97' class='form-control form-control-sm' name='ct97' rows='3' >{{$tv_clients_row->ct97|default:''}}</textarea>
+                    <span id='helpBlock_ct97' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>處遇計畫摘要</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <textarea id='ct98' class='form-control form-control-sm' name='ct98' rows='3' >{{$tv_clients_row->ct98|default:''}}</textarea>
+                    <span id='helpBlock_ct98' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              {{*
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>通知者</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct70' name='ct70' class='form-control form-control-sm' placeholder='請輸入通知者' value='{{$tv_clients_row->ct70|default:''}}' >
+                    <span id='helpBlock_ct70' class='help-block'>當餐點送達時，需接收這則通知的人</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>通知信箱</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct71' name='ct71' class='form-control form-control-sm' placeholder='請輸入通知信箱' value='{{$tv_clients_row->ct71|default:''}}' >
+                    <span id='helpBlock_ct71' class='help-block'>當餐點送達時，需接收這則通知的人</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>Line ID</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct72' name='ct72' class='form-control form-control-sm' placeholder='請輸入Line ID' value='{{$tv_clients_row->ct72|default:''}}' >
+                    <span id='helpBlock_ct72' class='help-block'>當餐點送達時，需接收這則通知的人</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              *}}
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+                <td width="{{$swidth_right}}" class="table-light">
+                  <span class='form-group'>
+                    <span class="form-control form-control-sm">
+                      <input type="radio" name="is_available" value="1" {{if $tv_clients_row->is_available|default:0==1}} checked {{/if}}> 是
+                      <input type="radio" name="is_available" value="0" {{if $tv_clients_row->is_available|default:0==0}} checked {{/if}}> 否
+                    </span>
+                  </span>
+                </td>
+              </tr>
+            {{else}}
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <span>{{$tv_clients_row->ct01|default:''}}{{$tv_clients_row->ct02|default:''}}</span>
+                    <span id='helpBlock_ct01' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>案主家緯度</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct16' name='ct16' class='form-control form-control-sm' placeholder='請輸入案主家緯度' value='{{$tv_clients_row->ct16|default:''}}'>
+                    <span id='helpBlock_ct16' class='help-block'>*輸入地址後自動轉換</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>案主家經度</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='ct17' name='ct17' class='form-control form-control-sm' placeholder='請輸入案主家經度' value='{{$tv_clients_row->ct17|default:''}}'>
+                    <span id='helpBlock_ct17' class='help-block'>*輸入地址後自動轉換</span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+            {{/if}}
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>
+<script>
+  
+  function memo_input(ct) {
+    if(ct.value=='N') { // 啟用
+      $('#'+ct.name+'_end_date').val('');
+      $('#'+ct.name+'_end_date').prop("readonly",true);  // readonly
+      $('#'+ct.name+'_end_date').prop("required",false);  // 非必填
+    }
+    else {
+      $('#'+ct.name+'_end_date').prop("readonly",false);  // 取消 readonly
+      $('#'+ct.name+'_end_date').prop("required",true);  // 必填
+    }
+
+    if(ct.name == "ct35") {
+      ct35_type_object(ct.value);
+    }
+  }
+  
+  function ct35_type_object(ct_value) {
+    if(ct_value == "Y") {
+      $(".ct35_type_object").prop('disabled' , false);
+    }
+    else {
+      $(".ct35_type_object").prop('disabled' , true);
+    }
+    $(".ct35_type_object").prop('checked',false);
+  }
+  
+</script>

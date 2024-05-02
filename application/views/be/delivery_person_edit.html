@@ -1,0 +1,668 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/jquery.fancybox.min.css">
+<script src="{{$tv_pub_url}}/js/jquery.fancybox.min.js"></script>
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script src="{{$tv_pub_url}}/js/jquery.twzipcode.min.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    $('.twzipcode').twzipcode();
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    $("#dp03").blur(function() {
+      var dp03_val = $("#dp03").val();
+      if(dp03_val != '') {
+        $.ajax({
+          type:'post',
+          url: '{{$tv_chk_dp03_link}}',
+          data: {dp03:dp03_val},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_chk_dp03_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            if(rs != "true") {
+              $("#dp03").val('');
+              alert("此身分證已重複請重新輸入");
+            }
+          }
+        })
+      }
+    });
+    
+    $("#dp07_start").blur(function() {
+      var date = new Date();
+      var year = date.getFullYear();
+      var dp07_start = $(this).val();
+      if(dp07_start != '') {
+        var dp07_start_arr = dp07_start.split("-");
+        var dp08 = year - dp07_start_arr[0];
+        $("#dp08").val(dp08);
+      }
+    });
+    
+    $("#dp07_end").blur(function() {
+      var $radios = $('input[type=radio][name="is_available"]');
+      if($(this).val() != '') {
+        $radios.filter("[value='0']").prop('checked', true);
+        $radios.filter("[value='1']").prop('checked', false);
+      }
+      else {
+        $radios.filter("[value='0']").prop('checked', false);
+        $radios.filter("[value='1']").prop('checked', true);
+      }
+    });
+
+    // delivery_person_rest刪除 Begin //
+    $(document).on("click", ".delivery_person_rest_del", function () {
+      var delivery_person_rest_s_num = $(this).data('delivery_person_rest_s_num');
+      console.log(delivery_person_rest_s_num);
+      $(".delivery_person_rest_del #f_del_s_num").val(delivery_person_rest_s_num);
+    });
+        
+    $(document).on('click',"#delivery_person_rest_del",function() {
+      var delivery_person_rest_s_num = $(".delivery_person_rest_del #f_del_s_num").val();
+      $('#delivery_person_rest_tr_'+delivery_person_rest_s_num).remove();
+      $(this).mec_item_reset();
+      return;
+    });
+    // delivery_person_rest刪除 End //
+
+    $('.add_delivery_person_rest_row').click(function(){
+      var add_qty = $('#add_qty').val(); // 新增筆數
+      $(this).ptp_add_row(add_qty);
+      return;
+    });
+    
+    // 重新顯示欄位的序1,2,3... Begin //
+    $.fn.mec_item_reset = function() {
+      var item_num = 1;
+      $('.delivery_person_rest_item').each(function() {
+        $(this).text(item_num);
+        item_num++;
+      })
+      var item_last = eval($('.delivery_person_rest_item').last().text()); // 目前 table 的 tbody 總共有幾個 tr
+      var item_last_str = item_last;
+      if(typeof(item_last) === 'undefined') {
+        item_last_str = 0;
+      }
+      $('#add_num').attr('max',item_last);
+      $('#add_num').val(item_last_str);
+      $('#add_qty').val('1');
+    }
+    // 重新顯示欄位的序1,2,3... End //
+
+    // 新增x筆明細 Begin //
+    $.fn.ptp_add_row = function(add_qty) {
+      for (i = 1; i <= add_qty; i++) {
+        var snum = eval($('#std_mec_cnt').val())+1; // 目前的筆數，刪除資料這裡不會減少數量，避免id重複
+        var new_delivery_person_rest = $('#delivery_person_rest_tr_STD_SNUM')[0].outerHTML;
+        var add_delivery_person_rest_row = new_delivery_person_rest.replaceAll('STD_SNUM', snum);
+        var add_delivery_person_rest_row = add_delivery_person_rest_row.replaceAll('STD_ITEM', 'delivery_person_rest_item');
+        $('#std_mec_cnt').val(snum);
+        $('#period_table_tbody').append(add_delivery_person_rest_row);
+        $("#ptp01_"+snum).addClass("ptp01_sel");
+      }
+      $(this).mec_item_reset();
+      $(".form_date").datetimepicker({
+        locale: 'tw',
+        format: 'YYYY-MM-DD',
+        showTodayButton: true,
+        showClear: true,
+        showClose: true,
+        allowInputToggle: true,
+        tooltips: {
+            today: '今天',
+            clear: '清除',
+            close: '關閉',
+            selectMonth: '選取月',
+            prevMonth: '上個月',
+            nextMonth: '下個月',
+            selectYear: '選擇年',
+            prevYear: '上一年',
+            nextYear: '下一年',
+            selectDecade: '選取十年',
+            prevDecade: '上十年',
+            nextDecade: '下十年',
+            prevCentury: '上世紀',
+            nextCentury: '下世紀'
+        },
+        icons: {
+          time: 'far fa-clock',
+          date: 'far fa-calendar',
+          up: 'fas fa-arrow-up',
+          down: 'fas fa-arrow-down',
+          previous: 'fas fa-chevron-left',
+          next: 'fas fa-chevron-right',
+          today: 'fas fa-calendar-check',
+          clear: 'far fa-trash-alt',
+          close: 'far fa-times-circle'
+        }
+      });
+    }
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>送餐員資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">員工管理</a></li>
+        <li class="breadcrumb-item"><a href="#">送餐員資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{assign var="swidth_left" value="20%"}}
+    {{assign var="swidth_right" value="80%"}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator" autocomplete="off">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="delivery_person[s_num]" value="{{$tv_delivery_person_row->s_num|default:'0'}}">
+      {{/if}}
+      <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <a class="nav-item nav-link active" id="nav-basic-tab" data-toggle="tab" href="#nav-basic" role="tab" aria-controls="nav-basic" aria-selected="true">路徑資料</a>
+          <a class="nav-item nav-link" id="nav-rest-tab" data-toggle="tab" href="#nav-rest" role="tab" aria-controls="nav-rest" aria-selected="false">請假資料</a>
+          {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+            <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+              <div class="float-right">建檔:<span class="mainC1">{{$tv_delivery_person_row->b_acc_name|default:''}}({{$tv_delivery_person_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_delivery_person_row->e_acc_name|default:''}}({{$tv_delivery_person_row->e_date|default:""}})</span></div>
+            </span>
+          {{/if}}
+        </div>
+      </nav>    
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-basic" role="tabpanel" aria-labelledby="nav-basic-tab">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm">
+              {{assign var="swidth_left" value="20%"}}
+              {{assign var="swidth_right" value="80%"}}
+              <tbody>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>姓</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp01' name='delivery_person[dp01]' class='form-control form-control-sm' placeholder='請輸入姓' value='{{$tv_delivery_person_row->dp01|default:''}}' required>
+                      <span id='helpBlock_dp01' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>名</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp02' name='delivery_person[dp02]' class='form-control form-control-sm' placeholder='請輸入名' value='{{$tv_delivery_person_row->dp02|default:''}}' required>
+                      <span id='helpBlock_dp02' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>身份證字號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp03' name='delivery_person[dp03]' class='form-control form-control-sm' placeholder='請輸入身份證字號' value='{{$tv_delivery_person_row->dp03|default:''}}' required>
+                      <span id='helpBlock_dp03' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>性別</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <span class='form-control form-control-sm'>
+                        <input type='radio' name='delivery_person[dp04]' value='M' {{if $tv_delivery_person_row->dp04|default:M==M}} checked {{/if}}> 男
+                        <input type='radio' name='delivery_person[dp04]' value='F' {{if $tv_delivery_person_row->dp04|default:M==F}} checked {{/if}}> 女
+                      </span>
+                      <span id='helpBlock_dp04' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>職工編號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp05' name='delivery_person[dp05]' class='form-control form-control-sm' placeholder='請輸入職工編號' value='{{$tv_delivery_person_row->dp05|default:''}}' autocomplete="off" required>
+                      <span id='helpBlock_dp05' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>登入密碼</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='password' id='dp_pwd' name='delivery_person[dp_pwd]' class='form-control form-control-sm' placeholder="{{$tv_pwd_placeholder}}" value="" autocomplete="new-password">
+                      <span id='helpBlock_dp_pwd' class='help-block'>
+                        {{if $tv_msel == 'add' or $tv_msel == 'cpy'}}
+                        {{else}}
+                          空白=不修改密碼。
+                        {{/if}}  
+                      </span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>Email Address</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='email' id='dp06' name='delivery_person[dp06]' class='form-control form-control-sm' placeholder='請輸入Email Address' value='{{$tv_delivery_person_row->dp06|default:''}}' autocomplete="off">
+                      <span id='helpBlock_dp06' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>到職日</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='dp07_start' name='delivery_person[dp07_start]' class='form-control form-control-sm' placeholder='請輸入到職日' value='{{$tv_delivery_person_row->dp07_start|default:''}}' >
+                      </div>
+                      <span id='helpBlock_dp07_start' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>離職日</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group form_date'>
+                        <div class='input-group-prepend'>
+                          <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                        </div>
+                        <input type='text' id='dp07_end' name='delivery_person[dp07_end]' class='form-control form-control-sm' placeholder='請輸入離職日' value='{{$tv_delivery_person_row->dp07_end|default:''}}' >
+                      </div>
+                      <span id='helpBlock_dp07_end' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>年資</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='number' min='0' step='any' id='dp08' name='delivery_person[dp08]' class='form-control form-control-sm' placeholder='請輸入年資' value='{{$tv_delivery_person_row->dp08|default:''}}' >
+                      <span id='helpBlock_dp08' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>手機門號</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp09_teltphone' name='delivery_person[dp09_teltphone]' class='form-control form-control-sm' placeholder='請輸入手機門號' value='{{$tv_delivery_person_row->dp09_teltphone|default:''}}' >
+                      <span id='helpBlock_dp09_teltphone' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>家裡電話</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp09_homephone' name='delivery_person[dp09_homephone]' class='form-control form-control-sm' placeholder='請輸入家裡電話' value='{{$tv_delivery_person_row->dp09_homephone|default:''}}' >
+                      <span id='helpBlock_dp09_homephone' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>聯絡地址</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <div class="twzipcode">
+                      <div class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <div class="input-group-append">
+                            <span class="input-group-text">郵遞區號</span>
+                          </div>
+                          <div data-role="zipcode" data-style="form-control form-control-sm" data-name="delivery_person[dp10_zipcode]" data-id="dp10_zipcode"  data-value="{{$tv_delivery_person_row->dp10_zipcode|default:''}}"></div>
+                          <div class="input-group-append">
+                            <span class="input-group-text">縣市</span>
+                          </div>
+                          <div data-role="county" data-class="form-control form-control-sm" data-style="width:100px;" data-name="delivery_person[dp10_county]" data-id="dp10_county" data-value="{{$tv_delivery_person_row->dp10_county|default:''}}"></div>
+                          <div class="input-group-append">
+                            <span class="input-group-text">鄉鎮市區</span>
+                          </div>
+                          <div data-role="district" data-class="form-control form-control-sm" data-style="width:100px;" data-name="delivery_person[dp10_district]" data-id="dp10_district" data-value="{{$tv_delivery_person_row->dp10_district|default:''}}"></div>
+                        </div>
+                        <input type="text" class="form-control form-control-sm" id="dp10_addr" name="delivery_person[dp10_addr]" value="{{$tv_delivery_person_row->dp10_addr|default:''}}" placeholder="請輸入地址(不需要輸入縣市/鄉鎮市區)">
+                        <span id='helpBlock_ct11' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <!-- <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right' rowspan='2'>戶籍地址</td>
+                  <td width='10%' class='alert alert-dark'>郵遞區號</td>
+                  <td width='17%' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp10_zipcode' name='delivery_person[dp10_zipcode]' class='form-control form-control-sm' placeholder='請輸入郵遞區號' value='{{$tv_delivery_person_row->dp10_zipcode|default:''}}' >
+                      <span id='helpBlock_dp10_zipcode' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                  <td width='7%' class='alert alert-dark'>縣市</td>
+                  <td width='16%' class='table-light'>
+                    <span class='form-group'>
+                      <select id='dp10_county' name='delivery_person[dp10_county]' class='form-control form-control-sm' onchange='updateDistricts()'>
+                        <option value='' selected disabled>請選擇縣市</option>
+                        <option value='基隆市' >基隆市</option>
+                        <option value='臺北市' >臺北市</option>
+                        <option value='新北市' >新北市</option>
+                        <option value='桃園市' >桃園市</option>
+                        <option value='新竹縣' >新竹縣</option>
+                        <option value='新竹市' >新竹市</option>
+                        <option value='苗栗縣' >苗栗縣</option>
+                        <option value='臺中市' >臺中市</option>
+                        <option value='彰化縣' >彰化縣</option>
+                        <option value='南投縣' >南投縣</option>
+                        <option value='雲林縣' >雲林縣</option>
+                        <option value='嘉義縣' >嘉義縣</option>
+                        <option value='嘉義市' >嘉義市</option>
+                        <option value='臺南市' >臺南市</option>
+                        <option value='高雄市' >高雄市</option>
+                        <option value='屏東縣' >屏東縣</option>
+                        <option value='宜蘭縣' >宜蘭縣</option>
+                        <option value='花蓮縣' >花蓮縣</option>
+                        <option value='臺東縣' >臺東縣</option>
+                        <option value='澎湖縣' >澎湖縣</option>
+                        <option value='金門縣' >金門縣</option>
+                        <option value='連江縣' >連江縣</option>
+                      </select>
+                      <span id='helpBlock_dp10_county' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                  <td width='10%' class='alert alert-dark'>鄉鎮市區</td>
+                  <td width='{{$swidth_left}}' class='table-light'>
+                    <span class='form-group'>
+                      <select id="dp10_district" name='delivery_person[dp10_district]' class='form-control form-control-sm'>
+                        <option value="" selected disabled>請選擇鄉鎮市區</option>
+                      </select>
+                      <span id='helpBlock_dp10_district' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='7%' class='alert alert-dark'>地址</td>
+                  <td width='73%' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp10_addr' name='delivery_person[dp10_addr]' class='form-control form-control-sm' placeholder='請輸入地址' value='{{$tv_delivery_person_row->dp10_addr|default:''}}' >
+                      <span id='helpBlock_dp10_addr' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr> -->
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>及時地圖-暱稱</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <input type='text' id='dp11' name='delivery_person[dp11]' class='form-control form-control-sm' placeholder='請輸入及時地圖-暱稱' value='{{$tv_delivery_person_row->dp11|default:''}}'>
+                      <span id='helpBlock_dp11' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>及時地圖-圖片</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <div class='input-group input-group-sm'>
+                        <div class='input-group-append'>
+                          <a href='javascript:;' class='file'>上傳
+                            <input text='hidden' id='dp12' name='delivery_person[dp12]' value='{{$tv_product_row->dp12|default:''}}'>
+                            <input type='file' name='files' data-url='{{$tv_upload_link}}' data-att_name='dp12'>
+                          </a>
+                          <button type='button' class='btn btn-C2 btn-xs del' data-del_fd_name='dp12' data-toggle='modal' data-backdrop='static' data-keyboard='false' data-target='.pop-del_file'>刪除</button>
+                        </div>
+                        <span id='dp12_str' class='form-control form-control-sm' readonly>{{$tv_delivery_person_row->dp12|default:''}}</span>
+                      </div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>及時地圖-送餐初衷</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='dp13' class='form-control form-control-sm' name='delivery_person[dp13]' rows='5'>{{$tv_delivery_person_row->dp13|default:''}}</textarea>
+                      <span id='helpBlock_dp13' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+                <tr class='d-flex'>
+                  <td width='{{$swidth_left}}' class='table-secondary text-right'>及時地圖-送餐經驗</td>
+                  <td width='{{$swidth_right}}' class='table-light'>
+                    <span class='form-group'>
+                      <textarea id='dp14' class='form-control form-control-sm' name='delivery_person[dp14]' rows='5'>{{$tv_delivery_person_row->dp14|default:''}}</textarea>
+                      <span id='helpBlock_dp14' class='help-block'></span>
+                      <div class='help-block with-errors'></div>
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class="d-flex">
+                  <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+                  <td width="{{$swidth_right}}" class="table-light">
+                    <span class='form-group'>
+                      <span class="form-control form-control-sm">
+                        <input type="radio" name="is_available" value="1" {{if $tv_delivery_person_row->is_available|default:0==1}} checked {{/if}}> 是
+                        <input type="radio" name="is_available" value="0" {{if $tv_delivery_person_row->is_available|default:0==0}} checked {{/if}}> 否
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="nav-rest" role="tabpanel" aria-labelledby="nav-rest-tab">
+          <div>
+            <table class="table table-bordered table-striped table-hover table-sm" style="width:35%; overflow-y: visible;">
+              {{assign var="snum" value="1"}}
+              <input type="hidden" id='std_mec_cnt' value="{{count($tv_delivery_person_rest_row)|default:'1'}}">
+              <thead>
+                <tr class="thead-light">
+                  <th class="text-nowrap" style="width:15%">請假日期</th>
+                  <th class="text-nowrap" style="width:15%">事由</th>
+                  <th class="text-nowrap" style="width:04%"></th>
+                </tr>
+              </thead>
+              <tbody id="period_table_tbody">
+                {{foreach from=$tv_delivery_person_rest_row key=k item=v}}
+                  <tr id="delivery_person_rest_tr_{{$snum}}" class="delivery_person_rest_tr" data-item="{{$snum}}">
+                    <input type='hidden' id='s_num_{{$snum}}' name='delivery_person_rest[{{$snum}}][s_num]' value='{{$snum}}'>
+                    <span class="delivery_person_rest_item" style="display: none;">{{$snum}}</span>
+                    <td class="text-left">
+                      <span class='form-group'>
+                        <div class='input-group form_date'>
+                          <div class='input-group-prepend'>
+                            <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                          </div>
+                          <input type='text' min="1" id="dpr01_{{$snum}}" name='delivery_person_rest[{{$snum}}][dpr01]' class='col-12 form-control form-control-sm' placeholder='' value="{{$v.dpr01|default:''}}">
+                        </div>
+                      </span>
+                    </td>
+                    <td class="text-left">
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <textarea id='dpr02_{{$snum}}' class='form-control form-control-sm' name='delivery_person_rest[{{$snum}}][dpr02]' rows='2' >{{$v.dpr02|default:''}}</textarea>
+                          <span id='helpBlock_dpr02_{{$snum}}' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                        </div>
+                      </span>
+                    </td>
+                    <td class="text-center">
+                      <button type='button' class='btn btn-C2 btn-xs delivery_person_rest_del' data-delivery_person_rest_s_num='{{$snum}}' data-tr_s_num='{{$snum}}' data-toggle='modal' data-target='.pop-delivery_person_rest_del'>{{$tv_del_btn}}</button>
+                    </td>
+                  </tr>
+                  {{assign var="snum" value="{{$snum+1}}"}}
+                {{/foreach}}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="5" class="text-left">
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">新增</span>
+                      </div>
+                      <input type="number" id="add_qty" min="1" step="1" size="2" style="text-align:right;width: 3em;" value="1">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">筆</span>
+                      </div>
+                      <button class="btn btn-warning btn-sm add_delivery_person_rest_row" type="button">確定 <i class="fa fa-plus" aria-hidden="true"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- delivery_person_rest 明細刪除確認彈出 -->
+  <div class="modal fade pop-delivery_person_rest_del" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此筆嗎？<br>
+          需按右上角[儲存]按鈕才會刪除資料。
+        </div>
+        <div class="delivery_person_rest_del modal-footer text-center">
+          <input type="hidden" id='f_del_s_num' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="delivery_person_rest_del" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- delivery_person_rest 明細刪除確認彈出 end-->
+  {{*預先增加一筆空白資料，主要用來複製用。 Begin*}}
+  <table style="display:none;">
+    <tr id="delivery_person_rest_tr_STD_SNUM" class="delivery_person_rest_tr" data-item="STD_SNUM">
+      <input type="hidden" id="s_num_STD_SNUM" name="delivery_person_rest[STD_SNUM][s_num]" value="0">
+      <span class="STD_ITEM" style="display: none;">{{$snum}}</span>
+      <td class="text-left">
+        <span class='form-group'>
+          <div class='input-group form_date'>
+            <div class='input-group-prepend'>
+              <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+            </div>
+            <input type='text' min="1" id="dpr01_STD_SNUM" name='delivery_person_rest[STD_SNUM][dpr01]' class='col-12 form-control form-control-sm' placeholder=''>
+          </div>
+        </span>
+      </td>
+      <td class="text-left">
+        <span class='form-group'>
+          <div class="input-group input-group-sm">
+            <textarea id='dpr02_STD_SNUM' class='form-control form-control-sm' name='delivery_person_rest[STD_SNUM][dpr02]' rows='2'></textarea>
+            <span id='helpBlock_dpr02_STD_SNUM' class='help-block'></span>
+            <div class='help-block with-errors'></div>
+          </div>
+        </span>
+      </td>
+      <td class="text-center">
+        <button type='button' class='btn btn-C2 btn-xs delivery_person_rest_del' data-delivery_person_rest_s_num='STD_SNUM' data-toggle='modal' data-target='.pop-delivery_person_rest_del'>{{$tv_del_btn}}</button>
+      </td>
+    </tr>
+  </table>
+  {{*預先增加一筆空白資料，主要用來複製用。 End*}}
+</div>

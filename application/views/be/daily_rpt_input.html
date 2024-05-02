@@ -1,0 +1,164 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script>
+  $(function() {
+    $("#taboo_tr").hide();
+    judge_rpt_type($("#rpt").val());
+    $("#rpt").change(function() {
+      judge_rpt_type($(this).val());
+    });
+        
+    function judge_rpt_type(rpt_type) {
+      if(rpt_type == 2) {
+        $("#taboo_tr").addClass('d-flex');
+        $("#taboo_tr").show();
+      }
+      else {
+        $("#taboo_tr").removeClass('d-flex');
+        $("#taboo_tr").hide();
+      }
+      if(rpt_type == 3 || rpt_type == 4) {
+        $("#type_tr").removeClass('d-flex');
+        $("#reh_s_num_tr").removeClass('d-flex');
+        $("#type_tr").hide();
+        $("#reh_s_num_tr").hide();
+      }
+      else {
+        $("#type_tr").addClass('d-flex');
+        $("#reh_s_num_tr").addClass('d-flex');
+        $("#type_tr").show();
+        $("#reh_s_num_tr").show();
+      }
+    }
+    
+    $("#type").change(function() {
+      $("#reh_s_num").val('');
+      var type_val = $(this).val();
+      $("#reh_s_num option").each(function() {
+        var reh05 = $(this).data('reh05');
+        if(type_val == 1) {
+          if(reh05 == 1) {
+            $(this).show();
+          }
+          if(reh05 == 2) {
+            $(this).hide();
+          }
+        }
+        else {
+          if(reh05 == 1) {
+            $(this).hide();
+          }
+          if(reh05 == 2) {
+            $(this).show();
+          }
+        }
+      });
+    });
+
+    $(window).bind("pageshow", function (){
+      $("#btn_cal_reset").click();
+    });
+
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix no_print">
+    <div class="float-left">
+      <h1>訂單查詢</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">作業專區</a></li>
+        <li class="breadcrumb-item"><a href="#">訂單查詢</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <!-- 表格區塊 -->
+    <div class="white-wrapper">
+      <!-- 篩選＆搜尋表格 -->
+      <div class="table-filter no_print">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content  modal-C1 ">
+            <form class="maT20" action="{{$tv_prn_link}}" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+              <div class="text-center paTB20">
+                <h2>請輸入查詢條件</h2>
+              </div>
+              <div class="modal-body text-left">
+                <table class="table xtable-bordered table-hover table-sm">
+                  {{assign var="swidth_left" value="col-3"}}
+                  {{assign var="swidth_right" value="col-9"}}
+                  <tbody>
+                    <tr class='d-flex'>
+                      <td class='{{$swidth_left}} table-secondary text-right dlvry_date'>日期</td>
+                      <td class='{{$swidth_right}} table-light dlvry_date'>
+                        <span class='form-group'>
+                          <div class='input-group date form_date'>
+                            <input type='text' id='dlvry_date' name='dlvry_date' class='col-12 form-control form-control-sm prn_enter' placeholder='請輸入日期' value'' required>
+                          </div>
+                          <span id='helpBlock' class='help-block'></span>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr class='d-flex'>
+                      <td class='{{$swidth_left}} table-secondary text-right'>訂單類型</td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <span class='form-group'>
+                          <select id='rpt' name='rpt' class='col-12 form-control form-control-sm prn_enter' required>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>配送單(外)</option>
+                            <option value='2'>餐點生產單</option>
+                            <option value='3'>餐點統計表</option>
+                          </select>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr id="type_tr" class='d-flex'>
+                      <td class='{{$swidth_left}} table-secondary text-right'>餐別</td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <span class='form-group'>
+                          <select id='type' name='type' class='col-12 form-control form-control-sm prn_enter'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>午餐</option>
+                            <option value='2'>晚餐</option><!--晚上-->
+                          </select>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr id="reh_s_num_tr" class='d-flex'>
+                      <td class='{{$swidth_left}} table-secondary text-right'>送餐路線</td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <span class='form-group'>
+                          <select id='reh_s_num' name='reh_s_num' class='col-12 form-control form-control-sm prn_enter'>
+                            <option value='' selected>-請選擇-</option>
+                            {{foreach from=$tv_route_row key=k item=v}}
+                              <option value='{{$v.s_num|default:''}}' data-reh05='{{$v.reh05|default:''}}'>{{$v.reh01|default:''}}</option>
+                            {{/foreach}}
+                          </select>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class='d-flex'>
+                      <td class='{{$swidth_left}}'></td>
+                      <td class='{{$swidth_right}} table-light'>
+                        <button type="submit" id="btn_cal" class="btn btn-C1 col-3" data-dismiss="modal">確定 <i class="far fa-check-circle"></i></button>
+                        <button id="btn_cal_reset" type="reset" class="btn btn-C1-line col-3">清除 <i class="fas fa-eraser"></i></button>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <!-- 篩選＆搜尋表格 -->
+    </div>
+  </div>
+</div>

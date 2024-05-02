@@ -1,0 +1,654 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    $("#hew03_sw_s_num").val("{{$tv_home_interview_row->hew03_sw_s_num|default:''}}");
+    $("#hew10").val("{{$tv_home_interview_row->hew10|default:''}}");
+    $("#hew10_1").val("{{$tv_home_interview_row->hew10_1|default:'1'}}");
+    $("#hew10_2").val("{{$tv_home_interview_row->hew10_2|default:'1'}}");
+    $("#hew10_3").val("{{$tv_home_interview_row->hew10_3|default:'1'}}");
+    $("#hew10_4").val("{{$tv_home_interview_row->hew10_4|default:'1'}}");
+    $("#hew10_5").val("{{$tv_home_interview_row->hew10_5|default:'1'}}");
+    $("#hew10_6").val("{{$tv_home_interview_row->hew10_6|default:'1'}}");
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    $('#hew04_ct_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此案主"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        // console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              // console.log(rs);  
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#hew04_ct_s_num').val(item[2]);
+        $('#hew04_ct_name').val(item[0]);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_disp_link}}',
+          data: {ct_s_num:item[2]},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_disp_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            rs = jQuery.parseJSON(rs);
+            var hew10_1_memo_str = '個案目前[[CT31_STR]]，[[CT31_MEMO]]，關係(疏離/衝突/緊密)，家中決策者為(伴侶/子女/父母/手足)。';
+                hew10_1_memo_str += '其家人__________(每天/常常/偶爾/很少/無)回來關心案主。';
+            var hew10_2_memo_str = '案主能清楚了解自身疾病與飲食方面的注意事項，且有(定時吃藥與就醫/主動治療與復健)。\n';
+                hew10_2_memo_str += '案主患有[[CT38_1_STR]]，對於(中風/失智/精障/慢性疾病/洗腎)的病識感不佳，經常有(忽略吃藥/排斥治療/消極面對)的行為，需給予提醒與關懷。\n';
+                hew10_2_memo_str += '案主[[CT36_STR]]，協助人為(配偶/子女/親戚/鄰居/居服員)：__________。 \n';
+                hew10_2_memo_str += '可自行外出，但行動範圍有受限，僅可(使用助行器行走/坐輪椅/電動代步車/走路)外出。 \n';
+                hew10_2_memo_str += '案家家電狀況：[[ELEC_CONDITION]]'
+            if(rs != null) {
+              hew10_1_memo_str = hew10_1_memo_str.replace("[[CT31_STR]]", rs['ct31_str']);
+              hew10_1_memo_str = hew10_1_memo_str.replace("[[CT31_MEMO]]", rs['ct31_memo']);
+              hew10_2_memo_str = hew10_2_memo_str.replace("[[ELEC_CONDITION]]", rs['ct21_str']);
+              hew10_2_memo_str = hew10_2_memo_str.replace("[[CT36_STR]]", rs['ct36_str']);
+              hew10_2_memo_str = hew10_2_memo_str.replace("[[CT38_1_STR]]", rs['ct38_1_str']);
+              $("#hew10_1_memo").val(hew10_1_memo_str);
+              $("#hew10_2_memo").val(hew10_2_memo_str);
+            }
+          }
+        });
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+    
+    {{* 鈺婷說不要 2022/07/19
+    $("#hew10_memo").prop('readonly', true);
+    $("#hew10_1_memo").prop('readonly', true);
+    $("#hew10_2_memo").prop('readonly', true);
+    $("#hew10_3_memo").prop('readonly', true);
+    $("#hew10_4_memo").prop('readonly', true);
+    $("#hew10_5_memo").prop('readonly', true);
+    $("#hew10_6_memo").prop('readonly', true);    
+    {{if $tv_msel == 'upd'}}
+      {{if $tv_home_interview_row->hew10 == 99}}
+        $("#hew10_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_home_interview_row->hew10_1 == 99}}
+        $("#hew10_1_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_home_interview_row->hew10_2 == 99}}
+        $("#hew10_2_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_home_interview_row->hew10_3 == 99}}
+        $("#hew10_3_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_home_interview_row->hew10_4 == 99}}
+        $("#hew10_4_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_home_interview_row->hew10_5 == 99}}
+        $("#hew10_5_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_home_interview_row->hew10_6 == 99}}
+        $("#hew10_6_memo").prop('readonly', false);
+      {{/if}}
+    {{/if}}
+    *}}
+
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>家訪紀錄</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">家訪紀錄</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_home_interview_row->b_acc_name|default:''}}({{$tv_home_interview_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_home_interview_row->e_acc_name|default:''}}({{$tv_home_interview_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="s_num" value="{{$tv_home_interview_row->s_num|default:'0'}}">
+      {{/if}}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          {{assign var="swidth_left_2" value="10%"}}
+          {{assign var="swidth_right_2" value="90%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>訪視時間</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class='input-group form_date'>
+                    <div class='input-group-prepend'>
+                      <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                    </div>
+                    <input type='text' id='hew01' name='hew01' class='form-control form-control-sm' placeholder='請輸入訪視時間' value='{{$tv_home_interview_row->hew01|default:''}}' required>
+                  </div>
+                  <span id='helpBlock_hew01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>到訪者</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  {{if $tv_msel == 'add'}}
+                    <span>{{$tv_acc_name}}</span>
+                    <input type='hidden' id='hew02_sw_s_num' name='hew02_sw_s_num' class='form-control form-control-sm' placeholder='請輸入到訪者' value='{{$tv_acc_s_num|default:''}}' required>
+                  {{else}}
+                    <span>{{$tv_home_interview_row->b_acc_name|default:''}}</span>
+                  {{/if}}
+                  <span id='helpBlock_hew02_sw_s_num' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>檢閱者</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='hew03_sw_s_num' name='hew03_sw_s_num' class='form-control form-control-sm'>
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=$tv_social_worker_row key=k item=v}}
+                      <option value='{{$v.s_num|default:''}}'>{{$v.sw01|default:''}}{{$v.sw02|default:''}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_hew03_sw_s_num' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            {{*
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>檢閱者簽名檔</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='hew03_sign' name='hew03_sign' class='form-control form-control-sm' placeholder='請輸入檢閱者簽名檔' value='{{$tv_home_interview_row->hew03_sign|default:''}}' >
+                  <span id='helpBlock_hew03_sign' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            *}}
+             <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='hidden' id='hew04_ct_s_num' name='hew04_ct_s_num' value='{{$tv_home_interview_row->hew04_ct_s_num|default:''}}'>
+                  <input type='text' id='hew04_ct_name' class='col-12 form-control form-control-sm' placeholder='請輸入案主姓名' autocomplete="off" value='{{$tv_home_interview_row->ct01|default:''}}{{$tv_home_interview_row->ct02|default:''}}' {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                  <span id='helpBlock_hew04_ct_name' class='help-block'></span>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>訪視目的</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-bordered table-hover table-sm">
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'></td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='hew10' name='hew10' class='form-control form-control-sm col-2' onchange="memo_input(this)">
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>定期關懷</option>
+                            <option value='2'>特殊問題</option>
+                            <option value='3'>年度評估</option>
+                            <option value='99'>其他</option>
+                          </select>
+                        <span id='helpBlock_hew10' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                        <div class="input-group-append ml-1">
+                          <span class="input-group-text">備註</span>
+                        </div>
+                        <textarea id='hew10_memo' class='form-control form-control-sm' name='hew10_memo' rows='3'>{{$tv_home_interview_row->hew10_memo|default:''}}</textarea>
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>生活情形</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-bordered table-hover table-sm">
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>一、家庭評估</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='hew10_1' name='hew10_1' class='form-control form-control-sm col-2' onchange="memo_input(this)">
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>維持</option>
+                            <option value='99'>改變</option>
+                          </select>
+                          <span id='helpBlock_hew10_1' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">備註</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='hew10_1_memo' class='form-control form-control-sm' name='hew10_1_memo' rows='3'>
+個案目前(帶入系統：居住狀況、狀況說明)，關係(疏離/衝突/緊密)，家中決策者為(伴侶/子女/父母/手足)。
+其家人__________(每天/常常/偶爾/很少/無)回來關心案主。</textarea>
+                          {{else}}
+                            <textarea id='hew10_1_memo' class='form-control form-control-sm' name='hew10_1_memo' rows='3'>{{$tv_home_interview_row->hew10_1_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>二、生理狀況</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='hew10_2' name='hew10_2' class='form-control form-control-sm col-2' onchange="memo_input(this)">
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>維持</option>
+                            <option value='99'>改變</option>
+                          </select>
+                          <span id='helpBlock_phw10_2' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">備註</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='hew10_2_memo' class='form-control form-control-sm' name='hew10_2_memo' rows='3'>
+案主能清楚了解自身疾病與飲食方面的注意事項，且有(定時吃藥與就醫/主動治療與復健)。
+案主患有()，對於(中風/失智/精障/慢性疾病/洗腎)的病識感不佳，經常有(忽略吃藥/排斥治療/消極面對)的行為，需給予提醒與關懷。
+案主()，協助人為(配偶/子女/親戚/鄰居/居服員)：__________。
+可自行外出，但行動範圍有受限，僅可(使用助行器行走/坐輪椅/電動代步車/走路)外出。
+案家家電狀況：。</textarea>
+                          {{else}}
+                            <textarea id='hew10_2_memo' class='form-control form-control-sm' name='hew10_2_memo' rows='3'>{{$tv_home_interview_row->hew10_2_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>三、心理評估</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='hew10_3' name='hew10_3' class='form-control form-control-sm col-2' onchange="memo_input(this)">
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>維持</option>
+                            <option value='99'>改變</option>
+                          </select>
+                          <span id='helpBlock_phw10_3' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">備註</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='hew10_3_memo' class='form-control form-control-sm' name='hew10_3_memo' rows='3'>
+與案主的溝通狀況為(主動/被動/選擇性溝通/拒絕溝通)，交談態度(和善/冷漠/激動/無異狀)。
+案主對於(家庭/夫妻/與子女/與父母)的關係感到(焦慮/不諒解/傷心/無助)，且有(自傷/表示不想要活/憂鬱/自我封鎖)的行為。</textarea>
+                          {{else}}
+                            <textarea id='hew10_3_memo' class='form-control form-control-sm' name='hew10_3_memo' rows='3'>{{$tv_home_interview_row->hew10_3_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>四、社會評估</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='hew10_4' name='hew10_4' class='form-control form-control-sm col-2' onchange="memo_input(this)">
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>維持</option>
+                            <option value='99'>改變</option>
+                          </select>
+                          <span id='helpBlock_phw10_4' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">備註</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='hew10_4_memo' class='form-control form-control-sm' name='hew10_4_memo' rows='3'>
+案主有(聘請看傭/親戚/鄰居/朋友/房東/警衛/宮廟)__________(偶爾/常常/每天)會來關心案主(生活/備餐/就醫)。
+案主有參加社區聚會，(偶爾/常常/每天)到社區(用餐/參加活動/上課/聊天)。
+案主有社交障礙，不喜歡與人互動，導致人際關係不佳，有社會脫離之情形。</textarea>
+                          {{else}}
+                            <textarea id='hew10_4_memo' class='form-control form-control-sm' name='hew10_4_memo' rows='3'>{{$tv_home_interview_row->hew10_4_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  {{*
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>五、經濟</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='hew10_5' name='hew10_5' class='form-control form-control-sm col-2' onchange="memo_input(this)">
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>維持</option>
+                            <option value='99'>改變</option>
+                          </select>
+                          <span id='helpBlock_hew10_5' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">備註</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='hew10_5_memo' class='form-control form-control-sm' name='hew10_5_memo' rows='3'></textarea>
+                          {{else}}
+                            <textarea id='hew10_5_memo' class='form-control form-control-sm' name='hew10_5_memo' rows='3'>{{$tv_home_interview_row->hew10_5_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  *}}
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>五、環境評估</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='hew10_6' name='hew10_6' class='form-control form-control-sm col-2' onchange="memo_input(this)">
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>維持</option>
+                            <option value='99'>改變</option>
+                          </select>
+                          <span id='helpBlock_hew10_6' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">備註</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='hew10_6_memo' class='form-control form-control-sm' name='hew10_6_memo' rows='3'>
+案主(欠缺/具備)行動能力，且(缺乏/鄰近)購物場所，周圍環境生活機能(不佳/尚可/便利)，購物環境(不佳/便利)。</textarea>
+                          {{else}}
+                            <textarea id='hew10_6_memo' class='form-control form-control-sm' name='hew10_6_memo' rows='3'>{{$tv_home_interview_row->hew10_6_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>送餐服務滿意度</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-bordered table-hover table-sm">
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>服務態度</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <span class='form-control form-control-sm'>
+                          <input type='radio' name='hew20' value='1' {{if $tv_home_interview_row->hew20|default:1==1}} checked {{/if}}> 非常滿意
+                          <input type='radio' name='hew20' value='2' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 滿意
+                          <input type='radio' name='hew20' value='3' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 普通
+                          <input type='radio' name='hew20' value='4' {{if $tv_home_interview_row->hew20|default:1==4}} checked {{/if}}> 不滿意
+                          <input type='radio' name='hew20' value='5' {{if $tv_home_interview_row->hew20|default:1==5}} checked {{/if}}> 非常不滿意
+                        </span>
+                        <span id='helpBlock_hew20' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>是否準時送達</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <span class='form-control form-control-sm'>
+                          <input type='radio' name='hew21' value='1' {{if $tv_home_interview_row->hew20|default:1==1}} checked {{/if}}> 非常滿意
+                          <input type='radio' name='hew21' value='2' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 滿意
+                          <input type='radio' name='hew21' value='3' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 普通
+                          <input type='radio' name='hew21' value='4' {{if $tv_home_interview_row->hew20|default:1==4}} checked {{/if}}> 不滿意
+                          <input type='radio' name='hew21' value='5' {{if $tv_home_interview_row->hew20|default:1==5}} checked {{/if}}> 非常不滿意
+                        </span>
+                        <span id='helpBlock_hew21' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>餐盒衛生</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <span class='form-control form-control-sm'>
+                          <input type='radio' name='hew22' value='1' {{if $tv_home_interview_row->hew20|default:1==1}} checked {{/if}}> 非常滿意
+                          <input type='radio' name='hew22' value='2' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 滿意
+                          <input type='radio' name='hew22' value='3' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 普通
+                          <input type='radio' name='hew22' value='4' {{if $tv_home_interview_row->hew20|default:1==4}} checked {{/if}}> 不滿意
+                          <input type='radio' name='hew22' value='5' {{if $tv_home_interview_row->hew20|default:1==5}} checked {{/if}}> 非常不滿意
+                        </span>
+                        <span id='helpBlock_hew22' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>餐盒滿意度</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <span class='form-control form-control-sm'>
+                          <input type='radio' name='hew23' value='1' {{if $tv_home_interview_row->hew20|default:1==1}} checked {{/if}}> 非常滿意
+                          <input type='radio' name='hew23' value='2' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 滿意
+                          <input type='radio' name='hew23' value='3' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 普通
+                          <input type='radio' name='hew23' value='4' {{if $tv_home_interview_row->hew20|default:1==4}} checked {{/if}}> 不滿意
+                          <input type='radio' name='hew23' value='5' {{if $tv_home_interview_row->hew20|default:1==5}} checked {{/if}}> 非常不滿意
+                        </span>
+                        <span id='helpBlock_hew23' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>機構服務態度</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <span class='form-control form-control-sm'>
+                          <input type='radio' name='hew24' value='1' {{if $tv_home_interview_row->hew20|default:1==1}} checked {{/if}}> 非常滿意
+                          <input type='radio' name='hew24' value='2' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 滿意
+                          <input type='radio' name='hew24' value='3' {{if $tv_home_interview_row->hew20|default:1==3}} checked {{/if}}> 普通
+                          <input type='radio' name='hew24' value='4' {{if $tv_home_interview_row->hew20|default:1==4}} checked {{/if}}> 不滿意
+                          <input type='radio' name='hew24' value='5' {{if $tv_home_interview_row->hew20|default:1==5}} checked {{/if}}> 非常不滿意
+                        </span>
+                        <span id='helpBlock_hew24' class='help-block'></span>
+                        <div class='help-block with-errors'></div>
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            {{*
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>評估摘要</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <textarea id='hew30' class='form-control form-control-sm' name='hew30' rows='5' >{{$tv_home_interview_row->hew30|default:''}}</textarea>
+                  <span id='helpBlock_hew30' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            *}}
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>評估與處遇</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  {{if 'add' == $tv_msel}}
+                    <textarea id='hew31' class='form-control form-control-sm' name='hew31' rows='5'>
+維持原送餐服務處遇：持續定期關懷與提供送餐服務。
+案主因(獨居/行動不便)備餐困難，導致(營養失調/體重過輕)，經持續接受本會送餐服務後，已逐漸改善營養失調之情形，案主表示(精神/胃口/體力/健康)改善。
+因案主為(獨居/被疏於照顧)之個案，經本會送餐志工與社工員定期關懷，使得案主得到關愛與認同，案主有表示(感謝送餐服務/感到安心)的字眼。
+擬提供轉介服務，轉介給(長照/生命連線/家暴防治中心/慈濟/華山基金會/食物銀行/______)，申請(長照/關懷/救助金/物資/______)的服務，以滿足案主需求。
+提供本會目前的餐食種類資訊給案主選擇—葷食、素食、初1.15素、一般餐（軟質、細軟）、治療餐(糖餐、低油、低普林、低蛋白、低碘)等。</textarea>
+                  {{else}}
+                    <textarea id='hew31' class='form-control form-control-sm' name='hew31' rows='5'>{{$tv_home_interview_row->hew31|default:''}}</textarea>
+                  {{/if}}
+                  <span id='helpBlock_hew31' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>其他說明</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <textarea id='hew32' class='form-control form-control-sm' name='hew32' rows='5' >{{$tv_home_interview_row->hew32|default:''}}</textarea>
+                  <span id='helpBlock_hew32' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>
+<script>
+  function memo_input(obj) {
+    return;
+    // 2022/07/19 鈺婷說不要
+    if(obj.value != '99') { // 啟用
+      $('#' + obj.name + '_memo').val('');
+      $('#' + obj.name + '_memo').prop("readonly",true);  // readonly
+      $('#' + obj.name + '_memo').prop("required",false);  // 非必填
+    }
+    else {
+      $('#' + obj.name + '_memo').prop("readonly",false);  // 取消 readonly
+      $('#' + obj.name + '_memo').prop("required",true);  // 必填
+    }
+  }
+</script>

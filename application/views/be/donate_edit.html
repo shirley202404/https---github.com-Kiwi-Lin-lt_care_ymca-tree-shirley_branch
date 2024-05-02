@@ -1,0 +1,286 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<script src="{{$tv_pub_url}}/js/jquery.twzipcode.min.js"></script>
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.fileupload.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    $('#twzipcode').twzipcode();
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>捐款資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">捐款管理</a></li>
+        <li class="breadcrumb-item"><a href="#">捐款資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_donate_row->b_acc_name|default:''}}({{$tv_donate_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_donate_row->e_acc_name|default:''}}({{$tv_donate_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="s_num" value="{{$tv_donate_row->s_num|default:'0'}}">
+      {{/if}}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="12%"}}
+          {{assign var="swidth_right" value="38%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>姓</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='de01' name='de01' class='form-control form-control-sm' placeholder='請輸入姓' value='{{$tv_donate_row->de01|default:''}}' required>
+                  <span id='helpBlock_de01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>名字</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='de02' name='de02' class='form-control form-control-sm' placeholder='請輸入名字' value='{{$tv_donate_row->de02|default:''}}' required>
+                  <span id='helpBlock_de02' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>Email</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='email' id='de03' name='de03' class='form-control form-control-sm' placeholder='請輸入Email' value='{{$tv_donate_row->de03|default:''}}' required>
+                  <span id='helpBlock_de03' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>聯絡地址</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <div id="twzipcode">
+                  <div class='form-group'>
+                    <div class="input-group input-group-sm">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">郵遞區號</span>
+                      </div>
+                      <div data-role="zipcode" data-class="form-control form-control-sm" data-style="width:100px;" data-name="de04_zipcode" data-id="de04_zipcode"  data-value="{{$tv_donate_row->de04_zipcode|default:''}}"></div>
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">縣市</span>
+                      </div>
+                      <div data-role="county" data-class="form-control form-control-sm" data-style="width:100px;" data-name="de04_county" data-id="de04_county" data-value=""></div>
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">鄉鎮市區</span>
+                      </div>
+                      <div data-role="district" data-class="form-control form-control-sm" data-style="width:100px;" data-name="de04_district" data-id="de04_district" data-value=""></div>
+                    </div>
+                    <input type="text" class="form-control form-control-sm" id="de04_addr" name="de04_addr" value="{{$tv_donate_row->de04_addr|default:''}}" placeholder="請輸入地址(不需要輸入縣市/鄉鎮市區)">
+                    <span id='helpBlock_zip' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>是否需要收據</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span class='form-control form-control-sm'>
+                    <input type='radio' name='de05' value='1' {{if $tv_donate_row->de05|default:1==1}} checked {{/if}}> 不索取
+                    <input type='radio' name='de05' value='2' {{if $tv_donate_row->de05|default:1==2}} checked {{/if}}> 紙本年度收據，響應環保節省資源
+                    <input type='radio' name='de05' value='3' {{if $tv_donate_row->de05|default:1==3}} checked {{/if}}> 紙本單筆收據
+                  </span>
+                  <span id='helpBlock_de05' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>捐款金額</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='number' min='0' step='any' id='de06' name='de06' class='form-control form-control-sm' placeholder='請輸入捐款金額' value='{{$tv_donate_row->de06|default:''}}' required>
+                  <span id='helpBlock_de06' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>每月定期定額期數</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='number' min='0' step='any' id='de07' name='de07' class='form-control form-control-sm' placeholder='請輸入每月定期定額期數' value='{{$tv_donate_row->de07|default:''}}'>
+                  <span id='helpBlock_de07' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>頻率(每年、每月)</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id="de08" name="de08" class="form-control form-control-sm ">
+                    <option value='' selected>-請選擇-</option>
+                    <option value="1">每月</option>
+                    <option value="2">每年</option>
+                  </select>
+                  <script>
+                      $('#de08').val('{{$tv_donate_row->de08|default:''}}');
+                   </script>
+                  <span id='helpBlock_de08' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>捐款方式</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id="de09" name="de09" class="form-control form-control-sm ">
+                    <option value='' selected>-請選擇-</option>
+                    <option value="1">信用卡</option>
+                    <option value="2">Line Pay</option>
+                    <option value="3">轉帳/ATM</option>
+                    <option value="4">超商繳費</option>
+                    <option value="5">超商條碼繳費</option>
+                    <option value="6">GOOGLE PAY</option>
+                  </select>
+                  <script>
+                      $('#de09').val('{{$tv_donate_row->de09|default:''}}');
+                   </script>
+                  <span id='helpBlock_de09' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>捐款名義</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <span class='form-control form-control-sm'>
+                    <input type='radio' name='de14' value='1'> 個人名義捐款
+                    <input type='radio' name='de14' value='2'> 組織名義捐款
+                  </span>
+                  <script>
+                    $("input[name=de14][value={{$tv_donate_row->de14|default:''}}]").attr("checked",true);
+                  </script>
+                  <span id='helpBlock_de14' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>收據抬頭</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='de10' name='de10' class='form-control form-control-sm' placeholder='請輸入收據抬頭' value='{{$tv_donate_row->de10|default:''}}' >
+                  <span id='helpBlock_de10' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>收據身份證號碼/統一編號</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='text' id='de12' name='de12' class='form-control form-control-sm' placeholder='請輸入收據身份證號碼/統一編號' value='{{$tv_donate_row->de12|default:''}}' >
+                  <span id='helpBlock_de12' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>回傳付款狀態</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$tv_donate_row->de15|default:''}}</td>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>回傳付款訊息</td>
+              <td width='{{$swidth_right}}' class='table-light'>{{$tv_donate_row->de16|default:''}}</td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>付款日期時間</td>
+              <td width='85%' class='table-light'>{{$tv_donate_row->de17|default:''}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+</div>

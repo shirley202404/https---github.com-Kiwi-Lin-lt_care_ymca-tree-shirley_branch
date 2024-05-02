@@ -1,0 +1,106 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>電訪記錄</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">電訪記錄</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_phone_interview_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    {{*<div class="float-right">建檔:<span class="mainC1">{{$tv_phone_interview_row->b_acc_name|default:''}}({{$tv_phone_interview_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_phone_interview_row->e_acc_name|default:''}}({{$tv_phone_interview_row->e_date|default:""}})</span></div>*}}
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm">
+        {{assign var="swidth_left" value="20%"}}
+        {{assign var="swidth_right" value="80%"}}
+        {{assign var="swidth_left_2" value="10%"}}
+        {{assign var="swidth_right_2" value="10%"}}
+        <tbody>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">訪問時間</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_phone_interview_row->phw01|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+            <td width="{{$swidth_left}}" class="table-secondary text-right">區域</td>
+            <td width="{{$swidth_right}}" class="table-light">
+              <span class="text-dark">
+                {{$tv_phone_interview_row->ct14|default:''}}
+          	</span>
+            </td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">案主名稱</td>
+          	<td width="{{$swidth_right}}" class="table-light">
+          	  <span class="text-dark">
+                  {{$tv_phone_interview_row->ct01|default:''}}{{$tv_phone_interview_row->ct02|default:''}}
+          	  </span>
+          	</td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">電訪者</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_phone_interview_row->b_acc_name|default:''}}</span></td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">生活情形</td>
+          	<td width="{{$swidth_right}}" class="table-light">
+              <span class="text-dark">
+                一、接聽情形：{{$tv_phone_interview_row->phw10_1_str|default:''}} {{if $tv_phone_interview_row->phw10_1_memo != NULL}}，{{$tv_phone_interview_row->phw10_1_memo|default:''}} {{/if}}
+              </span>
+              <div class="maT5"></div>
+              <span class="text-dark">
+                二、餐食建議：{{$tv_phone_interview_row->phw10_2_str|default:''}} {{if $tv_phone_interview_row->phw10_2_memo != NULL}}，{{$tv_phone_interview_row->phw10_2_memo|default:''}} {{/if}}
+              </span>
+              <div class="maT5"></div>
+              <span class="text-dark">
+                三、服務建議：{{$tv_phone_interview_row->phw10_3_str|default:''}} {{if $tv_phone_interview_row->phw10_3_memo != NULL}}，{{$tv_phone_interview_row->phw10_3_memo|default:''}} {{/if}}
+              </span>
+              <div class="maT5"></div>
+              <span class="text-dark">
+                四、精神狀況：{{$tv_phone_interview_row->phw10_4_str|default:''}} {{if $tv_phone_interview_row->phw10_4_memo != NULL}}，{{$tv_phone_interview_row->phw10_4_memo|default:''}} {{/if}}
+              </span>
+              <div class="maT5"></div>
+              <span class="text-dark">
+                五、身體狀況：{{$tv_phone_interview_row->phw10_5_str|default:''}} {{if $tv_phone_interview_row->phw10_5_memo != NULL}}，{{$tv_phone_interview_row->phw10_5_memo|default:''}} {{/if}}
+              </span>
+              <div class="maT5"></div>
+              <span class="text-dark">
+                六、社會互動：{{$tv_phone_interview_row->phw10_6_str|default:''}} {{if $tv_phone_interview_row->phw10_6_memo != NULL}}，{{$tv_phone_interview_row->phw10_6_memo|default:''}} {{/if}}
+              </span>
+              <div class="maT5"></div>
+              <span class="text-dark">
+                七、是否轉介或追蹤：{{$tv_phone_interview_row->phw10_7_str|default:''}} {{if $tv_phone_interview_row->phw10_7_memo != NULL}}，{{$tv_phone_interview_row->phw10_7_memo|default:''}} {{/if}}
+              </span>
+            </td>
+          </tr>
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">檢閱者</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_phone_interview_row->sw_chk_name|default:''}}</span></td>
+          </tr>
+          {{*
+          <tr class="d-flex">
+          	<td width="{{$swidth_left}}" class="table-secondary text-right">檢閱者簽名檔</td>
+          	<td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_phone_interview_row->phw03_sign|default:''}}</span></td>
+          </tr>
+          *}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

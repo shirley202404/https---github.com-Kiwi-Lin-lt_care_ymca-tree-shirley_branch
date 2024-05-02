@@ -1,0 +1,165 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/jquery.fancybox.min.css">
+<script src="{{$tv_pub_url}}/js/jquery.fancybox.min.js"></script>
+<script>
+  $(function(){
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>送餐員資料</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">員工管理</a></li>
+        <li class="breadcrumb-item"><a href="#">送餐員資料</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_upd_link}}{{$tv_delivery_person_row->s_num}}';">{{$tv_upd_btn}} <i class="fas fa-pencil-alt"></i></button>
+      <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    <br>
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="nav-basic-tab" data-toggle="tab" href="#nav-basic" role="tab" aria-controls="nav-basic" aria-selected="true">路徑資料</a>
+        <a class="nav-item nav-link" id="nav-rest-tab" data-toggle="tab" href="#nav-rest" role="tab" aria-controls="nav-rest" aria-selected="false">請假資料</a>
+        {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+          <span class="nav-item nav-link flex-grow-1 text-right align-middle disabled">
+            <div class="float-right">建檔:<span class="mainC1">{{$tv_delivery_person_row->b_acc_name|default:''}}({{$tv_delivery_person_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_delivery_person_row->e_acc_name|default:''}}({{$tv_delivery_person_row->e_date|default:""}})</span></div>
+          </span>
+        {{/if}}
+      </div>
+    </nav>    
+    {{assign var="swidth_left" value="20%"}}
+    {{assign var="swidth_right" value="80%"}}
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-basic" role="tabpanel" aria-labelledby="nav-basic-tab">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover table-sm">
+            {{assign var="swidth_left" value="20%"}}
+            {{assign var="swidth_right" value="80%"}}
+            <tbody>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">姓名</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp01_mask|default:''}}{{$tv_delivery_person_row->dp02_mask|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">身份證字號</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp03_mask|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">性別</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp04_str|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">職工編號</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp05|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">Email Address</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp06|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">到職日</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp07_start|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">離職日</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp07_end|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">年資</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp08|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">手機門號</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp09_teltphone_mask|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">家裡電話</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp09_homephone_mask|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">聯絡地址</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp10_zipcode|default:''}}{{$tv_delivery_person_row->dp10_county|default:''}}{{$tv_delivery_person_row->dp10_district|default:''}}{{$tv_delivery_person_row->dp10_addr|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">及時地圖-暱稱</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp11|default:''}}</span></td>
+              </tr>
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>及時地圖-圖片</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  {{if $tv_delivery_person_row->dp12 != null}}
+                    <a href="{{$tv_upload_path}}{{$tv_delivery_person_row->dp12|default:''}}" data-fancybox >
+                      <img src="{{$tv_upload_path}}{{$tv_delivery_person_row->dp12|default:''}}" class="img-fluid" alt="{{$tv_delivery_person_row->wkl02|default:''}}" title="{{$tv_delivery_person_row->wkl02|default:''}}" style="max-width: 50px;">
+                    </a>
+                  {{/if}}
+                </td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">及時地圖-送餐初衷</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp13|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">及時地圖-送餐經驗</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp14|default:''}}</span></td>
+              </tr>
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">備註</td>
+                <td width="{{$swidth_right}}" class="table-light"><span class="text-dark">{{$tv_delivery_person_row->dp99|default:''}}</span></td>
+              </tr>
+                    
+              <tr class="d-flex">
+                <td width="{{$swidth_left}}" class="table-secondary text-right">是否啟用</td>
+                <td width="{{$swidth_right}}" class="table-light">
+                  <span class="text-dark">
+                  {{if '1'==$tv_delivery_person_row->is_available}}
+                    是
+                  {{else}}
+                    否
+                  {{/if}}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="nav-rest" role="tabpanel" aria-labelledby="nav-rest-tab">
+        <div class="table-responsive" style="width: 50%;">
+          <table class="table table-bordered table-hover table-sm">
+            <thead>
+              <tr class="thead-light">
+                <th style="width: 15%" class="text-nowrap">請假日期</th><!--3-->
+                <th class="text-nowrap">請假事由</th><!--3-->
+              </tr>
+            </thead>
+            <tbody>
+              {{foreach from=$tv_delivery_person_rest_row key=k item=v}}
+                <tr>
+                  <td>{{$v.dpr01|default:''}}</td>
+                  <td>{{$v.dpr02|default:''|nl2br}}</td>
+                </tr>
+              {{foreachelse}}
+                <tr>
+                  <td colspan="99" class="alert alert-warning">
+                      查無資料!!!
+                  </td>
+                </tr>
+              {{/foreach}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- container-fluid end-->
+</div>

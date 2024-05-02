@@ -1,0 +1,503 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<script src="{{$tv_pub_url}}/js/bootstrap3-typeahead.min.js"></script>
+<script src="{{$tv_pub_url}}/js/validator.min.js"></script>
+<script src="{{$tv_pub_url}}/js/chosen.jquery.min.js"></script>
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/chosen.css">
+<!-- file upload 如沒用到可以刪除-->
+<script src="{{$tv_pub_url}}/js/up_file/js/vendor/jquery.ui.widget.js"></script>
+<script src="{{$tv_pub_url}}/js/up_file/js/jquery.iframe-transport.js"></script>
+<script>
+  $(function(){
+    //CKEDITOR.replace('field_name', { height: '300px', width: '100%'});
+    $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+    $("#save").click(function(){
+      var err_msg = '';
+      $('#fd_input').validator('validate');
+      if($('.with-errors').text() != '') {
+        alert('{{$tv_validate_err}}');
+        return;
+      }
+      for ( instance in CKEDITOR.instances ) {
+        CKEDITOR.instances[instance].updateElement();
+      }
+      $.ajax({
+        type:'post',
+        url: '{{$tv_save_link}}',
+        data: $("#fd_input").serialize(),
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_save_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_save_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            //console.log(rs);
+            alert(rs);
+          }
+        }
+      })
+    });
+    $(document).on('click',"input[name='files']",function() {
+      $(this).fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+          $.each(data.result.files, function (index, file) {
+            if(file.error) {
+              alert(file.error);
+              return;
+            }
+            //file.name = decodeURIComponent(file.name); // 對應
+            //console.log(file.name);
+            var att_name = data.att_name;
+            $('#'+att_name).val(file.name);
+            $('#'+att_name+'_str').text(file.name);
+          });
+        }
+      });
+    });
+
+    $("#phw10_1").val("{{$tv_phone_interview_row->phw10_1|default:''}}");
+    $("#phw10_2").val("{{$tv_phone_interview_row->phw10_2|default:''}}");
+    $("#phw10_3").val("{{$tv_phone_interview_row->phw10_3|default:''}}");
+    $("#phw10_4").val("{{$tv_phone_interview_row->phw10_4|default:''}}");
+    $("#phw10_5").val("{{$tv_phone_interview_row->phw10_5|default:''}}");
+    $("#phw10_6").val("{{$tv_phone_interview_row->phw10_6|default:''}}");
+    $("#phw10_7").val("{{$tv_phone_interview_row->phw10_7|default:''}}");
+    $("#phw03_sw_s_num").val("{{$tv_phone_interview_row->phw03_sw_s_num|default:''}}");
+    /*chosen select*/
+    var config = {
+      '.chosen-select-deselect'  : { allow_single_deselect: true, width: '100%', no_results_text: 'Oops, nothing found!', search_contains: true },
+      '.chosen-select-width'     : { width: '380pt', no_results_text: '查無輸入的資料', search_contains: true },
+      '.chosen-select-ass'     : { width: '100%', no_results_text: '查無輸入的資料', max_selected_options: 2, search_contains: true } //限選2個
+    }
+    for (var selector in config) {
+      $(selector).chosen(config[selector]);
+    }
+    // 檔案刪除用 Begin //
+    $(document).on("click", ".del", function () {
+      var del_fd_name = $(this).data('del_fd_name');
+      $(".modal-footer #f_del_fd_name").val(del_fd_name);
+    });
+    $('#del_file').click(function(){
+      var del_fd_name = $('#f_del_fd_name').val();
+      $('#'+del_fd_name).val('');
+      $('#'+del_fd_name+'_str').text('');
+    });
+    // 檔案刪除用 End //
+    
+    $('#phw04_ct_name').typeahead({
+      items: 'all',
+      minLength: '1',
+      autoSelect: false,
+      selectOnBlur: false,
+      menu: '<ul class="typeahead dropdown-menu" role="listbox"></ul>',
+      item: '<li data-toggle="tooltip" data-placement="top" title="選此案主"><a class="dropdown-item2" href="#" role="option"></a></li>',
+      source: function (q, process) {
+        // console.log(q);
+        $.ajax({
+          type:'post',
+          url: '{{$tv_que_ct_link}}',
+          data: {q:q},
+          error: function(xhr) {
+            err_msg = 'Ajax request發生錯誤[{{$tv_que_ct_link}}]:'+xhr+'\n請重試';
+            alert(err_msg);
+          },
+          success: function (rs) {
+            //console.log(rs);
+            if(rs != 'null') {
+              var rs = jQuery.parseJSON(rs);
+              process(rs);
+              // console.log(rs);  
+            }
+          }
+        });
+      },
+      updater: function (item) {
+        //var item_name = $(this)[0].$element[0].name;
+        var item = item.split(';;');
+        $('#phw04_ct_s_num').val(item[2]);
+        $('#phw04_ct_name').val(item[0]);
+        return item[0]; // 更新目前的欄位值
+      }
+    });
+    
+    {{* Mark By Kiwi => 20230307
+    $("#phw10_1_memo").prop('readonly', true);
+    $("#phw10_2_memo").prop('readonly', true);
+    $("#phw10_3_memo").prop('readonly', true);
+    $("#phw10_4_memo").prop('readonly', true);
+    $("#phw10_5_memo").prop('readonly', true);
+    $("#phw10_6_memo").prop('readonly', true);    
+    $("#phw10_7_memo").prop('readonly', true);    
+    {{if $tv_msel == 'upd'}}
+      {{if $tv_phone_interview_row->phw10_1 == 99}}
+        $("#phw10_1_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_phone_interview_row->phw10_2 == 99}}
+        $("#phw10_2_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_phone_interview_row->phw10_3 == 99}}
+        $("#phw10_3_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_phone_interview_row->phw10_4 == 99}}
+        $("#phw10_4_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_phone_interview_row->phw10_5 == 99}}
+        $("#phw10_5_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_phone_interview_row->phw10_6 == 99}}
+        $("#phw10_6_memo").prop('readonly', false);
+      {{/if}}
+      {{if $tv_phone_interview_row->phw10_7 == Y}}
+        $("#phw10_7_memo").prop('readonly', false);
+      {{/if}}
+    {{/if}}
+    *}}
+  });
+</script>
+<div class="right-content">
+  <div class="page-title clearfix">
+    <div class="float-left">
+      <h1>電訪記錄</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">案主管理</a></li>
+        <li class="breadcrumb-item"><a href="#">電訪記錄</a></li>
+        <li class="breadcrumb-item active">{{$tv_breadcrumb3}}</li>
+      </ol>
+    </div>
+    <div class="float-right">
+      <div class="visible-xs"><div class="maT10"></div></div>
+      <button id="save" class="btn btn-C1 btn-sm" type="button">{{$tv_save_btn}} <i class="far fa-save"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+    </div>
+  </div>
+  <!-- container-fluid -->
+  <div class="container-fluid">
+    {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+      <br>
+      <div class="float-right">建檔:<span class="mainC1">{{$tv_phone_interview_row->b_acc_name|default:''}}({{$tv_phone_interview_row->b_date|default:''}})</span>-修改:<span class="mainC1">{{$tv_phone_interview_row->e_acc_name|default:''}}({{$tv_phone_interview_row->e_date|default:""}})</span></div>
+    {{/if}}
+    <form class="maT20" id="fd_input" name="fd_input" method="POST" enctype="multipart/form-data" data-toggle="validator">
+      {{if $tv_msel <> 'add' and $tv_msel <> 'cpy'}}
+        <input type="hidden" id="s_num" name="s_num" value="{{$tv_phone_interview_row->s_num|default:'0'}}">
+      {{/if}}
+      <input type="hidden" id="phw99" name="phw99" value="{{$tv_phone_interview_row->phw99|default:'1'}}">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm">
+          {{assign var="swidth_left" value="20%"}}
+          {{assign var="swidth_right" value="80%"}}
+          {{assign var="swidth_left_2" value="10%"}}
+          {{assign var="swidth_right_2" value="90%"}}
+          <tbody>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>訪問時間</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <div class='input-group form_date'>
+                    <div class='input-group-prepend'>
+                      <span class='input-group-text'><i class='far fa-calendar-alt'></i></span>
+                    </div>
+                    <input type='text' id='phw01' name='phw01' class='form-control form-control-sm' placeholder='請輸入訪問時間' value='{{$tv_phone_interview_row->phw01|default:''}}' required>
+                  </div>
+                  <span id='helpBlock_phw01' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>電訪者</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  {{if $tv_msel == 'add'}}
+                    <span>{{$tv_acc_name}}</span>
+                    <input type='hidden' id='phw02_sw_s_num' name='phw02_sw_s_num' class='form-control form-control-sm' placeholder='請輸入電訪者' value='{{$tv_acc_s_num|default:''}}' required>
+                  {{else}}
+                    <span>{{$tv_phone_interview_row->b_acc_name|default:''}}</span>
+                  {{/if}}
+                  <span id='helpBlock_phw02_sw_s_num' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>檢閱者</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <select id='phw03_sw_s_num' name='phw03_sw_s_num' class='form-control form-control-sm' required>
+                    <option value='' selected>-請選擇-</option>
+                    {{foreach from=$tv_social_worker_row key=k item=v}}
+                      <option value='{{$v.s_num|default:''}}'>{{$v.sw01|default:''}}{{$v.sw02|default:''}}</option>
+                    {{/foreach}}
+                  </select>
+                  <span id='helpBlock_phw03_sw_s_num' class='help-block'></span>
+                  <div class='help-block with-errors'></div>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'><span class="text-danger">*</span>案主姓名</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <span class='form-group'>
+                  <input type='hidden' id='phw04_ct_s_num' name='phw04_ct_s_num' value='{{$tv_phone_interview_row->phw04_ct_s_num|default:''}}'>
+                  <input type='text' id='phw04_ct_name' class='col-12 form-control form-control-sm' placeholder='請輸入案主姓名' autocomplete="off" value='{{$tv_phone_interview_row->ct01|default:''}}{{$tv_phone_interview_row->ct02|default:''}}' {{if $tv_msel == "upd"}} readonly {{/if}} required>
+                  <span id='helpBlock_phw04_ct_name' class='help-block'></span>
+                </span>
+              </td>
+            </tr>
+            <tr class='d-flex'>
+              <td width='{{$swidth_left}}' class='table-secondary text-right'>生活情形</td>
+              <td width='{{$swidth_right}}' class='table-light'>
+                <table class="table table-bordered table-hover table-sm">
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>一、接聽情形</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='phw10_1' name='phw10_1' class='form-control form-control-sm col-2'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>親自接聽</option>
+                            <option value='2'>親友接聽</option>
+                            <option value='3'>無人接聽</option>
+                          </select>
+                          <span id='helpBlock_phw10_1' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">說明</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='phw10_1_memo' class='form-control form-control-sm' name='phw10_1_memo' rows='3'></textarea>
+                          {{else}}
+                            <textarea id='phw10_1_memo' class='form-control form-control-sm' name='phw10_1_memo' rows='3'>{{$tv_phone_interview_row->phw10_1_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>二、餐食建議</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='phw10_2' name='phw10_2' class='form-control form-control-sm col-2'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>很好</option>
+                            <option value='99'>有意見</option>
+                          </select>
+                          <span id='helpBlock_phw10_2' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">說明</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='phw10_2_memo' class='form-control form-control-sm' name='phw10_2_memo' rows='3'></textarea>
+                          {{else}}
+                            <textarea id='phw10_2_memo' class='form-control form-control-sm' name='phw10_2_memo' rows='3'>{{$tv_phone_interview_row->phw10_2_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>三、服務建議</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='phw10_3' name='phw10_3' class='form-control form-control-sm col-2'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>很好</option>
+                            <option value='99'>有意見</option>
+                          </select>
+                          <span id='helpBlock_phw10_3' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">說明</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='phw10_3_memo' class='form-control form-control-sm' name='phw10_3_memo' rows='3'></textarea>
+                          {{else}}
+                            <textarea id='phw10_3_memo' class='form-control form-control-sm' name='phw10_3_memo' rows='3'>{{$tv_phone_interview_row->phw10_3_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>四、精神狀況</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='phw10_4' name='phw10_4' class='form-control form-control-sm col-2'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>感覺良好</option>
+                            <option value='2'>尚可</option>
+                            <option value='3'>精神不佳</option>
+                            <option value='4'>輕生念頭</option>
+                          </select>
+                          <span id='helpBlock_phw10_3' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">說明</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='phw10_4_memo' class='form-control form-control-sm' name='phw10_4_memo' rows='3'>
+與案主的溝通狀況為(主動/被動/選擇性溝通/拒絕溝通)，交談態度(和善/冷漠/激動/無異狀)。
+案主對於(家庭/夫妻/與子女/與父母)的關係感到(焦慮/不諒解/傷心/無助)，且有(自傷/表示不想要活/憂鬱/自我封鎖)的行為。</textarea>
+                          {{else}}
+                            <textarea id='phw10_4_memo' class='form-control form-control-sm' name='phw10_4_memo' rows='3'>{{$tv_phone_interview_row->phw10_4_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>五、身體狀況</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='phw10_5' name='phw10_5' class='form-control form-control-sm col-2'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>感覺良好</option>
+                            <option value='2'>如同往常</option>
+                            <option value='3'>稍有不適</option>
+                            <option value='4'>嚴重不適</option>
+                          </select>
+                          <span id='helpBlock_phw10_5' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">說明</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='phw10_5_memo' class='form-control form-control-sm' name='phw10_5_memo' rows='3'>
+案主能清楚了解自身疾病與飲食方面的注意事項，且有(定時吃藥與就醫/主動治療與復健)。</textarea>
+                          {{else}}
+                            <textarea id='phw10_5_memo' class='form-control form-control-sm' name='phw10_5_memo' rows='3'>{{$tv_phone_interview_row->phw10_5_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>六、社會互動</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='phw10_6' name='phw10_6' class='form-control form-control-sm col-2'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='1'>與親友互動</option>
+                            <option value='2'>參與外界活動</option>
+                            <option value='3'>極少外出</option>
+                          </select>
+                          <span id='helpBlock_phw10_6' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">說明</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='phw10_6_memo' class='form-control form-control-sm' name='phw10_6_memo' rows='3'>
+案主有(聘請看傭/親戚/鄰居/朋友/房東/警衛/宮廟)__________(偶爾/常常/每天)會來關心案主(生活/備餐/就醫)。
+案主有參加社區聚會，(偶爾/常常/每天)到社區(用餐/參加活動/上課/聊天)。
+案主有社交障礙，不喜歡與人互動，導致人際關係不佳，有社會脫離之情形。</textarea>
+                          {{else}}
+                            <textarea id='phw10_6_memo' class='form-control form-control-sm' name='phw10_6_memo' rows='3'>{{$tv_phone_interview_row->phw10_6_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class='d-flex'>
+                    <td width='{{$swidth_left_2}}' class='table-secondary text-right'>七、是否轉介或追蹤</td>
+                    <td width='{{$swidth_right_2}}' class='table-light'>
+                      <span class='form-group'>
+                        <div class="input-group input-group-sm">
+                          <select id='phw10_7' name='phw10_7' class='form-control form-control-sm col-2'>
+                            <option value='' selected>-請選擇-</option>
+                            <option value='Y'>是</option>
+                            <option value='N'>否</option>
+                          </select>
+                          <span id='helpBlock_phw10_7' class='help-block'></span>
+                          <div class='help-block with-errors'></div>
+                          <div class="input-group-append ml-1">
+                            <span class="input-group-text">說明</span>
+                          </div>
+                          {{if 'add' == $tv_msel}}
+                            <textarea id='phw10_7_memo' class='form-control form-control-sm' name='phw10_7_memo' rows='3'></textarea>
+                          {{else}}
+                            <textarea id='phw10_7_memo' class='form-control form-control-sm' name='phw10_7_memo' rows='3'>{{$tv_phone_interview_row->phw10_7_memo|default:''}}</textarea>
+                          {{/if}}
+                        </div>
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+              {{*
+              <tr class='d-flex'>
+                <td width='{{$swidth_left}}' class='table-secondary text-right'>檢閱者簽名檔</td>
+                <td width='{{$swidth_right}}' class='table-light'>
+                  <span class='form-group'>
+                    <input type='text' id='phw03_sign' name='phw03_sign' class='form-control form-control-sm' placeholder='請輸入檢閱者簽名檔' value='{{$tv_phone_interview_row->phw03_sign|default:''}}' >
+                    <span id='helpBlock_phw03_sign' class='help-block'></span>
+                    <div class='help-block with-errors'></div>
+                  </span>
+                </td>
+              </tr>
+              *}}
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <!-- container-fluid end-->
+  <!-- 刪除確認彈出 -->
+  <div class="modal fade pop-del_file" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal-dialog  modal-sm" role="document">
+      <div class="modal-content  modal-C1 ">
+        <div class="text-center paTB20">
+          <h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+          真的要刪除此檔案嗎？
+          <br>
+          ※確定後，需按右上儲存按鈕才會刪除檔案!!
+        </div>
+        <div class="modal-footer text-center">
+          <input type="hidden" id='f_del_fd_name' value="">
+          <button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+          <button type="button" id="del_file" class="btn btn-C1" data-dismiss="modal">確定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 刪除確認彈出 end-->
+</div>
+{{* Mark By Kiwi => 20230307
+<script>
+  function memo_input(obj) {
+    if(obj.name != 'phw10_7') {
+      if(obj.value != '99') { // 啟用
+        $('#' + obj.name + '_memo').val('');
+        $('#' + obj.name + '_memo').prop("readonly",true);  // readonly
+        $('#' + obj.name + '_memo').prop("required",false);  // 非必填
+      }
+      else {
+        $('#' + obj.name + '_memo').prop("readonly",false);  // 取消 readonly
+        $('#' + obj.name + '_memo').prop("required",true);  // 必填
+      }
+    }
+    else {
+      if(obj.value != 'Y') { // 啟用
+        $('#' + obj.name + '_memo').val('');
+        $('#' + obj.name + '_memo').prop("readonly",true);  // readonly
+        $('#' + obj.name + '_memo').prop("required",false);  // 非必填
+      }
+      else {
+        $('#' + obj.name + '_memo').prop("readonly",false);  // 取消 readonly
+        $('#' + obj.name + '_memo').prop("required",true);  // 必填
+      }
+    }
+  }
+</script>
+*}}

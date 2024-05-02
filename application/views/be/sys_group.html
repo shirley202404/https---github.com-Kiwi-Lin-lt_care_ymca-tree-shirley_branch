@@ -1,0 +1,111 @@
+{{include file="{{$tv_kind}}/meta.html"}}
+{{include file="{{$tv_kind}}/header.html"}}
+<!-- table sort -->
+{{*https://mottie.github.io/tablesorter/docs/#Examples*}}
+<script src="{{$tv_pub_url}}/js/tablesorter/jquery.tablesorter.min.js"></script>
+<script src="{{$tv_pub_url}}/js/tablesorter/jquery.tablesorter.widgets.min.js"></script>
+<!-- bootstrap css theme -->
+<link rel="stylesheet" href="{{$tv_pub_url}}/css/tablesorter/theme.bootstrap_4.min.css">
+<script>
+  $(function(){
+    $(document).on("click", ".del", function () {
+      var s_num = $(this).data('s_num');
+      $(".modal-footer #f_del_s_num").val(s_num);
+    });
+
+    $("#del").click(function(){
+      var err_msg = '';
+      var s_num = $(".modal-footer #f_del_s_num").val();
+      $.ajax({
+        type:'post',
+        url: '{{$tv_del_link}}',
+        data: {s_num:s_num},
+        error: function(xhr) {
+          err_msg = 'Ajax request發生錯誤[{{$tv_del_link}}]:'+xhr+'\n請重試';
+          alert(err_msg);
+        },
+        success: function (rs) {
+          if(rs=='ok') {
+            alert("{{$tv_del_ok}}");
+            location.replace("{{$tv_return_link}}");
+          }
+          else {
+            alert("{{$tv_del_ng}}");
+          }
+        }
+      })
+      return;
+    });
+
+    $(".sort-table").tablesorter({
+      theme : "bootstrap",
+      sortInitialOrder: 'asc'
+    });
+  });
+</script>
+<div class="right-content">
+	<div class="page-title clearfix">
+		<div class="float-left">
+			<h1>群組管理</h1>
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item"><a href="" class="C1">系統管理</a></li>
+				<li class="breadcrumb-item active">群組管理</li>
+			</ol>
+		</div>
+		<div class="float-right">
+			<div class="visible-xs"><div class="maT10"></div></div>
+		  <button type="button" class="btn btn-light btn-sm" onclick="location.href='{{$tv_add_link}}';">{{$tv_add_btn}} <i class="fas fa-plus"></i></button>
+      <button class="btn btn-light btn-sm" type="button" onclick="location.href='{{$tv_return_link}}';">{{$tv_list_btn}} <i class="fas fa-list"></i></button>
+		</div>
+	</div>
+	<div class="container-fluid">
+		<!-- 表格區塊 -->
+		<div class="white-wrapper">
+			<div class="table-responsive">
+				<table class="table table-bordered table-striped table-hover table-sm sort-table">
+					<thead>
+						<tr class="thead-light">
+							<th>序</th>
+							<th>群組名稱</th>
+							<th>使用者</th>
+							<th class='sorter-false filter-false'></th>
+						</tr>
+					</thead>
+					<tbody>
+						{{foreach from=$tv_acc_group_row key=k item=v}}
+						  <tr>
+						  	<td><a href="{{$tv_upd_link}}{{$v.s_num}}" class="text-dark">{{$v.s_num}}</a></td>
+						  	<td><a href="{{$tv_upd_link}}{{$v.s_num}}" class="text-dark">{{$v.acg_name}}</a></td>
+						  	<td><a href="{{$tv_upd_link}}{{$v.s_num}}" class="text-dark">{{$v.acc_name}}</a></td>
+						  	<td>
+						  		<button type="button" class="btn btn-sm btn-C1" onclick="location.href='{{$tv_upd_link}}{{$v.s_num}}';">{{$tv_upd_btn}}</button>
+						  		{{if $v.s_num<>1}}
+                    <button type="button" class="btn btn-sm btn-C2 del" data-s_num="{{$v.s_num}}" data-toggle="modal" data-target=".pop-container">{{$tv_del_btn}}</button>
+						  		{{/if}}
+						  	</td>
+						  </tr>
+						{{/foreach}}
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<!-- 表格區塊 end-->
+	</div>
+	<!-- 刪除確認彈出 -->
+	<div class="modal fade pop-container" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+		<div class="modal-dialog  modal-sm" role="document">
+			<div class="modal-content  modal-C1 ">
+				<div class="text-center paTB20">
+					<h1><i class="fa fa-info-circle mainC2 maB10" aria-hidden="true"></i><br></h1>
+					真的要刪除此項目嗎？
+				</div>
+				<div class="modal-footer text-center">
+				  <input type="hidden" id='f_del_s_num' value="">
+					<button type="button" class="btn btn-C1-line" data-dismiss="modal">取消</button>
+					<button type="button" id="del" class="btn btn-C1" data-dismiss="modal">確定</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- 刪除確認彈出 end-->
+</div>
